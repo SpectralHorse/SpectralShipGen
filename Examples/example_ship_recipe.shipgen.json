@@ -1,0 +1,29 @@
+{
+  "format_version": 1,
+  "ship": {
+    "resolution": { "width": 44, "height": 44 },
+    "style": "HEAVY",
+    "faction": "MILITARY",
+    "seeds": {
+      "master": 123456,
+      "structure": 10790235826728781733,
+      "palette": 12024528127574737321,
+      "details": 11217145707583546534,
+      "attachments": 17592109411737590876
+    },
+    "settings": {
+      "detail_density": 50,
+      "asymmetric_detail_chance": 10,
+      "attachments_enabled": true
+    }
+  },
+  "animation": {
+    "seed": 987654321,
+    "frame_count": 10,
+    "engine_flicker": true,
+    "light_blinking": true,
+    "mechanical_micro_movement": false,
+    "hover_offset": false,
+    "small_detail_variation": true
+  }
+}
