@@ -166,6 +166,8 @@ namespace PixelShipGenerator
         PixelMask PrimaryDetailMotifMask;
         PixelMask SecondaryDetailMotifMask;
         uint32_t StructuralNegativeSpaceCount = 0u;
+        uint32_t StructuralNegativeSpaceAttemptCount = 0u;
+        uint32_t StructuralNegativeSpaceSuccessCount = 0u;
         uint32_t StructuralNegativeSpacePixelCount = 0u;
         std::array<uint32_t, static_cast<std::size_t>(ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END)> StructuralNegativeSpaceTypeCounts = {};
         PixelMask ReservedNegativeSpaceMask;

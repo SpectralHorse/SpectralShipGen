@@ -35,6 +35,7 @@ namespace PixelShipGeneratorTests
     int runLiveryRegression();
     int runDetailMotifRegression();
     int runRegressionRunnerRegression();
+    int runDiagnosticsRunnerRegression();
 
     int runPreviewPreferencesRegression();
     int runGenerationCalibrationRegression();

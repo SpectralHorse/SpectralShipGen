@@ -713,6 +713,8 @@ namespace PixelShipGenerator
         if (context.DebugInfo != nullptr)
         {
             context.DebugInfo->StructuralNegativeSpaceCount = 0u;
+            context.DebugInfo->StructuralNegativeSpaceAttemptCount = 0u;
+            context.DebugInfo->StructuralNegativeSpaceSuccessCount = 0u;
             context.DebugInfo->StructuralNegativeSpacePixelCount = 0u;
             context.DebugInfo->StructuralNegativeSpaceTypeCounts.fill(0u);
             context.DebugInfo->ReservedNegativeSpaceMask = PixelMask(context.Settings.Dimensions.Width, context.Settings.Dimensions.Height, false);
@@ -750,7 +752,12 @@ namespace PixelShipGenerator
             const ShipStructuralNegativeSpaceType type = selectStructuralNegativeSpaceType(context, selectedTypes);
             if (type == ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END) { break; }
             selectedTypes[static_cast<std::size_t>(type)] = true;
-            if (tryApplyStructuralNegativeSpace(context, type)) { ++successfulCount; }
+            if (context.DebugInfo != nullptr) { ++context.DebugInfo->StructuralNegativeSpaceAttemptCount; }
+            if (tryApplyStructuralNegativeSpace(context, type))
+            {
+                ++successfulCount;
+                if (context.DebugInfo != nullptr) { ++context.DebugInfo->StructuralNegativeSpaceSuccessCount; }
+            }
         }
 
         if (context.DebugInfo != nullptr)

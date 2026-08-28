@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "DiagnosticsRunner.h"
 #include "GenerationStatistics.h"
-#include "ShipGenerationRecipeSerializer.h"
 
 namespace
 {
@@ -22,8 +22,33 @@ namespace
         bool AllStyles = false;
         bool AllFactions = false;
         std::optional<std::string> CsvPath;
+        bool DetailedPerformance = false;
     };
 
+
+    bool parseStyle(const std::string& value, PixelShipGenerator::ShipStyle& style)
+    {
+        using PixelShipGenerator::ShipStyle;
+        if (value == "SLEEK") { style = ShipStyle::SLEEK; return true; }
+        if (value == "FIGHTER") { style = ShipStyle::FIGHTER; return true; }
+        if (value == "HEAVY") { style = ShipStyle::HEAVY; return true; }
+        if (value == "INDUSTRIAL") { style = ShipStyle::INDUSTRIAL; return true; }
+        if (value == "SPEARHEAD") { style = ShipStyle::SPEARHEAD; return true; }
+        if (value == "DELTA") { style = ShipStyle::DELTA; return true; }
+        return false;
+    }
+
+    bool parseFaction(const std::string& value, PixelShipGenerator::ShipFactionType& faction)
+    {
+        using PixelShipGenerator::ShipFactionType;
+        if (value == "FRONTIER") { faction = ShipFactionType::FRONTIER; return true; }
+        if (value == "MILITARY") { faction = ShipFactionType::MILITARY; return true; }
+        if (value == "ASCENDANT") { faction = ShipFactionType::ASCENDANT; return true; }
+        if (value == "XENO") { faction = ShipFactionType::XENO; return true; }
+        if (value == "CORPORATE") { faction = ShipFactionType::CORPORATE; return true; }
+        if (value == "RELIC") { faction = ShipFactionType::RELIC; return true; }
+        return false;
+    }
     void printUsage(std::ostream& output)
     {
         output << "ShipGeneratorDiagnostics\n\n";
@@ -43,7 +68,8 @@ namespace
         output << "  --all-resolutions                 Sweep all seven PreviewApp resolutions.\n";
         output << "  --all-styles                      Sweep every current ShipStyle enum value.\n";
         output << "  --all-factions                    Sweep every current ShipFactionType enum value.\n";
-        output << "  --csv <path>                      Write one summary row per configuration.\n";
+        output << "  --csv <path>                      Write extended summary CSV from DiagnosticsResult.\n";
+        output << "  --performance                    Enable detailed per-stage timing instrumentation.\n";
         output << "  --help                            Show this help.\n";
     }
 
@@ -121,6 +147,12 @@ namespace
                 continue;
             }
 
+            if (argument == "--performance")
+            {
+                options.DetailedPerformance = true;
+                continue;
+            }
+
             if (index + 1 >= argc)
             {
                 error = "Missing value for argument: " + argument;
@@ -176,7 +208,7 @@ namespace
             }
             else if (argument == "--style")
             {
-                if (!PixelShipGeneratorPreview::shipStyleFromRecipeString(value, options.BaseConfiguration.Style))
+                if (!parseStyle(value, options.BaseConfiguration.Style))
                 {
                     error = "Unknown style: " + value;
                     return false;
@@ -184,7 +216,7 @@ namespace
             }
             else if (argument == "--faction")
             {
-                if (!PixelShipGeneratorPreview::shipFactionFromRecipeString(value, options.BaseConfiguration.Faction))
+                if (!parseFaction(value, options.BaseConfiguration.Faction))
                 {
                     error = "Unknown faction: " + value;
                     return false;
@@ -298,60 +330,66 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    std::ofstream csvFile;
+    const std::vector<uint32_t> resolutions = getSelectedResolutions(options);
+    const std::vector<PixelShipGenerator::ShipStyle> styles = getSelectedStyles(options);
+    const std::vector<PixelShipGenerator::ShipFactionType> factions = getSelectedFactions(options);
+
+    PixelShipGeneratorDiagnostics::DiagnosticsRunConfiguration runConfiguration;
+    runConfiguration.Dimensions.clear();
+    if (options.AllResolutions)
+    {
+        for (const uint32_t resolution : resolutions) { runConfiguration.Dimensions.push_back({ resolution, resolution }); }
+    }
+    else
+    {
+        runConfiguration.Dimensions.push_back({ options.BaseConfiguration.Width, options.BaseConfiguration.Height });
+    }
+    runConfiguration.Styles = styles;
+    runConfiguration.Factions = factions;
+    runConfiguration.SamplesPerConfiguration = options.BaseConfiguration.Samples;
+    runConfiguration.DiagnosticSeed = options.BaseConfiguration.DiagnosticSeed;
+    runConfiguration.DetailDensity = options.BaseConfiguration.DetailDensity;
+    runConfiguration.AsymmetricDetailChance = options.BaseConfiguration.AsymmetricDetailChance;
+    runConfiguration.AttachmentsEnabled = options.BaseConfiguration.AttachmentsEnabled;
+    runConfiguration.DetailedPerformanceInstrumentation = options.DetailedPerformance;
+#ifdef PIXEL_SHIP_GENERATOR_BUILD_CONFIGURATION
+    runConfiguration.BuildConfiguration = PIXEL_SHIP_GENERATOR_BUILD_CONFIGURATION;
+#endif
+
+    uint64_t lastPrinted = 0u;
+    const PixelShipGeneratorDiagnostics::DiagnosticsResult result = PixelShipGeneratorDiagnostics::DiagnosticsRunner().run(runConfiguration,
+        [&](const PixelShipGeneratorDiagnostics::DiagnosticsProgress& progress)
+        {
+            const uint64_t interval = std::max<uint64_t>(1u, progress.TotalWorkItems / 20u);
+            if (progress.CompletedWorkItems != progress.TotalWorkItems && progress.CompletedWorkItems - lastPrinted < interval) { return; }
+            lastPrinted = progress.CompletedWorkItems;
+            std::cout << "\rProgress " << progress.CompletedWorkItems << '/' << progress.TotalWorkItems << " (" << static_cast<uint32_t>(progress.ProgressPercent) << "%)";
+            if (progress.EstimatedRemainingAvailable) { std::cout << " ETA ~" << (progress.EstimatedRemainingNanoseconds / 1000000000.0) << " s"; }
+            std::cout << std::flush;
+        });
+    if (result.ScheduledWorkItems != 0u) { std::cout << '\n'; }
+
+    for (const auto& configurationResult : result.ConfigurationResults)
+    {
+        PixelShipGeneratorDiagnostics::printGenerationStatistics(std::cout, configurationResult.Configuration, configurationResult.Statistics);
+    }
+    PixelShipGeneratorDiagnostics::printDiagnosticsResultSummary(std::cout, result);
 
     if (options.CsvPath.has_value())
     {
-        csvFile.open(*options.CsvPath, std::ios::out | std::ios::trunc);
-
+        std::ofstream csvFile(*options.CsvPath, std::ios::out | std::ios::trunc);
         if (!csvFile)
         {
             std::cerr << "Error: failed to open CSV path: " << *options.CsvPath << '\n';
             return 1;
         }
-
-        PixelShipGeneratorDiagnostics::writeGenerationStatisticsCsvHeader(csvFile);
-    }
-
-    const std::vector<uint32_t> resolutions = getSelectedResolutions(options);
-    const std::vector<PixelShipGenerator::ShipStyle> styles = getSelectedStyles(options);
-    const std::vector<PixelShipGenerator::ShipFactionType> factions = getSelectedFactions(options);
-    const uint64_t dimensionConfigurationCount = options.AllResolutions ? resolutions.size() : 1u;
-    const uint64_t configurationCount = dimensionConfigurationCount * styles.size() * factions.size();
-    uint64_t configurationIndex = 0u;
-
-    for (uint64_t dimensionIndex = 0u; dimensionIndex < dimensionConfigurationCount; ++dimensionIndex)
-    {
-        PixelShipGeneratorDiagnostics::DiagnosticGenerationConfiguration dimensionConfiguration = options.BaseConfiguration;
-        if (options.AllResolutions)
-        {
-            dimensionConfiguration.Width = resolutions[dimensionIndex];
-            dimensionConfiguration.Height = resolutions[dimensionIndex];
-        }
-
-        for (const PixelShipGenerator::ShipStyle style : styles)
-        {
-            for (const PixelShipGenerator::ShipFactionType faction : factions)
-            {
-                ++configurationIndex;
-                PixelShipGeneratorDiagnostics::DiagnosticGenerationConfiguration configuration = dimensionConfiguration;
-                configuration.Style = style;
-                configuration.Faction = faction;
-                std::cout << "\nRunning configuration " << configurationIndex << '/' << configurationCount << ": " << configuration.Width << 'x' << configuration.Height << ' ' << PixelShipGeneratorPreview::shipStyleToRecipeString(style) << ' ' << PixelShipGeneratorPreview::shipFactionToRecipeString(faction) << " ...\n";
-                const PixelShipGeneratorDiagnostics::GenerationStatistics statistics = PixelShipGeneratorDiagnostics::collectGenerationStatistics(configuration);
-                PixelShipGeneratorDiagnostics::printGenerationStatistics(std::cout, configuration, statistics);
-
-                if (csvFile)
-                {
-                    PixelShipGeneratorDiagnostics::writeGenerationStatisticsCsvRow(csvFile, configuration, statistics);
-                }
-            }
-        }
-    }
-
-    if (csvFile)
-    {
+        PixelShipGeneratorDiagnostics::writeDiagnosticsResultCsv(csvFile, result);
         std::cout << "\nCSV summary written: " << *options.CsvPath << '\n';
+    }
+
+    if (result.Cancelled || !result.Completed)
+    {
+        return 2;
     }
 
     return 0;

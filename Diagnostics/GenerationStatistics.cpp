@@ -13,13 +13,43 @@
 #include <utility>
 #include <vector>
 
-#include "ShipGenerationRecipeSerializer.h"
+#include "DiagnosticsRunner.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationSettings.h"
 #include "ShipGenerator.h"
 
 namespace
 {
+
+    const char* styleName(PixelShipGenerator::ShipStyle style)
+    {
+        using PixelShipGenerator::ShipStyle;
+        switch (style)
+        {
+        case ShipStyle::SLEEK: return "SLEEK";
+        case ShipStyle::FIGHTER: return "FIGHTER";
+        case ShipStyle::HEAVY: return "HEAVY";
+        case ShipStyle::INDUSTRIAL: return "INDUSTRIAL";
+        case ShipStyle::SPEARHEAD: return "SPEARHEAD";
+        case ShipStyle::DELTA: return "DELTA";
+        default: return "UNKNOWN";
+        }
+    }
+
+    const char* factionName(PixelShipGenerator::ShipFactionType faction)
+    {
+        using PixelShipGenerator::ShipFactionType;
+        switch (faction)
+        {
+        case ShipFactionType::FRONTIER: return "FRONTIER";
+        case ShipFactionType::MILITARY: return "MILITARY";
+        case ShipFactionType::ASCENDANT: return "ASCENDANT";
+        case ShipFactionType::XENO: return "XENO";
+        case ShipFactionType::CORPORATE: return "CORPORATE";
+        case ShipFactionType::RELIC: return "RELIC";
+        default: return "UNKNOWN";
+        }
+    }
     struct MaskMetrics
     {
         uint32_t PixelCount = 0u;
@@ -730,34 +760,18 @@ namespace PixelShipGeneratorDiagnostics
 
     GenerationStatistics collectGenerationStatistics(const DiagnosticGenerationConfiguration& configuration)
     {
-        GenerationStatistics statistics;
-        PixelShipGenerator::ShipGenerator generator;
-
-        for (uint64_t sampleIndex = 0u; sampleIndex < configuration.Samples; ++sampleIndex)
-        {
-            PixelShipGenerator::ShipGenerationSettings settings;
-            settings.Seed = deriveDiagnosticSampleSeed(configuration.DiagnosticSeed, sampleIndex);
-            settings.Dimensions.Width = configuration.Width;
-            settings.Dimensions.Height = configuration.Height;
-            settings.Style = configuration.Style;
-            settings.Faction = configuration.Faction;
-            settings.DetailDensity = configuration.DetailDensity;
-            settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
-            settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
-            PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
-
-            try
-            {
-                const PixelShipGenerator::GeneratedShip ship = generator.generate(settings, &debugInfo);
-                statistics.recordSuccess(ship, debugInfo, configuration);
-            }
-            catch (const std::exception&)
-            {
-                statistics.recordFailure(debugInfo);
-            }
-        }
-
-        return statistics;
+        DiagnosticsRunConfiguration runConfiguration;
+        runConfiguration.Dimensions = { { configuration.Width, configuration.Height } };
+        runConfiguration.Styles = { configuration.Style };
+        runConfiguration.Factions = { configuration.Faction };
+        runConfiguration.SamplesPerConfiguration = configuration.Samples;
+        runConfiguration.DiagnosticSeed = configuration.DiagnosticSeed;
+        runConfiguration.DetailDensity = configuration.DetailDensity;
+        runConfiguration.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+        runConfiguration.AttachmentsEnabled = configuration.AttachmentsEnabled;
+        runConfiguration.DetailLevel = DiagnosticsDetailLevel::SUMMARY_ONLY;
+        const DiagnosticsResult result = DiagnosticsRunner().run(runConfiguration);
+        return result.ConfigurationResults.empty() ? GenerationStatistics() : result.ConfigurationResults.front().Statistics;
     }
 
     void printGenerationStatistics(std::ostream& output, const DiagnosticGenerationConfiguration& configuration, const GenerationStatistics& statistics)
@@ -776,8 +790,8 @@ namespace PixelShipGeneratorDiagnostics
         output << "Shading complexity: " << scaleTraits.ShadingComplexity << "%\n";
         output << "Attachment complexity: " << scaleTraits.AttachmentComplexity << "%\n";
         output << "Animation complexity: " << scaleTraits.AnimationComplexity << "%\n";
-        output << "Style: " << PixelShipGeneratorPreview::shipStyleToRecipeString(configuration.Style) << '\n';
-        output << "Faction: " << PixelShipGeneratorPreview::shipFactionToRecipeString(configuration.Faction) << '\n';
+        output << "Style: " << styleName(configuration.Style) << '\n';
+        output << "Faction: " << factionName(configuration.Faction) << '\n';
         output << "Attachments: " << (configuration.AttachmentsEnabled ? "ON" : "OFF") << '\n';
         output << "Detail density: " << configuration.DetailDensity << '\n';
         output << "Asymmetric detail chance: " << configuration.AsymmetricDetailChance << '\n';
@@ -1147,7 +1161,7 @@ namespace PixelShipGeneratorDiagnostics
         const double averageDetailPatterns = statistics.AccentPatternCount.average() + statistics.MechanicalPatternCount.average() + statistics.LightPatternCount.average();
         output << std::fixed << std::setprecision(6);
         const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ configuration.Width, configuration.Height });
-        output << configuration.Width << ',' << configuration.Height << ',' << scaleTraits.AspectRatio << ',' << PixelShipGenerator::getGenerationScaleTierName(scaleTraits.Tier) << ',' << scaleTraits.HorizontalCapacity << ',' << scaleTraits.LongitudinalCapacity << ',' << scaleTraits.MajorFeatureCapacity << ',' << scaleTraits.DetailComplexity << ',' << scaleTraits.ShadingComplexity << ',' << scaleTraits.AttachmentComplexity << ',' << scaleTraits.AnimationComplexity << ',' << statistics.ComplexityInitialBudget.average() << ',' << statistics.ComplexityConsumedBudget.average() << ',' << statistics.ComplexityUnusedBudget.average() << ',' << statistics.ComplexityUtilizationPercent.average() << ',' << PixelShipGeneratorPreview::shipStyleToRecipeString(configuration.Style) << ',' << PixelShipGeneratorPreview::shipFactionToRecipeString(configuration.Faction) << ',' << (configuration.AttachmentsEnabled ? 1 : 0) << ',' << configuration.Samples << ',' << statistics.SuccessfulGenerations << ',' << statistics.FailedGenerations << ',' << statistics.HullAttempts.average() << ',' << percentage(statistics.FirstAttemptSuccessCount, statistics.RequestedGenerations) << ',' << statistics.HullValidationRejectionCount << ',' << statistics.HullNormalizedWidth.average() << ',' << statistics.HullNormalizedHeight.average() << ',' << statistics.HullCanvasDensity.average() << ',' << statistics.HullPixelCount.average() << ',' << statistics.SilhouetteArticulationCount.average() << ',' << statistics.SilhouetteShoulderProminencePercent.average() << ',' << statistics.SilhouetteInteriorContractionPercent.average() << ',' << statistics.SilhouetteNoseTaperPercent.average() << ',' << statistics.SilhouetteRearTaperPercent.average() << ',' << statistics.SilhouetteLongestStableRunPercent.average() << ',' << statistics.SilhouetteNearMaximumRowPercent.average() << ',' << statistics.SilhouetteTopUnusedMargin.average() << ',' << statistics.SilhouetteBottomUnusedMargin.average() << ',' << statistics.SilhouetteLeftUnusedMargin.average() << ',' << statistics.SilhouetteRightUnusedMargin.average() << ',' << statistics.SilhouetteGuidanceAppliedCount.average() << ',' << statistics.StructuralNegativeSpaceCount.average() << ',' << statistics.StructuralNegativeSpacePixelCount.average() << ',' << statistics.WingMaximumSpan.average() << ',' << statistics.WingMaximumExtension.average() << ',' << statistics.WingRootThickness.average() << ',' << statistics.WingPixelCount.average() << ',' << statistics.WingRootPixelCount.average() << ',' << statistics.OuterWingPixelCount.average() << ',' << statistics.WingStartNormalizedY.average() << ',' << statistics.WingEndNormalizedY.average() << ',' << statistics.HullModifierCount.average() << ',' << percentage(totalModifierRejections, totalModifierAttempts) << ',' << statistics.CockpitPlacementAttempts.average() << ',' << percentage(statistics.CockpitPlacementFailureCount, statistics.SuccessfulGenerations) << ',' << statistics.CockpitPixelCount.average() << ',' << statistics.CockpitNormalizedWidth.average() << ',' << statistics.CockpitNormalizedHeight.average() << ',' << statistics.CockpitGlassPixelCount.average() << ',' << statistics.CockpitFramePixelCount.average() << ',' << statistics.CockpitBasePixelCount.average() << ',' << statistics.CockpitUpperSectionPixelCount.average() << ',' << statistics.CockpitComplexityCost.average() << ',' << statistics.MajorFeatureCount.average() << ',' << statistics.MajorFeaturePixelCount.average() << ',' << statistics.MajorFeaturePlacementRejections.average() << ',' << statistics.WeaponHardpointCount.average() << ',' << statistics.WeaponCount.average() << ',' << statistics.WeaponPixelCount.average() << ',' << statistics.WeaponPlacementRejections.average() << ',' << statistics.EngineCount.average() << ',' << percentage(statistics.ZeroEngineCount, statistics.SuccessfulGenerations) << ',' << statistics.EngineHousingWidth.average() << ',' << statistics.EngineNozzleWidth.average() << ',' << statistics.EngineExhaustLength.average() << ',' << percentage(statistics.NacelleEngineCount, totalEngineUnits) << ',' << statistics.AttachmentCount.average() << ',' << percentage(statistics.ZeroAttachmentCount, statistics.SuccessfulGenerations) << ',' << percentage(statistics.AttachmentPlacementFailureCount, statistics.AttachmentPlacementAttemptCount) << ',' << percentage(statistics.SymmetricAttachmentPlacementCount, totalAttachmentPlacements) << ',' << averageDetailPatterns << ',' << statistics.DetailMaskCanvasDensity.average();
+        output << configuration.Width << ',' << configuration.Height << ',' << scaleTraits.AspectRatio << ',' << PixelShipGenerator::getGenerationScaleTierName(scaleTraits.Tier) << ',' << scaleTraits.HorizontalCapacity << ',' << scaleTraits.LongitudinalCapacity << ',' << scaleTraits.MajorFeatureCapacity << ',' << scaleTraits.DetailComplexity << ',' << scaleTraits.ShadingComplexity << ',' << scaleTraits.AttachmentComplexity << ',' << scaleTraits.AnimationComplexity << ',' << statistics.ComplexityInitialBudget.average() << ',' << statistics.ComplexityConsumedBudget.average() << ',' << statistics.ComplexityUnusedBudget.average() << ',' << statistics.ComplexityUtilizationPercent.average() << ',' << styleName(configuration.Style) << ',' << factionName(configuration.Faction) << ',' << (configuration.AttachmentsEnabled ? 1 : 0) << ',' << configuration.Samples << ',' << statistics.SuccessfulGenerations << ',' << statistics.FailedGenerations << ',' << statistics.HullAttempts.average() << ',' << percentage(statistics.FirstAttemptSuccessCount, statistics.RequestedGenerations) << ',' << statistics.HullValidationRejectionCount << ',' << statistics.HullNormalizedWidth.average() << ',' << statistics.HullNormalizedHeight.average() << ',' << statistics.HullCanvasDensity.average() << ',' << statistics.HullPixelCount.average() << ',' << statistics.SilhouetteArticulationCount.average() << ',' << statistics.SilhouetteShoulderProminencePercent.average() << ',' << statistics.SilhouetteInteriorContractionPercent.average() << ',' << statistics.SilhouetteNoseTaperPercent.average() << ',' << statistics.SilhouetteRearTaperPercent.average() << ',' << statistics.SilhouetteLongestStableRunPercent.average() << ',' << statistics.SilhouetteNearMaximumRowPercent.average() << ',' << statistics.SilhouetteTopUnusedMargin.average() << ',' << statistics.SilhouetteBottomUnusedMargin.average() << ',' << statistics.SilhouetteLeftUnusedMargin.average() << ',' << statistics.SilhouetteRightUnusedMargin.average() << ',' << statistics.SilhouetteGuidanceAppliedCount.average() << ',' << statistics.StructuralNegativeSpaceCount.average() << ',' << statistics.StructuralNegativeSpacePixelCount.average() << ',' << statistics.WingMaximumSpan.average() << ',' << statistics.WingMaximumExtension.average() << ',' << statistics.WingRootThickness.average() << ',' << statistics.WingPixelCount.average() << ',' << statistics.WingRootPixelCount.average() << ',' << statistics.OuterWingPixelCount.average() << ',' << statistics.WingStartNormalizedY.average() << ',' << statistics.WingEndNormalizedY.average() << ',' << statistics.HullModifierCount.average() << ',' << percentage(totalModifierRejections, totalModifierAttempts) << ',' << statistics.CockpitPlacementAttempts.average() << ',' << percentage(statistics.CockpitPlacementFailureCount, statistics.SuccessfulGenerations) << ',' << statistics.CockpitPixelCount.average() << ',' << statistics.CockpitNormalizedWidth.average() << ',' << statistics.CockpitNormalizedHeight.average() << ',' << statistics.CockpitGlassPixelCount.average() << ',' << statistics.CockpitFramePixelCount.average() << ',' << statistics.CockpitBasePixelCount.average() << ',' << statistics.CockpitUpperSectionPixelCount.average() << ',' << statistics.CockpitComplexityCost.average() << ',' << statistics.MajorFeatureCount.average() << ',' << statistics.MajorFeaturePixelCount.average() << ',' << statistics.MajorFeaturePlacementRejections.average() << ',' << statistics.WeaponHardpointCount.average() << ',' << statistics.WeaponCount.average() << ',' << statistics.WeaponPixelCount.average() << ',' << statistics.WeaponPlacementRejections.average() << ',' << statistics.EngineCount.average() << ',' << percentage(statistics.ZeroEngineCount, statistics.SuccessfulGenerations) << ',' << statistics.EngineHousingWidth.average() << ',' << statistics.EngineNozzleWidth.average() << ',' << statistics.EngineExhaustLength.average() << ',' << percentage(statistics.NacelleEngineCount, totalEngineUnits) << ',' << statistics.AttachmentCount.average() << ',' << percentage(statistics.ZeroAttachmentCount, statistics.SuccessfulGenerations) << ',' << percentage(statistics.AttachmentPlacementFailureCount, statistics.AttachmentPlacementAttemptCount) << ',' << percentage(statistics.SymmetricAttachmentPlacementCount, totalAttachmentPlacements) << ',' << averageDetailPatterns << ',' << statistics.DetailMaskCanvasDensity.average();
 
         output << ',' << statistics.HullLayerCount.average() << ',' << statistics.HullLayerPixelCount.average() << ',' << statistics.HullLayerPlacementRejections.average();
         output << ',' << statistics.CoreTreatmentCount.average() << ',' << statistics.CoreRegionPixelCount.average() << ',' << statistics.CoreRaisedPixelCount.average() << ',' << statistics.CoreRecessedPixelCount.average() << ',' << statistics.CoreSecondaryMaterialPixelCount.average() << ',' << statistics.CoreLuminousPixelCount.average() << ',' << statistics.CoreTreatmentComplexityCost.average() << ',' << statistics.CoreTreatmentPlacementRejections.average();
