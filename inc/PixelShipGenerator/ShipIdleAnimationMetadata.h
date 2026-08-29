@@ -30,6 +30,7 @@ namespace PixelShipGenerator
     struct ShipWeaponAnimationComponent
     {
         ShipWeaponType Type = ShipWeaponType::SINGLE_CANNON;
+        ShipWeaponHardpointRegion Region = ShipWeaponHardpointRegion::FORWARD_FUSELAGE_SIDE;
         ShipAttachmentDirection Direction = ShipAttachmentDirection::UP;
         uint32_t AnchorX = 0u;
         uint32_t AnchorY = 0u;

@@ -34,4 +34,9 @@ namespace PixelShipGenerator
     {
         return createSpritesheet(animation.Frames, animation.FrameWidth, animation.FrameHeight);
     }
+
+    Image createHorizontalSpritesheet(const ShipFiringAnimation& animation)
+    {
+        return createSpritesheet(animation.Frames, animation.FrameWidth, animation.FrameHeight);
+    }
 }

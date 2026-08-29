@@ -9,6 +9,7 @@ namespace PixelShipGeneratorTests
             { "idle-animation", "Idle Animation", RegressionCategory::ANIMATION, runIdleAnimationRegression, false },
             { "lateral-movement-animation", "Lateral Movement Animation", RegressionCategory::ANIMATION, runLateralMovementAnimationRegression, false },
             { "longitudinal-movement-animation", "Longitudinal Movement Animation", RegressionCategory::ANIMATION, runLongitudinalMovementAnimationRegression, false },
+            { "firing-animation", "Weapon Firing Animation", RegressionCategory::ANIMATION, runFiringAnimationRegression, false },
             { "diagnostics", "Generation Diagnostics", RegressionCategory::DIAGNOSTICS, runGenerationDiagnosticsRegression, false },
             { "diagnostics-runner", "Reusable Diagnostics Runner", RegressionCategory::DIAGNOSTICS, runDiagnosticsRunnerRegression, false },
             { "diagnostics-dashboard", "Diagnostics Dashboard Analysis", RegressionCategory::DIAGNOSTICS, runDiagnosticsDashboardRegression, false },

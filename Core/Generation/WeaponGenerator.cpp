@@ -1110,6 +1110,7 @@ namespace PixelShipGenerator
 
         ShipWeaponAnimationComponent animationComponent;
         animationComponent.Type = candidate.Placement.Type;
+        animationComponent.Region = candidate.Placement.Region;
         animationComponent.Direction = candidate.Placement.Direction;
         animationComponent.AnchorX = candidate.Placement.AnchorX;
         animationComponent.AnchorY = candidate.Placement.AnchorY;
