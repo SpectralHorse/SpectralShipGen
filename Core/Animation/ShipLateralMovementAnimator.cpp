@@ -450,6 +450,8 @@ namespace
         diagnostic.SemanticGroup = group.SemanticGroup;
         diagnostic.SourcePixelCount = static_cast<uint32_t>(group.SourcePixels.size());
         diagnostic.MaximumOffsetX = group.MaximumOffsetX;
+        diagnostic.MaximumOffsetY = 0;
+        diagnostic.MaximumExhaustLengthDelta = group.Type == PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_VECTORING ? static_cast<uint32_t>(std::abs(group.MaximumOffsetX)) : 0u;
         diagnostic.SustainPhaseOffset = group.SustainPhaseOffset;
         plan.Diagnostics.Components.push_back(diagnostic);
         plan.Diagnostics.MaximumMechanicalTravelPixels = std::max(plan.Diagnostics.MaximumMechanicalTravelPixels, static_cast<uint32_t>(std::abs(group.MaximumOffsetX)));
@@ -561,6 +563,7 @@ namespace
     void finalizeDiagnosticsAndSampling(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipMovementAnimationSettings& settings, const PixelShipGenerator::GenerationScaleTraits& scaleTraits, LateralMovementPlan& plan)
     {
         plan.Diagnostics.DirectionSignX = plan.DirectionSignX;
+        plan.Diagnostics.DirectionSignY = 0;
 
         std::vector<double> phaseOffsets;
         for (const MovableGroup& group : plan.Groups)
@@ -579,39 +582,40 @@ namespace
             else { maximumOtherTravel = std::max(maximumOtherTravel, travel); }
         }
 
+        plan.Diagnostics.MaximumExhaustTravelPixels = maximumExhaustTravel;
         const uint32_t activeComponentCount = plan.Diagnostics.ActiveEngineCount + plan.Diagnostics.ActiveWeaponCount + plan.Diagnostics.ActiveAttachmentCount;
         const uint32_t phaseGroupCount = std::max(1u, plan.Diagnostics.IndependentPhaseGroupCount);
 
         auto configure = [&](PixelShipGenerator::AnimationSamplingRequirements& requirements, PixelShipGenerator::ShipMovementAnimationPhase phase)
-        {
-            requirements.Type = plan.Type;
-            requirements.Mode = settings.SamplingMode;
-            requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;
-            requirements.MaximumMechanicalTravelPixels = maximumOtherTravel;
-            requirements.MaximumExhaustTravelPixels = maximumExhaustTravel;
-            requirements.ActiveAnimatedComponentCount = activeComponentCount;
-            requirements.IndependentPhaseGroupCount = activeComponentCount > 0u ? phaseGroupCount : 0u;
-            requirements.MaximumTemporalCyclesPerClip = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN && activeComponentCount > 0u ? 2u : activeComponentCount > 0u ? 1u : 0u;
-            requirements.MaximumFrameCount = std::max(1u, settings.MaximumFrameCount);
+            {
+                requirements.Type = plan.Type;
+                requirements.Mode = settings.SamplingMode;
+                requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;
+                requirements.MaximumMechanicalTravelPixels = maximumOtherTravel;
+                requirements.MaximumExhaustTravelPixels = maximumExhaustTravel;
+                requirements.ActiveAnimatedComponentCount = activeComponentCount;
+                requirements.IndependentPhaseGroupCount = activeComponentCount > 0u ? phaseGroupCount : 0u;
+                requirements.MaximumTemporalCyclesPerClip = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN && activeComponentCount > 0u ? 2u : activeComponentCount > 0u ? 1u : 0u;
+                requirements.MaximumFrameCount = std::max(1u, settings.MaximumFrameCount);
 
-            if (phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN)
-            {
-                requirements.DurationMilliseconds = std::max(1u, settings.SustainLoopDurationMilliseconds);
-                requirements.ExactFrameCount = std::max(1u, settings.SustainFrameCount);
-                requirements.MinimumFrameCount = std::max(1u, settings.MinimumSustainFrameCount);
-            }
-            else
-            {
-                requirements.DurationMilliseconds = std::max(1u, phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER ? settings.EnterDurationMilliseconds : settings.ExitDurationMilliseconds);
-                requirements.ExactFrameCount = std::max(2u, settings.TransitionFrameCount);
-                requirements.MinimumFrameCount = std::max(2u, settings.MinimumTransitionFrameCount);
-            }
-            if (activeComponentCount == 0u && settings.SamplingMode == PixelShipGenerator::AnimationSamplingMode::ADAPTIVE)
-            {
-                requirements.MinimumFrameCount = 1u;
-            }
-            requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, requirements.MaximumFrameCount);
-        };
+                if (phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN)
+                {
+                    requirements.DurationMilliseconds = std::max(1u, settings.SustainLoopDurationMilliseconds);
+                    requirements.ExactFrameCount = std::max(1u, settings.SustainFrameCount);
+                    requirements.MinimumFrameCount = std::max(1u, settings.MinimumSustainFrameCount);
+                }
+                else
+                {
+                    requirements.DurationMilliseconds = std::max(1u, phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER ? settings.EnterDurationMilliseconds : settings.ExitDurationMilliseconds);
+                    requirements.ExactFrameCount = std::max(2u, settings.TransitionFrameCount);
+                    requirements.MinimumFrameCount = std::max(2u, settings.MinimumTransitionFrameCount);
+                }
+                if (activeComponentCount == 0u && settings.SamplingMode == PixelShipGenerator::AnimationSamplingMode::ADAPTIVE)
+                {
+                    requirements.MinimumFrameCount = 1u;
+                }
+                requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, requirements.MaximumFrameCount);
+            };
 
         configure(plan.EnterSampling, PixelShipGenerator::ShipMovementAnimationPhase::ENTER);
         configure(plan.SustainSampling, PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN);

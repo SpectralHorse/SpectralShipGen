@@ -21,8 +21,10 @@ namespace PixelShipGenerator
     enum class ShipMovementAnimatedComponentType : uint32_t
     {
         ENGINE_VECTORING = 0u,
+        ENGINE_PROPULSION,
         WEAPON_STABILIZATION,
         ATTACHMENT_ARTICULATION,
+        BRAKING_ARTICULATION,
         SHIP_MOVEMENT_ANIMATED_COMPONENT_TYPE_END
     };
 
@@ -40,8 +42,11 @@ namespace PixelShipGenerator
         AnimationSamplingMode SamplingMode = AnimationSamplingMode::ADAPTIVE;
 
         bool EngineVectoring = true;
+        bool EnginePropulsionResponse = true;
+        bool ExhaustResponse = true;
         bool WeaponStabilization = true;
         bool AttachmentArticulation = true;
+        bool BrakingArticulation = true;
         std::optional<uint64_t> Seed;
     };
 
@@ -51,16 +56,21 @@ namespace PixelShipGenerator
         uint32_t SemanticGroup = 0u;
         uint32_t SourcePixelCount = 0u;
         int32_t MaximumOffsetX = 0;
+        int32_t MaximumOffsetY = 0;
+        uint32_t MaximumExhaustLengthDelta = 0u;
         double SustainPhaseOffset = 0.0;
     };
 
     struct ShipMovementAnimationDiagnostics
     {
         int32_t DirectionSignX = 0;
+        int32_t DirectionSignY = 0;
         uint32_t ActiveEngineCount = 0u;
         uint32_t ActiveWeaponCount = 0u;
         uint32_t ActiveAttachmentCount = 0u;
+        uint32_t ActiveBrakingComponentCount = 0u;
         uint32_t MaximumMechanicalTravelPixels = 0u;
+        uint32_t MaximumExhaustTravelPixels = 0u;
         uint32_t IndependentPhaseGroupCount = 0u;
         std::vector<ShipMovementComponentDiagnostic> Components;
     };

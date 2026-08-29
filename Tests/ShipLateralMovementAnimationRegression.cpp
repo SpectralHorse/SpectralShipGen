@@ -52,12 +52,12 @@ namespace
 
     bool diagnosticsEqual(const ShipMovementAnimationDiagnostics& first, const ShipMovementAnimationDiagnostics& second)
     {
-        if (first.DirectionSignX != second.DirectionSignX || first.ActiveEngineCount != second.ActiveEngineCount || first.ActiveWeaponCount != second.ActiveWeaponCount || first.ActiveAttachmentCount != second.ActiveAttachmentCount || first.MaximumMechanicalTravelPixels != second.MaximumMechanicalTravelPixels || first.IndependentPhaseGroupCount != second.IndependentPhaseGroupCount || first.Components.size() != second.Components.size()) { return false; }
+        if (first.DirectionSignX != second.DirectionSignX || first.DirectionSignY != second.DirectionSignY || first.ActiveEngineCount != second.ActiveEngineCount || first.ActiveWeaponCount != second.ActiveWeaponCount || first.ActiveAttachmentCount != second.ActiveAttachmentCount || first.ActiveBrakingComponentCount != second.ActiveBrakingComponentCount || first.MaximumMechanicalTravelPixels != second.MaximumMechanicalTravelPixels || first.MaximumExhaustTravelPixels != second.MaximumExhaustTravelPixels || first.IndependentPhaseGroupCount != second.IndependentPhaseGroupCount || first.Components.size() != second.Components.size()) { return false; }
         for (std::size_t index = 0u; index < first.Components.size(); ++index)
         {
             const ShipMovementComponentDiagnostic& a = first.Components[index];
             const ShipMovementComponentDiagnostic& b = second.Components[index];
-            if (a.Type != b.Type || a.SemanticGroup != b.SemanticGroup || a.SourcePixelCount != b.SourcePixelCount || a.MaximumOffsetX != b.MaximumOffsetX || std::abs(a.SustainPhaseOffset - b.SustainPhaseOffset) > 0.000001) { return false; }
+            if (a.Type != b.Type || a.SemanticGroup != b.SemanticGroup || a.SourcePixelCount != b.SourcePixelCount || a.MaximumOffsetX != b.MaximumOffsetX || a.MaximumOffsetY != b.MaximumOffsetY || a.MaximumExhaustLengthDelta != b.MaximumExhaustLengthDelta || std::abs(a.SustainPhaseOffset - b.SustainPhaseOffset) > 0.000001) { return false; }
         }
         return true;
     }
@@ -102,14 +102,14 @@ namespace
         std::vector<std::pair<Key, ShipMovementComponentDiagnostic>> rightComponents;
 
         auto append = [](const ShipMovementAnimationDiagnostics& diagnostics, std::vector<std::pair<Key, ShipMovementComponentDiagnostic>>& output)
-        {
-            for (const ShipMovementComponentDiagnostic& component : diagnostics.Components)
             {
-                const Key key{ static_cast<uint32_t>(component.Type), component.SemanticGroup, component.SourcePixelCount };
-                output.push_back({ key, component });
-            }
-            std::sort(output.begin(), output.end(), [](const auto& first, const auto& second) { return first.first < second.first; });
-        };
+                for (const ShipMovementComponentDiagnostic& component : diagnostics.Components)
+                {
+                    const Key key{ static_cast<uint32_t>(component.Type), component.SemanticGroup, component.SourcePixelCount };
+                    output.push_back({ key, component });
+                }
+                std::sort(output.begin(), output.end(), [](const auto& first, const auto& second) { return first.first < second.first; });
+            };
 
         append(left.Diagnostics, leftComponents);
         append(right.Diagnostics, rightComponents);
