@@ -8,6 +8,7 @@ namespace PixelShipGeneratorTests
 {
     int runGeneratorRegression();
     int runIdleAnimationRegression();
+    int runLateralMovementAnimationRegression();
     int runGenerationDiagnosticsRegression();
     int runGenerationRecipeRegression();
     int runGeneratorStatisticsRegression();

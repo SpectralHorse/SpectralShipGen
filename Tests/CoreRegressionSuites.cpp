@@ -7,6 +7,7 @@ namespace PixelShipGeneratorTests
         return {
             { "generator", "Generator Determinism", RegressionCategory::DETERMINISM, runGeneratorRegression, false },
             { "idle-animation", "Idle Animation", RegressionCategory::ANIMATION, runIdleAnimationRegression, false },
+            { "lateral-movement-animation", "Lateral Movement Animation", RegressionCategory::ANIMATION, runLateralMovementAnimationRegression, false },
             { "diagnostics", "Generation Diagnostics", RegressionCategory::DIAGNOSTICS, runGenerationDiagnosticsRegression, false },
             { "diagnostics-runner", "Reusable Diagnostics Runner", RegressionCategory::DIAGNOSTICS, runDiagnosticsRunnerRegression, false },
             { "diagnostics-dashboard", "Diagnostics Dashboard Analysis", RegressionCategory::DIAGNOSTICS, runDiagnosticsDashboardRegression, false },
