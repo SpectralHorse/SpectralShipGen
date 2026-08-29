@@ -19,6 +19,7 @@ namespace PixelShipGenerator
             ShipWeaponHardpointRegion Region = ShipWeaponHardpointRegion::FORWARD_FUSELAGE_SIDE;
             ShipAttachmentDirection Direction = ShipAttachmentDirection::UP;
             bool PairCapable = false;
+            uint32_t FeasibilityPercent = 100u;
         };
 
         struct FactionWeaponProfile
@@ -27,6 +28,17 @@ namespace PixelShipGenerator
             int32_t SymmetryChanceOffset = 0;
             std::array<uint32_t, static_cast<std::size_t>(ShipWeaponType::SHIP_WEAPON_TYPE_END)> WeightMultipliers = {};
             uint32_t EmissiveChance = 0u;
+        };
+
+        enum class WeaponCandidateValidationFailureReason : uint32_t
+        {
+            NONE = 0u,
+            MISSING_SEMANTIC_GEOMETRY,
+            INVALID_ROOT_SUPPORT,
+            SEMANTIC_COLLISION,
+            DISCONNECTED_GEOMETRY,
+            FIRING_CLEARANCE,
+            INVALID_MUZZLE_DIRECTION
         };
 
         struct CandidateWeapon

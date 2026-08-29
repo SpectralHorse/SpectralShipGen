@@ -24,6 +24,7 @@ namespace PixelShipGenerator
             bool buildRoot(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, uint32_t halfWidth, uint32_t depth, CandidateWeapon& candidate) const;
             bool addCandidateRectangle(CandidateWeapon& candidate, PixelMask& semanticMask, int32_t startX, int32_t startY, uint32_t width, uint32_t height) const;
             bool addCandidatePixel(CandidateWeapon& candidate, PixelMask& semanticMask, int32_t x, int32_t y) const;
+            uint32_t getAssemblyScalePercent(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const;
             uint32_t scaleWeaponPixelsFrom64(uint32_t value, uint32_t dimension, uint32_t scalePercent) const;
         };
     }

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <set>
 
 #include "ShipFiringAnimator.h"
@@ -230,18 +231,37 @@ int PixelShipGeneratorTests::runFiringAnimationRegression()
         }
     }
 
-    const GeneratedShip centralShip = generator.generate(makeSettings(0x7000000000000001ull, { 96u,96u }, ShipStyle::INDUSTRIAL, ShipFactionType::FRONTIER));
-    const auto centralTargets = animator.getAvailableTargets(centralShip);
-    const GeneratedShip wingShip = generator.generate(makeSettings(0x7000000000000000ull, { 96u,96u }, ShipStyle::FIGHTER, ShipFactionType::MILITARY));
-    const auto wingTargets = animator.getAvailableTargets(wingShip);
-    if (centralTargets.empty() || wingTargets.empty())
+    auto findGeneratedTarget = [&](ShipWeaponHardpointRegion desiredRegion, ShipStyle style, ShipFactionType faction, uint64_t seedBase)
+        -> std::optional<std::pair<GeneratedShip, ShipFiringAnimationTarget>>
+        {
+            for (uint32_t attempt = 0u; attempt < 64u; ++attempt)
+            {
+                GeneratedShip ship = generator.generate(makeSettings(seedBase + attempt, { 96u,96u }, style, faction));
+                for (const ShipFiringAnimationTarget target : animator.getAvailableTargets(ship))
+                {
+                    if (ship.IdleAnimationMetadata.WeaponComponents[target.WeaponComponentIndex].Region == desiredRegion)
+                    {
+                        return std::make_pair(std::move(ship), target);
+                    }
+                }
+            }
+            return std::nullopt;
+        };
+
+    const auto centralFixture = findGeneratedTarget(ShipWeaponHardpointRegion::CENTRAL_NOSE, ShipStyle::INDUSTRIAL, ShipFactionType::FRONTIER, 0x7000000000000000ull);
+    const auto wingFixture = findGeneratedTarget(ShipWeaponHardpointRegion::OUTER_WING, ShipStyle::FIGHTER, ShipFactionType::MILITARY, 0x7100000000000000ull);
+    if (!centralFixture.has_value() || !wingFixture.has_value())
     {
-        std::cerr << "Task 70 regression failed: central/wing weapon fixtures lost targets.\n";
+        std::cerr << "Task 70 regression failed: unable to find deterministic central/wing weapon fixtures.\n";
         return 1;
     }
-    const ShipFiringAnimation centralFire = animator.generate(centralShip, centralTargets.front());
-    const ShipFiringAnimation wingFire = animator.generate(wingShip, wingTargets.front());
-    if (centralFire.Diagnostics.Weapons.front().Region != ShipWeaponHardpointRegion::CENTRAL_NOSE || wingFire.Diagnostics.Weapons.front().Region != ShipWeaponHardpointRegion::OUTER_WING || imagesEqual(animator.evaluateFrameAtNormalizedTime(centralShip, centralTargets.front(), 0.28), centralShip.FinalImage) || imagesEqual(animator.evaluateFrameAtNormalizedTime(wingShip, wingTargets.front(), 0.28), wingShip.FinalImage))
+    const GeneratedShip& centralShip = centralFixture->first;
+    const ShipFiringAnimationTarget centralTarget = centralFixture->second;
+    const GeneratedShip& wingShip = wingFixture->first;
+    const ShipFiringAnimationTarget wingTarget = wingFixture->second;
+    const ShipFiringAnimation centralFire = animator.generate(centralShip, centralTarget);
+    const ShipFiringAnimation wingFire = animator.generate(wingShip, wingTarget);
+    if (centralFire.Diagnostics.Weapons.front().Region != ShipWeaponHardpointRegion::CENTRAL_NOSE || wingFire.Diagnostics.Weapons.front().Region != ShipWeaponHardpointRegion::OUTER_WING || imagesEqual(animator.evaluateFrameAtNormalizedTime(centralShip, centralTarget, 0.28), centralShip.FinalImage) || imagesEqual(animator.evaluateFrameAtNormalizedTime(wingShip, wingTarget, 0.28), wingShip.FinalImage))
     {
         std::cerr << "Task 70 regression failed: central/wing firing variants are not represented by actual weapon semantics.\n";
         return 1;

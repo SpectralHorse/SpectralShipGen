@@ -18,6 +18,7 @@ namespace PixelShipGenerator
     using WeaponGenerationInternal::CandidateWeapon;
     using WeaponGenerationInternal::FactionWeaponProfile;
     using WeaponGenerationInternal::WeaponCandidateBuilder;
+    using WeaponGenerationInternal::WeaponCandidateValidationFailureReason;
     using WeaponGenerationInternal::WeaponCandidateValidator;
     using WeaponGenerationInternal::WeaponHardpoint;
     using WeaponGenerationInternal::WeaponHardpointPlanner;
@@ -178,6 +179,29 @@ namespace PixelShipGenerator
             }
         }
 
+        void recordValidationFailure(ShipGenerationDebugInfo* debugInfo, WeaponCandidateValidationFailureReason reason)
+        {
+            if (debugInfo == nullptr) { return; }
+
+            switch (reason)
+            {
+            case WeaponCandidateValidationFailureReason::SEMANTIC_COLLISION:
+            case WeaponCandidateValidationFailureReason::INVALID_ROOT_SUPPORT:
+            case WeaponCandidateValidationFailureReason::MISSING_SEMANTIC_GEOMETRY:
+            case WeaponCandidateValidationFailureReason::INVALID_MUZZLE_DIRECTION:
+                ++debugInfo->WeaponSemanticCollisionFailureCount;
+                break;
+            case WeaponCandidateValidationFailureReason::DISCONNECTED_GEOMETRY:
+                ++debugInfo->WeaponConnectivityFailureCount;
+                break;
+            case WeaponCandidateValidationFailureReason::FIRING_CLEARANCE:
+                ++debugInfo->WeaponFiringClearanceFailureCount;
+                break;
+            default:
+                break;
+            }
+        }
+
         FactionWeaponProfile getFactionWeaponProfile(ShipFactionType faction)
         {
             FactionWeaponProfile profile;
@@ -228,7 +252,7 @@ namespace PixelShipGenerator
             return profile;
         }
 
-        uint32_t getGenerationChance(const ShipGenerationContext& context, const FactionWeaponProfile& factionProfile)
+        uint32_t getGenerationChance(const ShipGenerationContext& context, const FactionWeaponProfile& factionProfile, bool hasValidOpportunity)
         {
             const uint32_t capacity = context.ScaleTraits.MajorFeatureCapacity;
             uint32_t scalePercent = 38u;
@@ -258,13 +282,19 @@ namespace PixelShipGenerator
                 if (context.VisualHierarchy.targets(ShipVisualAnchorType::WEAPONS))
                 {
                     chance = (chance * context.VisualHierarchy.getAnchorWeightPercent(ShipVisualAnchorType::WEAPONS) + 50u) / 100u;
-                    if (context.VisualHierarchy.isPrimary(ShipVisualAnchorType::WEAPONS)) { chance = std::max<uint64_t>(chance, 88u); }
+                    if (context.VisualHierarchy.isPrimary(ShipVisualAnchorType::WEAPONS) && hasValidOpportunity) { chance = 100u; }
                 }
                 else
                 {
                     chance = chance * context.VisualHierarchy.getCompetingFeaturePercent(ShipVisualAnchorType::WEAPONS) / 100u;
                 }
             }
+
+            if (hasValidOpportunity && capacity > 20u && !context.VisualHierarchy.isPrimary(ShipVisualAnchorType::WEAPONS))
+            {
+                chance += std::min<uint64_t>(16u, context.Profile.LargeWeaponChance / 6u);
+            }
+
             return static_cast<uint32_t>(std::min<uint64_t>(100u, chance));
         }
 
@@ -307,37 +337,32 @@ namespace PixelShipGenerator
         if (context.DebugInfo != nullptr)
         {
             context.DebugInfo->WeaponHardpointCount = 0u;
+            context.DebugInfo->WeaponRequestedGroupCount = 0u;
+            context.DebugInfo->WeaponRealizedGroupCount = 0u;
             context.DebugInfo->WeaponPlacementAttemptCount = 0u;
             context.DebugInfo->WeaponPlacementRejectionCount = 0u;
+            context.DebugInfo->WeaponGenerationChanceSkipCount = 0u;
+            context.DebugInfo->WeaponNoHardpointFailureCount = 0u;
+            context.DebugInfo->WeaponTypeSelectionFailureCount = 0u;
+            context.DebugInfo->WeaponCandidateGeometryFailureCount = 0u;
+            context.DebugInfo->WeaponSemanticCollisionFailureCount = 0u;
+            context.DebugInfo->WeaponConnectivityFailureCount = 0u;
+            context.DebugInfo->WeaponFiringClearanceFailureCount = 0u;
+            context.DebugInfo->WeaponSymmetryPairFailureCount = 0u;
+            context.DebugInfo->WeaponSpatialBudgetRejectionCount = 0u;
+            context.DebugInfo->WeaponComplexityBudgetRejectionCount = 0u;
             context.DebugInfo->WeaponCount = 0u;
             context.DebugInfo->WeaponPixelCount = 0u;
             context.DebugInfo->WeaponMovablePixelCount = 0u;
+            context.DebugInfo->WeaponCoveragePermille = 0u;
+            context.DebugInfo->WeaponVisualAnchorOpportunity = false;
+            context.DebugInfo->WeaponVisualAnchorRealized = false;
             context.DebugInfo->WeaponOccupiedMask = PixelMask(width, height, false);
             context.DebugInfo->WeaponTypeCounts.fill(0u);
             context.DebugInfo->WeaponUnits.clear();
         }
 
         if (width == 0u || height == 0u)
-        {
-            return;
-        }
-
-        if (!context.ComplexityBudget.canAfford(GenerationComplexityCategory::LARGE_WEAPON, 14u))
-        {
-            return;
-        }
-
-        const FactionWeaponProfile factionProfile = getFactionWeaponProfile(context.Settings.Faction);
-        const uint32_t generationChance = getGenerationChance(context, factionProfile);
-        const bool macroRequested = context.MacroAsymmetry.targets(MacroAsymmetryCategory::LARGE_WEAPON);
-
-        if (context.CalibrationSettings != nullptr && context.CalibrationSettings->Overrides.ForcedLargeWeaponPresence.has_value())
-        {
-            const bool normallyGenerated = generationChance > 0u && context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) < generationChance;
-            (void)normallyGenerated;
-            if (!*context.CalibrationSettings->Overrides.ForcedLargeWeaponPresence) { return; }
-        }
-        else if (!macroRequested && (generationChance == 0u || context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) >= generationChance))
         {
             return;
         }
@@ -350,10 +375,39 @@ namespace PixelShipGenerator
         if (context.DebugInfo != nullptr)
         {
             context.DebugInfo->WeaponHardpointCount = static_cast<uint32_t>(hardpoints.size());
+            context.DebugInfo->WeaponVisualAnchorOpportunity = context.VisualHierarchy.InfluenceEnabled &&
+                context.VisualHierarchy.isPrimary(ShipVisualAnchorType::WEAPONS) && !hardpoints.empty();
+        }
+
+        if (!context.ComplexityBudget.canAfford(GenerationComplexityCategory::LARGE_WEAPON, 14u))
+        {
+            if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponComplexityBudgetRejectionCount; }
+            return;
+        }
+
+        const FactionWeaponProfile factionProfile = getFactionWeaponProfile(context.Settings.Faction);
+        const uint32_t generationChance = getGenerationChance(context, factionProfile, !hardpoints.empty());
+        const bool macroRequested = context.MacroAsymmetry.targets(MacroAsymmetryCategory::LARGE_WEAPON);
+
+        if (context.CalibrationSettings != nullptr && context.CalibrationSettings->Overrides.ForcedLargeWeaponPresence.has_value())
+        {
+            const bool normallyGenerated = generationChance > 0u && context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) < generationChance;
+            (void)normallyGenerated;
+            if (!*context.CalibrationSettings->Overrides.ForcedLargeWeaponPresence)
+            {
+                if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponGenerationChanceSkipCount; }
+                return;
+            }
+        }
+        else if (!macroRequested && (generationChance == 0u || context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) >= generationChance))
+        {
+            if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponGenerationChanceSkipCount; }
+            return;
         }
 
         if (hardpoints.empty())
         {
+            if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponNoHardpointFailureCount; }
             if (macroRequested) { MacroAsymmetryPlanner::reject(context); }
             return;
         }
@@ -367,6 +421,7 @@ namespace PixelShipGenerator
         }
 
         const uint32_t targetGroups = context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 1u, maximumGroups);
+        if (context.DebugInfo != nullptr) { context.DebugInfo->WeaponRequestedGroupCount = targetGroups; }
         uint32_t nextSymmetryGroup = 1u;
         bool forcedTypePending = context.CalibrationSettings != nullptr && context.CalibrationSettings->Overrides.ForcedLargeWeaponType.has_value();
 
@@ -398,6 +453,7 @@ namespace PixelShipGenerator
                     if (context.DebugInfo != nullptr)
                     {
                         ++context.DebugInfo->WeaponPlacementRejectionCount;
+                        ++context.DebugInfo->WeaponTypeSelectionFailureCount;
                     }
 
                     continue;
@@ -405,13 +461,24 @@ namespace PixelShipGenerator
 
                 CandidateWeapon candidate(width, height);
 
-                if (!candidateBuilder.generateCandidate(context, hardpoint, type, factionProfile, candidate) || !candidateValidator.validateCandidate(context, candidate))
+                if (!candidateBuilder.generateCandidate(context, hardpoint, type, factionProfile, candidate))
                 {
                     if (context.DebugInfo != nullptr)
                     {
                         ++context.DebugInfo->WeaponPlacementRejectionCount;
+                        ++context.DebugInfo->WeaponCandidateGeometryFailureCount;
                     }
+                    continue;
+                }
 
+                WeaponCandidateValidationFailureReason validationFailure = WeaponCandidateValidationFailureReason::NONE;
+                if (!candidateValidator.validateCandidate(context, candidate, &validationFailure))
+                {
+                    if (context.DebugInfo != nullptr)
+                    {
+                        ++context.DebugInfo->WeaponPlacementRejectionCount;
+                        recordValidationFailure(context.DebugInfo, validationFailure);
+                    }
                     continue;
                 }
 
@@ -422,36 +489,54 @@ namespace PixelShipGenerator
                     CandidateWeapon mirrored(width, height);
                     candidateBuilder.mirrorCandidate(candidate, mirrored, width);
 
-                    if (candidateValidator.validateSymmetricPair(context, candidate, mirrored))
+                    WeaponCandidateValidationFailureReason pairFailure = WeaponCandidateValidationFailureReason::NONE;
+                    if (candidateValidator.validateSymmetricPair(context, candidate, mirrored, &pairFailure))
                     {
                         auto spatialRegions = context.SpatialBudget.makeRegionSet(hardpointPlanner.getSpatialRegion(hardpoint.Region, hardpoint.X, width));
                         context.SpatialBudget.addRegion(spatialRegions, context.SpatialBudget.getMirroredRegion(hardpointPlanner.getSpatialRegion(hardpoint.Region, hardpoint.X, width)));
                         const uint32_t localCost = getWeaponComplexityCost(type);
                         const uint32_t spatialAcceptance = context.SpatialBudget.getPlacementAcceptancePercent(spatialRegions, localCost, true);
-                        if (spatialAcceptance == 0u || context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) >= spatialAcceptance)
+                        const bool spatialAccepted = spatialAcceptance > 0u && context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) < spatialAcceptance;
+                        if (!spatialAccepted)
                         {
                             context.SpatialBudget.recordRejection(spatialRegions);
-                            if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponPlacementRejectionCount; }
-                            continue;
+                            if (context.DebugInfo != nullptr)
+                            {
+                                ++context.DebugInfo->WeaponSymmetryPairFailureCount;
+                                ++context.DebugInfo->WeaponSpatialBudgetRejectionCount;
+                            }
                         }
-
-                        if (context.ComplexityBudget.tryConsume(GenerationComplexityCategory::LARGE_WEAPON, getPairedWeaponComplexityCost(type)))
+                        else if (context.ComplexityBudget.tryConsume(GenerationComplexityCategory::LARGE_WEAPON, getPairedWeaponComplexityCost(type)))
                         {
                             context.SpatialBudget.consume(spatialRegions, localCost, true);
                             commitCandidate(context, candidate, nextSymmetryGroup);
                             commitCandidate(context, mirrored, nextSymmetryGroup);
                             ++nextSymmetryGroup;
                             forcedTypePending = false;
+                            if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponRealizedGroupCount; }
                             placed = true;
                             break;
                         }
+                        else if (context.DebugInfo != nullptr)
+                        {
+                            ++context.DebugInfo->WeaponSymmetryPairFailureCount;
+                            ++context.DebugInfo->WeaponComplexityBudgetRejectionCount;
+                        }
+                    }
+                    else if (context.DebugInfo != nullptr)
+                    {
+                        ++context.DebugInfo->WeaponSymmetryPairFailureCount;
                     }
                 }
 
                 const uint32_t localCost = getWeaponComplexityCost(type);
                 if (plannedAsymmetry && !MacroAsymmetryPlanner::canAcceptCandidate(context, candidate.OccupiedMask, localCost))
                 {
-                    if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponPlacementRejectionCount; }
+                    if (context.DebugInfo != nullptr)
+                    {
+                        ++context.DebugInfo->WeaponPlacementRejectionCount;
+                        ++context.DebugInfo->WeaponSemanticCollisionFailureCount;
+                    }
                     continue;
                 }
                 const auto spatialRegions = context.SpatialBudget.makeRegionSet(hardpointPlanner.getSpatialRegion(hardpoint.Region, hardpoint.X, width));
@@ -459,12 +544,17 @@ namespace PixelShipGenerator
                 if (spatialAcceptance == 0u || context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 99u) >= spatialAcceptance)
                 {
                     context.SpatialBudget.recordRejection(spatialRegions);
-                    if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponPlacementRejectionCount; }
+                    if (context.DebugInfo != nullptr)
+                    {
+                        ++context.DebugInfo->WeaponPlacementRejectionCount;
+                        ++context.DebugInfo->WeaponSpatialBudgetRejectionCount;
+                    }
                     continue;
                 }
 
                 if (!context.ComplexityBudget.tryConsume(GenerationComplexityCategory::LARGE_WEAPON, localCost))
                 {
+                    if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponComplexityBudgetRejectionCount; }
                     break;
                 }
 
@@ -472,6 +562,7 @@ namespace PixelShipGenerator
                 context.SpatialBudget.consume(spatialRegions, localCost, true);
                 commitCandidate(context, candidate, 0u);
                 forcedTypePending = false;
+                if (context.DebugInfo != nullptr) { ++context.DebugInfo->WeaponRealizedGroupCount; }
                 placed = true;
                 break;
             }
@@ -489,6 +580,9 @@ namespace PixelShipGenerator
             context.DebugInfo->WeaponCount = static_cast<uint32_t>(context.Weapons.Placements.size());
             context.DebugInfo->WeaponPixelCount = PixelMaskUtils::getMaskPixelCount(context.Weapons.OccupiedMask);
             context.DebugInfo->WeaponMovablePixelCount = PixelMaskUtils::getMaskPixelCount(context.Weapons.MovableMask);
+            const uint32_t hullPixels = PixelMaskUtils::getMaskPixelCount(context.Ship.HullMask);
+            context.DebugInfo->WeaponCoveragePermille = hullPixels == 0u ? 0u : static_cast<uint32_t>((static_cast<uint64_t>(context.DebugInfo->WeaponPixelCount) * 1000u + hullPixels / 2u) / hullPixels);
+            context.DebugInfo->WeaponVisualAnchorRealized = context.DebugInfo->WeaponVisualAnchorOpportunity && context.DebugInfo->WeaponCount > 0u;
             context.DebugInfo->WeaponOccupiedMask = context.Weapons.OccupiedMask;
         }
     }

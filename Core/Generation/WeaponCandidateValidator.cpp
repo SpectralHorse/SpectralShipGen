@@ -11,10 +11,13 @@ namespace PixelShipGenerator
 {
     namespace WeaponGenerationInternal
     {
-        bool WeaponCandidateValidator::validateCandidate(const ShipGenerationContext& context, const CandidateWeapon& candidate) const
+        bool WeaponCandidateValidator::validateCandidate(const ShipGenerationContext& context, const CandidateWeapon& candidate, WeaponCandidateValidationFailureReason* failureReason) const
         {
+            if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::NONE; }
+
             if (PixelMaskUtils::getMaskPixelCount(candidate.RootMask) == 0u || PixelMaskUtils::getMaskPixelCount(candidate.BodyMask) == 0u || PixelMaskUtils::getMaskPixelCount(candidate.BarrelMask) == 0u || PixelMaskUtils::getMaskPixelCount(candidate.MuzzleMask) == 0u)
             {
+                if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::MISSING_SEMANTIC_GEOMETRY; }
                 return false;
             }
 
@@ -24,6 +27,7 @@ namespace PixelShipGenerator
                 {
                     if (candidate.RootMask.get(x, y) && !context.Ship.HullMask.get(x, y))
                     {
+                        if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::INVALID_ROOT_SUPPORT; }
                         return false;
                     }
 
@@ -34,17 +38,31 @@ namespace PixelShipGenerator
 
                     if (context.StructuralNegativeSpace.ReservedMask.get(x, y) || context.Ship.CockpitMask.get(x, y) || context.Ship.EngineMask.get(x, y) || context.Ship.EngineExhaustMask.get(x, y) || context.MajorFeatures.OccupiedMask.get(x, y) || context.Weapons.OccupiedMask.get(x, y))
                     {
+                        if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::SEMANTIC_COLLISION; }
                         return false;
                     }
                 }
             }
 
-            if (!validateConnected(candidate) || !validateFiringClearance(context, candidate))
+            if (!validateConnected(candidate))
             {
+                if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::DISCONNECTED_GEOMETRY; }
                 return false;
             }
 
-            return candidate.Placement.MuzzleY < candidate.Placement.AnchorY;
+            if (!validateFiringClearance(context, candidate))
+            {
+                if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::FIRING_CLEARANCE; }
+                return false;
+            }
+
+            if (candidate.Placement.MuzzleY >= candidate.Placement.AnchorY)
+            {
+                if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::INVALID_MUZZLE_DIRECTION; }
+                return false;
+            }
+
+            return true;
         }
 
         bool WeaponCandidateValidator::validateConnected(const CandidateWeapon& candidate) const
@@ -141,14 +159,17 @@ namespace PixelShipGenerator
             return muzzleOutsideHull;
         }
 
-        bool WeaponCandidateValidator::validateSymmetricPair(const ShipGenerationContext& context, const CandidateWeapon& first, const CandidateWeapon& second) const
+        bool WeaponCandidateValidator::validateSymmetricPair(const ShipGenerationContext& context, const CandidateWeapon& first, const CandidateWeapon& second, WeaponCandidateValidationFailureReason* failureReason) const
         {
+            if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::NONE; }
+
             if (PixelMaskUtils::masksOverlap(first.OccupiedMask, second.OccupiedMask))
             {
+                if (failureReason != nullptr) { *failureReason = WeaponCandidateValidationFailureReason::SEMANTIC_COLLISION; }
                 return false;
             }
 
-            return validateCandidate(context, second);
+            return validateCandidate(context, second, failureReason);
         }
     }
 }

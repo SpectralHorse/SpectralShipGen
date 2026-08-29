@@ -22,7 +22,7 @@ namespace PixelShipGenerator
         private:
             void addSymmetricSideHardpoints(const ShipGenerationContext& context, std::vector<WeaponHardpoint>& hardpoints, uint32_t y, uint32_t leftX, uint32_t rightX, ShipWeaponHardpointRegion region) const;
             bool isHardpointSupported(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const;
-            bool usesWeightedHardpointSelection(const ShipGenerationProfile& profile) const;
+            uint32_t getHardpointFeasibilityPercent(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const;
         };
     }
 }

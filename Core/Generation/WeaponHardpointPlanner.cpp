@@ -43,6 +43,7 @@ namespace PixelShipGenerator
 
                     if (context.Ship.HullMask.get(central.X, central.Y) && isHardpointSupported(context, central))
                     {
+                        central.FeasibilityPercent = getHardpointFeasibilityPercent(context, central);
                         hardpoints.push_back(central);
                     }
                 }
@@ -53,6 +54,7 @@ namespace PixelShipGenerator
 
                     if (context.Ship.HullMask.get(central.X, central.Y) && isHardpointSupported(context, central))
                     {
+                        central.FeasibilityPercent = getHardpointFeasibilityPercent(context, central);
                         hardpoints.push_back(central);
                     }
                 }
@@ -139,11 +141,13 @@ namespace PixelShipGenerator
 
             if (isHardpointSupported(context, left))
             {
+                left.FeasibilityPercent = getHardpointFeasibilityPercent(context, left);
                 hardpoints.push_back(left);
             }
 
             if (isHardpointSupported(context, right))
             {
+                right.FeasibilityPercent = getHardpointFeasibilityPercent(context, right);
                 hardpoints.push_back(right);
             }
         }
@@ -180,6 +184,47 @@ namespace PixelShipGenerator
             return supportCount >= minimumSupport;
         }
 
+        uint32_t WeaponHardpointPlanner::getHardpointFeasibilityPercent(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const
+        {
+            const uint32_t width = context.Ship.HullMask.getWidth();
+            const uint32_t height = context.Ship.HullMask.getHeight();
+            if (width == 0u || height == 0u) { return 0u; }
+
+            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t envelopeWidth = std::max(3u, GenerationMath::scalePixelsFrom64(9u, width) * scalePercent / 100u);
+            const uint32_t envelopeDepth = std::max(4u, GenerationMath::scalePixelsFrom64(12u, height) * scalePercent / 100u);
+            const int32_t startX = static_cast<int32_t>(hardpoint.X) - static_cast<int32_t>(envelopeWidth / 2u);
+            const int32_t startY = static_cast<int32_t>(hardpoint.Y) - static_cast<int32_t>(envelopeDepth) + 1;
+
+            uint32_t sampleCount = 0u;
+            uint32_t blockedCount = 0u;
+            for (uint32_t oy = 0u; oy < envelopeDepth; ++oy)
+            {
+                const int32_t y = startY + static_cast<int32_t>(oy);
+                if (y < 0 || y >= static_cast<int32_t>(height)) { blockedCount += envelopeWidth; sampleCount += envelopeWidth; continue; }
+                for (uint32_t ox = 0u; ox < envelopeWidth; ++ox)
+                {
+                    const int32_t x = startX + static_cast<int32_t>(ox);
+                    ++sampleCount;
+                    if (x < 0 || x >= static_cast<int32_t>(width)) { ++blockedCount; continue; }
+                    const uint32_t px = static_cast<uint32_t>(x);
+                    const uint32_t py = static_cast<uint32_t>(y);
+                    if (context.StructuralNegativeSpace.ReservedMask.get(px, py) ||
+                        context.Ship.CockpitMask.get(px, py) || context.Ship.EngineMask.get(px, py) ||
+                        context.Ship.EngineExhaustMask.get(px, py) || context.MajorFeatures.OccupiedMask.get(px, py) ||
+                        context.Weapons.OccupiedMask.get(px, py))
+                    {
+                        ++blockedCount;
+                    }
+                }
+            }
+
+            if (sampleCount == 0u) { return 0u; }
+            const uint32_t clearPercent = 100u - std::min(100u, blockedCount * 100u / sampleCount);
+            // 55..125 keeps weak hardpoints selectable while strongly preferring clear local envelopes.
+            return std::clamp(55u + clearPercent * 70u / 100u, 55u, 125u);
+        }
+
         bool WeaponHardpointPlanner::hardpointMatchesMacroAsymmetryPlan(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const
         {
             if (!context.MacroAsymmetry.targets(MacroAsymmetryCategory::LARGE_WEAPON)) { return true; }
@@ -195,26 +240,12 @@ namespace PixelShipGenerator
 
         const WeaponHardpoint* WeaponHardpointPlanner::selectHardpoint(ShipGenerationContext& context, const std::vector<WeaponHardpoint>& hardpoints, bool plannedAsymmetry) const
         {
-            if (!usesWeightedHardpointSelection(context.Profile))
-            {
-                const uint32_t startIndex = context.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, static_cast<uint32_t>(hardpoints.size() - 1u));
-                for (uint32_t offset = 0u; offset < hardpoints.size(); ++offset)
-                {
-                    const WeaponHardpoint& possible = hardpoints[(startIndex + offset) % hardpoints.size()];
-                    if (!plannedAsymmetry || hardpointMatchesMacroAsymmetryPlan(context, possible))
-                    {
-                        return &possible;
-                    }
-                }
-
-                return nullptr;
-            }
-
             uint64_t totalHardpointWeight = 0u;
             for (const WeaponHardpoint& possible : hardpoints)
             {
                 if (plannedAsymmetry && !hardpointMatchesMacroAsymmetryPlan(context, possible)) { continue; }
-                uint32_t hardpointWeight = context.Profile.LargeWeaponHardpointWeights.getWeight(possible.Region);
+                uint64_t hardpointWeight = context.Profile.LargeWeaponHardpointWeights.getWeight(possible.Region);
+                hardpointWeight = hardpointWeight * possible.FeasibilityPercent / 100u;
                 if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.targets(ShipVisualAnchorType::WEAPONS))
                 {
                     const GenerationSpatialRegion region = getSpatialRegion(possible.Region, possible.X, context.Ship.HullMask.getWidth());
@@ -227,16 +258,14 @@ namespace PixelShipGenerator
                 totalHardpointWeight += hardpointWeight;
             }
 
-            if (totalHardpointWeight == 0u)
-            {
-                return nullptr;
-            }
+            if (totalHardpointWeight == 0u) { return nullptr; }
 
             uint64_t hardpointRoll = context.getGenerationRandomUInt64(GenerationDomain::WEAPONS, 0u, totalHardpointWeight - 1u);
             for (const WeaponHardpoint& possible : hardpoints)
             {
                 if (plannedAsymmetry && !hardpointMatchesMacroAsymmetryPlan(context, possible)) { continue; }
-                uint32_t weight = context.Profile.LargeWeaponHardpointWeights.getWeight(possible.Region);
+                uint64_t weight = context.Profile.LargeWeaponHardpointWeights.getWeight(possible.Region);
+                weight = weight * possible.FeasibilityPercent / 100u;
                 if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.targets(ShipVisualAnchorType::WEAPONS))
                 {
                     const GenerationSpatialRegion region = getSpatialRegion(possible.Region, possible.X, context.Ship.HullMask.getWidth());
@@ -246,13 +275,9 @@ namespace PixelShipGenerator
                         weight = weight * context.VisualHierarchy.getAnchorWeightPercent(ShipVisualAnchorType::WEAPONS) / 100u;
                     }
                 }
-                if (hardpointRoll < weight)
-                {
-                    return &possible;
-                }
+                if (hardpointRoll < weight) { return &possible; }
                 hardpointRoll -= weight;
             }
-
             return nullptr;
         }
 
@@ -271,10 +296,5 @@ namespace PixelShipGenerator
             }
         }
 
-        bool WeaponHardpointPlanner::usesWeightedHardpointSelection(const ShipGenerationProfile& profile) const
-        {
-            const ShipWeaponHardpointWeights& weights = profile.LargeWeaponHardpointWeights;
-            return weights.CentralNose != 100u || weights.ForwardFuselageSide != 100u || weights.WingRoot != 100u || weights.OuterWing != 100u || weights.ForwardShoulder != 100u || weights.CentralBody != 100u;
-        }
     }
 }

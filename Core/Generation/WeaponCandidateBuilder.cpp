@@ -79,7 +79,7 @@ namespace PixelShipGenerator
 
         bool WeaponCandidateBuilder::generateSingleCannon(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, const FactionWeaponProfile& factionProfile, CandidateWeapon& candidate) const
         {
-            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t scalePercent = getAssemblyScalePercent(context, hardpoint);
             const uint32_t width = candidate.OccupiedMask.getWidth();
             const uint32_t height = candidate.OccupiedMask.getHeight();
             const uint32_t bodyWidth = std::max(1u, scaleWeaponPixelsFrom64(4u, width, scalePercent));
@@ -126,7 +126,7 @@ namespace PixelShipGenerator
 
         bool WeaponCandidateBuilder::generateTwinCannon(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, const FactionWeaponProfile& factionProfile, CandidateWeapon& candidate) const
         {
-            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t scalePercent = getAssemblyScalePercent(context, hardpoint);
             const uint32_t width = candidate.OccupiedMask.getWidth();
             const uint32_t height = candidate.OccupiedMask.getHeight();
             const uint32_t bodyWidth = std::max(3u, scaleWeaponPixelsFrom64(6u, width, scalePercent));
@@ -169,7 +169,7 @@ namespace PixelShipGenerator
 
         bool WeaponCandidateBuilder::generateCompactTurret(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, const FactionWeaponProfile& factionProfile, CandidateWeapon& candidate) const
         {
-            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t scalePercent = getAssemblyScalePercent(context, hardpoint);
             const uint32_t width = candidate.OccupiedMask.getWidth();
             const uint32_t height = candidate.OccupiedMask.getHeight();
             const uint32_t bodyWidth = std::max(3u, scaleWeaponPixelsFrom64(6u, width, scalePercent));
@@ -210,7 +210,7 @@ namespace PixelShipGenerator
 
         bool WeaponCandidateBuilder::generateRailWeapon(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, const FactionWeaponProfile& factionProfile, CandidateWeapon& candidate) const
         {
-            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t scalePercent = getAssemblyScalePercent(context, hardpoint);
             const uint32_t width = candidate.OccupiedMask.getWidth();
             const uint32_t height = candidate.OccupiedMask.getHeight();
             const uint32_t bodyWidth = std::max(2u, scaleWeaponPixelsFrom64(3u, width, scalePercent));
@@ -247,7 +247,7 @@ namespace PixelShipGenerator
 
         bool WeaponCandidateBuilder::generateWeaponPod(ShipGenerationContext& context, const WeaponHardpoint& hardpoint, const FactionWeaponProfile& factionProfile, CandidateWeapon& candidate) const
         {
-            const uint32_t scalePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t scalePercent = getAssemblyScalePercent(context, hardpoint);
             const uint32_t width = candidate.OccupiedMask.getWidth();
             const uint32_t height = candidate.OccupiedMask.getHeight();
             const uint32_t bodyWidth = std::max(4u, scaleWeaponPixelsFrom64(8u, width, scalePercent));
@@ -393,6 +393,27 @@ namespace PixelShipGenerator
             destination.Placement.BarrelMinX = imageWidth - 1u - source.Placement.BarrelMaxX;
             destination.Placement.BarrelMaxX = imageWidth - 1u - source.Placement.BarrelMinX;
             destination.Placement.MuzzleX = imageWidth - 1u - source.Placement.MuzzleX;
+        }
+
+        uint32_t WeaponCandidateBuilder::getAssemblyScalePercent(const ShipGenerationContext& context, const WeaponHardpoint& hardpoint) const
+        {
+            const uint32_t basePercent = context.Profile.LargeWeaponScalePercent;
+            const uint32_t capacity = context.ScaleTraits.MajorFeatureCapacity;
+            if (capacity <= 40u) { return basePercent; }
+
+            const uint32_t capacityGrowth = std::min(25u, (capacity - 40u) * 25u / 60u);
+            const uint32_t localFactor = hardpoint.FeasibilityPercent <= 70u
+                ? 0u
+                : std::min(100u, (hardpoint.FeasibilityPercent - 70u) * 2u);
+            uint32_t growthPercent = capacityGrowth * localFactor / 100u;
+
+            if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.isPrimary(ShipVisualAnchorType::WEAPONS) && localFactor >= 50u)
+            {
+                growthPercent += 8u;
+            }
+
+            const uint32_t scaled = static_cast<uint32_t>((static_cast<uint64_t>(basePercent) * (100u + growthPercent) + 50u) / 100u);
+            return std::min(180u, scaled);
         }
 
         uint32_t WeaponCandidateBuilder::scaleWeaponPixelsFrom64(uint32_t value, uint32_t dimension, uint32_t scalePercent) const

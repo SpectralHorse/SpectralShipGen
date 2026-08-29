@@ -140,6 +140,13 @@ namespace PixelShipGeneratorDiagnostics
             return out.str();
         }
 
+        const JsonValue* optionalMember(const JsonValue& object, const char* key)
+        {
+            if (object.Type != JsonType::OBJECT) { throw std::runtime_error("Expected JSON object."); }
+            const auto it = object.Object.find(key);
+            return it == object.Object.end() ? nullptr : &it->second;
+        }
+
         const JsonValue& member(const JsonValue& object, const char* key)
         {
             if (object.Type != JsonType::OBJECT) { throw std::runtime_error("Expected JSON object."); }
@@ -250,6 +257,14 @@ namespace PixelShipGeneratorDiagnostics
             out << ",\"negative_space_attempts\":" << s.StructuralNegativeSpaceAttemptCount << ",\"negative_space_successes\":" << s.StructuralNegativeSpaceSuccessCount
                 << ",\"major_feature_attempts\":" << s.MajorFeaturePlacementAttemptCount << ",\"major_feature_rejections\":" << s.MajorFeaturePlacementRejectionCount
                 << ",\"weapon_attempts\":" << s.WeaponPlacementAttemptCount << ",\"weapon_rejections\":" << s.WeaponPlacementRejectionCount
+                << ",\"weapon_requested_groups\":" << s.WeaponRequestedGroupCount << ",\"weapon_realized_groups\":" << s.WeaponRealizedGroupCount
+                << ",\"weapon_chance_skips\":" << s.WeaponGenerationChanceSkipCount << ",\"weapon_no_hardpoint\":" << s.WeaponNoHardpointFailureCount
+                << ",\"weapon_type_selection_failures\":" << s.WeaponTypeSelectionFailureCount
+                << ",\"weapon_geometry_failures\":" << s.WeaponCandidateGeometryFailureCount << ",\"weapon_semantic_failures\":" << s.WeaponSemanticCollisionFailureCount
+                << ",\"weapon_connectivity_failures\":" << s.WeaponConnectivityFailureCount << ",\"weapon_clearance_failures\":" << s.WeaponFiringClearanceFailureCount
+                << ",\"weapon_pair_failures\":" << s.WeaponSymmetryPairFailureCount << ",\"weapon_spatial_rejections\":" << s.WeaponSpatialBudgetRejectionCount
+                << ",\"weapon_complexity_rejections\":" << s.WeaponComplexityBudgetRejectionCount << ",\"weapon_coverage_permille\":" << s.WeaponCoveragePermille
+                << ",\"weapon_anchor_opportunity\":" << (s.WeaponVisualAnchorOpportunity ? "true" : "false") << ",\"weapon_anchor_realized\":" << (s.WeaponVisualAnchorRealized ? "true" : "false")
                 << ",\"attachment_attempts\":" << s.AttachmentPlacementAttemptCount << ",\"attachment_failures\":" << s.AttachmentPlacementFailureCount
                 << ",\"material_zones\":" << s.MaterialZoneCount << ",\"livery_markings\":" << s.LiveryMarkingCount << ",\"detail_motif_occurrences\":" << s.DetailMotifOccurrenceCount
                 << ",\"major_features\":" << s.MajorFeatureCount << ",\"weapons\":" << s.WeaponCount << ",\"engines\":" << s.EngineCount
@@ -315,6 +330,21 @@ namespace PixelShipGeneratorDiagnostics
                 s.StructuralNegativeSpaceAttemptCount = u32(member(j, "negative_space_attempts")); s.StructuralNegativeSpaceSuccessCount = u32(member(j, "negative_space_successes"));
                 s.MajorFeaturePlacementAttemptCount = u32(member(j, "major_feature_attempts")); s.MajorFeaturePlacementRejectionCount = u32(member(j, "major_feature_rejections"));
                 s.WeaponPlacementAttemptCount = u32(member(j, "weapon_attempts")); s.WeaponPlacementRejectionCount = u32(member(j, "weapon_rejections"));
+                if (const JsonValue* value = optionalMember(j, "weapon_requested_groups")) { s.WeaponRequestedGroupCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_realized_groups")) { s.WeaponRealizedGroupCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_chance_skips")) { s.WeaponGenerationChanceSkipCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_no_hardpoint")) { s.WeaponNoHardpointFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_type_selection_failures")) { s.WeaponTypeSelectionFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_geometry_failures")) { s.WeaponCandidateGeometryFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_semantic_failures")) { s.WeaponSemanticCollisionFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_connectivity_failures")) { s.WeaponConnectivityFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_clearance_failures")) { s.WeaponFiringClearanceFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_pair_failures")) { s.WeaponSymmetryPairFailureCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_spatial_rejections")) { s.WeaponSpatialBudgetRejectionCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_complexity_rejections")) { s.WeaponComplexityBudgetRejectionCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_coverage_permille")) { s.WeaponCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_anchor_opportunity")) { s.WeaponVisualAnchorOpportunity = boolean(*value); }
+                if (const JsonValue* value = optionalMember(j, "weapon_anchor_realized")) { s.WeaponVisualAnchorRealized = boolean(*value); }
                 s.AttachmentPlacementAttemptCount = u32(member(j, "attachment_attempts")); s.AttachmentPlacementFailureCount = u32(member(j, "attachment_failures"));
                 s.MaterialZoneCount = u32(member(j, "material_zones")); s.LiveryMarkingCount = u32(member(j, "livery_markings")); s.DetailMotifOccurrenceCount = u32(member(j, "detail_motif_occurrences"));
                 s.MajorFeatureCount = u32(member(j, "major_features")); s.WeaponCount = u32(member(j, "weapons")); s.EngineCount = u32(member(j, "engines")); s.ComplexityUtilizationPercent = number(member(j, "complexity_utilization_percent"));

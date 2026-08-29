@@ -376,6 +376,21 @@ namespace PixelShipGeneratorDiagnostics
                 sample.MajorFeaturePlacementRejectionCount = debugInfo.MajorFeaturePlacementRejectionCount;
                 sample.WeaponPlacementAttemptCount = debugInfo.WeaponPlacementAttemptCount;
                 sample.WeaponPlacementRejectionCount = debugInfo.WeaponPlacementRejectionCount;
+                sample.WeaponRequestedGroupCount = debugInfo.WeaponRequestedGroupCount;
+                sample.WeaponRealizedGroupCount = debugInfo.WeaponRealizedGroupCount;
+                sample.WeaponGenerationChanceSkipCount = debugInfo.WeaponGenerationChanceSkipCount;
+                sample.WeaponNoHardpointFailureCount = debugInfo.WeaponNoHardpointFailureCount;
+                sample.WeaponTypeSelectionFailureCount = debugInfo.WeaponTypeSelectionFailureCount;
+                sample.WeaponCandidateGeometryFailureCount = debugInfo.WeaponCandidateGeometryFailureCount;
+                sample.WeaponSemanticCollisionFailureCount = debugInfo.WeaponSemanticCollisionFailureCount;
+                sample.WeaponConnectivityFailureCount = debugInfo.WeaponConnectivityFailureCount;
+                sample.WeaponFiringClearanceFailureCount = debugInfo.WeaponFiringClearanceFailureCount;
+                sample.WeaponSymmetryPairFailureCount = debugInfo.WeaponSymmetryPairFailureCount;
+                sample.WeaponSpatialBudgetRejectionCount = debugInfo.WeaponSpatialBudgetRejectionCount;
+                sample.WeaponComplexityBudgetRejectionCount = debugInfo.WeaponComplexityBudgetRejectionCount;
+                sample.WeaponCoveragePermille = debugInfo.WeaponCoveragePermille;
+                sample.WeaponVisualAnchorOpportunity = debugInfo.WeaponVisualAnchorOpportunity;
+                sample.WeaponVisualAnchorRealized = debugInfo.WeaponVisualAnchorRealized;
                 sample.AttachmentPlacementAttemptCount = debugInfo.AttachmentPlacementAttemptCount;
                 sample.AttachmentPlacementFailureCount = debugInfo.AttachmentPlacementFailureCount;
             }

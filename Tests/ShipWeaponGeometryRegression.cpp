@@ -16,6 +16,7 @@
 #include "MajorFeatureGenerator.h"
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
+#include "ShipGenerator.h"
 #include "ShipGenerationDebugInfo.h"
 #include "ShipGenerationProfile.h"
 #include "ShipGenerationSeeds.h"
@@ -210,6 +211,8 @@ namespace
 int PixelShipGeneratorTests::runWeaponGeometryRegression()
 {
     std::array<uint32_t, Resolutions.size()> shipsWithWeapons = {};
+    std::array<uint64_t, Resolutions.size()> weaponPixelsByResolution = {};
+    std::array<uint64_t, Resolutions.size()> maximumAssemblyAreaByResolution = {};
     std::array<uint32_t, static_cast<std::size_t>(PixelShipGenerator::ShipWeaponType::SHIP_WEAPON_TYPE_END)> observedTypeCounts = {};
     uint32_t shipsWithoutWeapons = 0u;
 
@@ -254,9 +257,14 @@ int PixelShipGeneratorTests::runWeaponGeometryRegression()
                         return 1;
                     }
 
-                    if (firstDebug.WeaponCount != firstContext.Weapons.Placements.size() || firstDebug.WeaponPixelCount != PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(firstContext.Weapons.OccupiedMask))
+                    if (firstDebug.WeaponCount != firstContext.Weapons.Placements.size() || firstDebug.WeaponPixelCount != PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(firstContext.Weapons.OccupiedMask) || firstDebug.WeaponRealizedGroupCount > firstDebug.WeaponRequestedGroupCount)
                     {
                         std::cerr << "Weapon debug metadata mismatch at resolution " << resolution << ".\n";
+                        return 1;
+                    }
+                    if ((firstDebug.WeaponCount == 0u) != (firstDebug.WeaponCoveragePermille == 0u))
+                    {
+                        std::cerr << "Weapon coverage diagnostics are inconsistent at resolution " << resolution << ".\n";
                         return 1;
                     }
 
@@ -267,10 +275,18 @@ int PixelShipGeneratorTests::runWeaponGeometryRegression()
                     }
 
                     ++shipsWithWeapons[resolutionIndex];
+                    weaponPixelsByResolution[resolutionIndex] += firstDebug.WeaponPixelCount;
+                    uint64_t maximumAssemblyArea = 0u;
                     for (const PixelShipGenerator::WeaponPlacement& placement : firstContext.Weapons.Placements)
                     {
                         ++observedTypeCounts[static_cast<std::size_t>(placement.Type)];
+                        const uint32_t minimumX = std::min(placement.BodyMinX, placement.BarrelMinX);
+                        const uint32_t maximumX = std::max(placement.BodyMaxX, placement.BarrelMaxX);
+                        const uint32_t minimumY = std::min(placement.BodyMinY, placement.BarrelMinY);
+                        const uint32_t maximumY = std::max(placement.BodyMaxY, placement.BarrelMaxY);
+                        maximumAssemblyArea = std::max<uint64_t>(maximumAssemblyArea, static_cast<uint64_t>(maximumX - minimumX + 1u) * (maximumY - minimumY + 1u));
                     }
+                    maximumAssemblyAreaByResolution[resolutionIndex] += maximumAssemblyArea;
                 }
             }
         }
@@ -294,6 +310,79 @@ int PixelShipGeneratorTests::runWeaponGeometryRegression()
     if (observedTypes < 4u)
     {
         std::cerr << "Insufficient large-weapon type variety observed.\n";
+        return 1;
+    }
+
+    const auto averagePixels = [&](std::size_t index) -> double
+        { return shipsWithWeapons[index] == 0u ? 0.0 : static_cast<double>(weaponPixelsByResolution[index]) / shipsWithWeapons[index]; };
+    const auto averageAssemblyArea = [&](std::size_t index) -> double
+        { return shipsWithWeapons[index] == 0u ? 0.0 : static_cast<double>(maximumAssemblyAreaByResolution[index]) / shipsWithWeapons[index]; };
+    const std::size_t index32 = 1u;
+    const std::size_t index96 = 4u;
+    const std::size_t index160 = 6u;
+    if (!(averagePixels(index96) > averagePixels(index32) * 2.0 && averagePixels(index160) > averagePixels(index96) * 1.8 && averageAssemblyArea(index160) > averageAssemblyArea(index96) * 1.5))
+    {
+        std::cerr << "Large-weapon scale growth is not visible across native resolutions.\n";
+        return 1;
+    }
+
+    constexpr std::array<PixelShipGenerator::ShipDimensions, 2u> RectangularDimensions = {{{ 128u, 96u }, { 96u, 128u }}};
+    constexpr std::array<PixelShipGenerator::ShipStyle, 2u> RectangularStyles = { PixelShipGenerator::ShipStyle::DELTA, PixelShipGenerator::ShipStyle::SPEARHEAD };
+    for (std::size_t caseIndex = 0u; caseIndex < RectangularDimensions.size(); ++caseIndex)
+    {
+        bool observedWeapons = false;
+        for (uint32_t sample = 0u; sample < 16u && !observedWeapons; ++sample)
+        {
+            PixelShipGenerator::ShipGenerationSettings settings;
+            settings.Dimensions = RectangularDimensions[caseIndex];
+            settings.Style = RectangularStyles[caseIndex];
+            settings.Faction = caseIndex == 0u ? PixelShipGenerator::ShipFactionType::MILITARY : PixelShipGenerator::ShipFactionType::ASCENDANT;
+            settings.Seed = 0x7600760000000000ull + static_cast<uint64_t>(caseIndex) * 0x1000ull + sample;
+            const PixelShipGenerator::ShipGenerationSeeds seeds = PixelShipGenerator::deriveShipGenerationSeeds(settings.Seed);
+            const PixelShipGenerator::ShipGenerationProfile& profile = PixelShipGenerator::getShipGenerationProfile(settings.Style);
+            PixelShipGenerator::ShipGenerationDebugInfo firstDebug;
+            PixelShipGenerator::ShipGenerationDebugInfo secondDebug;
+            PixelShipGenerator::ShipGenerationContext firstContext(settings, profile, seeds, &firstDebug);
+            PixelShipGenerator::ShipGenerationContext secondContext(settings, profile, seeds, &secondDebug);
+
+            if (!generatePipeline(firstContext) || !generatePipeline(secondContext) || !validateWeapons(firstContext) || !validateWeapons(secondContext))
+            {
+                std::cerr << "Rectangular weapon generation/validation failure.\n";
+                return 1;
+            }
+            if (!masksEqual(firstContext.Weapons.OccupiedMask, secondContext.Weapons.OccupiedMask) || !placementsEqual(firstContext.Weapons.Placements, secondContext.Weapons.Placements))
+            {
+                std::cerr << "Rectangular weapon determinism failure.\n";
+                return 1;
+            }
+            observedWeapons = !firstContext.Weapons.Placements.empty();
+        }
+        if (!observedWeapons)
+        {
+            std::cerr << "No weapon realization observed for rectangular regression case.\n";
+            return 1;
+        }
+    }
+
+    PixelShipGenerator::ShipGenerator generator;
+    uint32_t anchorOpportunities = 0u;
+    uint32_t anchorRealizations = 0u;
+    for (uint32_t sample = 0u; sample < 96u && anchorOpportunities < 12u; ++sample)
+    {
+        PixelShipGenerator::ShipGenerationSettings settings;
+        settings.Seed = 0x7600000000000000ull + sample;
+        settings.Dimensions = { 96u,96u };
+        settings.Style = static_cast<PixelShipGenerator::ShipStyle>(sample % static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END));
+        settings.Faction = static_cast<PixelShipGenerator::ShipFactionType>((sample / static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)) % static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END));
+        PixelShipGenerator::ShipGenerationDebugInfo debug;
+        generator.generate(settings, &debug);
+        if (!debug.WeaponVisualAnchorOpportunity) { continue; }
+        ++anchorOpportunities;
+        if (debug.WeaponVisualAnchorRealized) { ++anchorRealizations; }
+    }
+    if (anchorOpportunities < 3u || anchorRealizations * 100u < anchorOpportunities * 85u)
+    {
+        std::cerr << "WEAPONS visual-anchor realization is not reliable when a valid hardpoint opportunity exists.\n";
         return 1;
     }
 
