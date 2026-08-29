@@ -78,7 +78,8 @@ namespace PixelShipGeneratorDiagnostics
             for (const DiagnosticsRawSampleResult* sample : samples)
             {
                 ++result.SampleCount;
-                if (sample->Success) { ++result.SuccessfulSamples; } else { ++result.FailedSamples; }
+                if (sample->Success) { ++result.SuccessfulSamples; }
+                else { ++result.FailedSamples; }
                 generationTimes.push_back(static_cast<double>(sample->TotalGenerationNanoseconds) / 1000000.0);
                 hullAttempts.push_back(static_cast<double>(sample->HullAttemptCount));
                 materialZoneCounts.push_back(static_cast<double>(sample->MaterialZoneCount));
@@ -232,9 +233,9 @@ namespace PixelShipGeneratorDiagnostics
             if (grouping == DiagnosticsGrouping::STYLE || grouping == DiagnosticsGrouping::DIMENSIONS_STYLE || grouping == DiagnosticsGrouping::DIMENSIONS_STYLE_FACTION) { key.Style = sample.WorkItem.Style; }
             if (grouping == DiagnosticsGrouping::FACTION || grouping == DiagnosticsGrouping::DIMENSIONS_STYLE_FACTION) { key.Faction = sample.WorkItem.Faction; }
             const auto found = std::find_if(groups.begin(), groups.end(), [&](const DiagnosticsGroupedResult& group)
-            {
-                return group.Dimensions == key.Dimensions && group.Style == key.Style && group.Faction == key.Faction;
-            });
+                {
+                    return group.Dimensions == key.Dimensions && group.Style == key.Style && group.Faction == key.Faction;
+                });
             if (found == groups.end()) { groups.push_back(key); }
         }
         for (auto& group : groups)
@@ -246,7 +247,7 @@ namespace PixelShipGeneratorDiagnostics
         return groups;
     }
 
-    DiagnosticsResult DiagnosticsRunner::run(const DiagnosticsRunConfiguration& configuration, const DiagnosticsProgressCallback& progressCallback, const DiagnosticsCancellationCallback& cancellationCallback) const
+    DiagnosticsResult DiagnosticsRunner::run(const DiagnosticsRunConfiguration& configuration, const DiagnosticsProgressCallback& progressCallback, const DiagnosticsCancellationCallback& cancellationCallback, const DiagnosticsSampleCallback& sampleCallback) const
     {
         DiagnosticsResult result;
         result.Configuration = configuration;
@@ -336,7 +337,8 @@ namespace PixelShipGeneratorDiagnostics
                 result.ConfigurationResults[static_cast<std::size_t>(item.ConfigurationIndex)].Statistics.recordFailure(debugInfo);
             }
             sample.TotalGenerationNanoseconds = durationNanoseconds(Clock::now() - sampleStart);
-            if (configuration.DetailedPerformanceInstrumentation && categoryEnabled(configuration, DiagnosticsCategory::PERFORMANCE)) { sample.Performance = performance; } else { sample.Performance.TotalDurationNanoseconds = sample.TotalGenerationNanoseconds; }
+            if (configuration.DetailedPerformanceInstrumentation && categoryEnabled(configuration, DiagnosticsCategory::PERFORMANCE)) { sample.Performance = performance; }
+            else { sample.Performance.TotalDurationNanoseconds = sample.TotalGenerationNanoseconds; }
             if (categoryEnabled(configuration, DiagnosticsCategory::RETRY_EFFORT))
             {
                 sample.HullAttemptCount = debugInfo.HullGenerationAttemptCount;
@@ -359,6 +361,7 @@ namespace PixelShipGeneratorDiagnostics
             }
             eta.observe(item, sample.TotalGenerationNanoseconds);
             allSamples.push_back(sample);
+            if (sampleCallback) { sampleCallback(allSamples.back()); }
             ++result.CompletedWorkItems;
 
             if (progressCallback)

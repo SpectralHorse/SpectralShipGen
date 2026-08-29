@@ -171,6 +171,7 @@ namespace PixelShipGeneratorDiagnostics
 
     using DiagnosticsProgressCallback = std::function<void(const DiagnosticsProgress&)>;
     using DiagnosticsCancellationCallback = std::function<bool()>;
+    using DiagnosticsSampleCallback = std::function<void(const DiagnosticsRawSampleResult&)>;
 
     std::vector<DiagnosticsWorkItem> resolveDiagnosticsWorkSchedule(const DiagnosticsRunConfiguration& configuration);
     DiagnosticsDistributionSummary summarizeDiagnosticsValues(std::vector<double> values);
@@ -181,8 +182,9 @@ namespace PixelShipGeneratorDiagnostics
     {
     public:
         DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
-                              const DiagnosticsProgressCallback& progressCallback = {},
-                              const DiagnosticsCancellationCallback& cancellationCallback = {}) const;
+            const DiagnosticsProgressCallback& progressCallback = {},
+            const DiagnosticsCancellationCallback& cancellationCallback = {},
+            const DiagnosticsSampleCallback& sampleCallback = {}) const;
     };
 
     void printDiagnosticsResultSummary(std::ostream& output, const DiagnosticsResult& result);
