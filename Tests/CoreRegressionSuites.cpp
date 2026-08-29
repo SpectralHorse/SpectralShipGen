@@ -9,6 +9,7 @@ namespace PixelShipGeneratorTests
             { "idle-animation", "Idle Animation", RegressionCategory::ANIMATION, runIdleAnimationRegression, false },
             { "diagnostics", "Generation Diagnostics", RegressionCategory::DIAGNOSTICS, runGenerationDiagnosticsRegression, false },
             { "diagnostics-runner", "Reusable Diagnostics Runner", RegressionCategory::DIAGNOSTICS, runDiagnosticsRunnerRegression, false },
+            { "diagnostics-dashboard", "Diagnostics Dashboard Analysis", RegressionCategory::DIAGNOSTICS, runDiagnosticsDashboardRegression, false },
             { "recipe", "Recipe Serialization", RegressionCategory::PERSISTENCE, runGenerationRecipeRegression, false },
             { "statistics", "Generator Statistics", RegressionCategory::DIAGNOSTICS, runGeneratorStatisticsRegression, true },
             { "engines", "Engine Geometry", RegressionCategory::GEOMETRY, runEngineGeometryRegression, true },

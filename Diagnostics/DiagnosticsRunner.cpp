@@ -70,10 +70,18 @@ namespace PixelShipGeneratorDiagnostics
             std::vector<double> generationTimes;
             std::vector<double> hullAttempts;
             std::vector<double> materialZoneCounts;
+            std::vector<double> majorFeatureCounts;
+            std::vector<double> weaponCounts;
+            std::vector<double> engineCounts;
+            std::vector<double> complexityUtilization;
             std::array<std::vector<double>, PixelShipGenerator::ShipGenerationPerformanceStageCount> stageTimes;
             generationTimes.reserve(samples.size());
             hullAttempts.reserve(samples.size());
             materialZoneCounts.reserve(samples.size());
+            majorFeatureCounts.reserve(samples.size());
+            weaponCounts.reserve(samples.size());
+            engineCounts.reserve(samples.size());
+            complexityUtilization.reserve(samples.size());
 
             for (const DiagnosticsRawSampleResult* sample : samples)
             {
@@ -83,6 +91,15 @@ namespace PixelShipGeneratorDiagnostics
                 generationTimes.push_back(static_cast<double>(sample->TotalGenerationNanoseconds) / 1000000.0);
                 hullAttempts.push_back(static_cast<double>(sample->HullAttemptCount));
                 materialZoneCounts.push_back(static_cast<double>(sample->MaterialZoneCount));
+                majorFeatureCounts.push_back(static_cast<double>(sample->MajorFeatureCount));
+                weaponCounts.push_back(static_cast<double>(sample->WeaponCount));
+                engineCounts.push_back(static_cast<double>(sample->EngineCount));
+                complexityUtilization.push_back(sample->ComplexityUtilizationPercent);
+                const std::size_t primaryAnchor = static_cast<std::size_t>(sample->PrimaryVisualAnchor);
+                if (primaryAnchor < result.PrimaryVisualAnchorCounts.size()) { ++result.PrimaryVisualAnchorCounts[primaryAnchor]; }
+                const std::size_t secondaryAnchor = static_cast<std::size_t>(sample->SecondaryVisualAnchor);
+                if (secondaryAnchor < result.SecondaryVisualAnchorCounts.size()) { ++result.SecondaryVisualAnchorCounts[secondaryAnchor]; }
+                if (sample->VisualHierarchyFallbackOccurred) { ++result.VisualHierarchyFallbackCount; }
                 result.TotalHullValidationRejections += sample->HullValidationRejectionCount;
                 result.StructuralNegativeSpaceAttempts += sample->StructuralNegativeSpaceAttemptCount;
                 result.StructuralNegativeSpaceSuccesses += sample->StructuralNegativeSpaceSuccessCount;
@@ -99,6 +116,10 @@ namespace PixelShipGeneratorDiagnostics
             result.GenerationTimeMilliseconds = summarizeDiagnosticsValues(std::move(generationTimes));
             result.HullAttempts = summarizeDiagnosticsValues(std::move(hullAttempts));
             result.MaterialZoneCount = summarizeDiagnosticsValues(std::move(materialZoneCounts));
+            result.MajorFeatureCount = summarizeDiagnosticsValues(std::move(majorFeatureCounts));
+            result.WeaponCount = summarizeDiagnosticsValues(std::move(weaponCounts));
+            result.EngineCount = summarizeDiagnosticsValues(std::move(engineCounts));
+            result.ComplexityUtilizationPercent = summarizeDiagnosticsValues(std::move(complexityUtilization));
             for (std::size_t i = 0u; i < stageTimes.size(); ++i) { result.StageTimeMilliseconds[i] = summarizeDiagnosticsValues(std::move(stageTimes[i])); }
             result.HullRetryRatePercent = result.SampleCount == 0u ? 0.0 : 100.0 * static_cast<double>(result.TotalHullValidationRejections) / static_cast<double>(result.SampleCount);
             result.StructuralNegativeSpaceAttemptRatePercent = result.SampleCount == 0u ? 0.0 : 100.0 * static_cast<double>(result.StructuralNegativeSpaceAttempts) / static_cast<double>(result.SampleCount);
@@ -213,6 +234,11 @@ namespace PixelShipGeneratorDiagnostics
         for (const double value : values) { const long double delta = value - result.Mean; variance += delta * delta; }
         result.StandardDeviation = std::sqrt(static_cast<double>(variance / values.size()));
         return result;
+    }
+
+    DiagnosticsAggregateSummary aggregateDiagnosticsSamplePointers(const std::vector<const DiagnosticsRawSampleResult*>& samples)
+    {
+        return aggregateRange(samples);
     }
 
     DiagnosticsAggregateSummary aggregateDiagnosticsSamples(const std::vector<DiagnosticsRawSampleResult>& samples)
@@ -358,6 +384,14 @@ namespace PixelShipGeneratorDiagnostics
                 sample.MaterialZoneCount = debugInfo.MaterialZoneCount;
                 sample.LiveryMarkingCount = debugInfo.LiveryMarkingCount;
                 sample.DetailMotifOccurrenceCount = debugInfo.PrimaryDetailMotifOccurrenceCount + debugInfo.SecondaryDetailMotifOccurrenceCount;
+                sample.MajorFeatureCount = debugInfo.MajorFeatureCount;
+                sample.WeaponCount = debugInfo.WeaponCount;
+                sample.EngineCount = debugInfo.EngineCount;
+                sample.ComplexityUtilizationPercent = debugInfo.ComplexityInitialBudget == 0u ? 0.0 :
+                    100.0 * static_cast<double>(debugInfo.ComplexityConsumedBudget) / static_cast<double>(debugInfo.ComplexityInitialBudget);
+                sample.PrimaryVisualAnchor = debugInfo.PrimaryVisualAnchor;
+                sample.SecondaryVisualAnchor = debugInfo.SecondaryVisualAnchor;
+                sample.VisualHierarchyFallbackOccurred = debugInfo.VisualHierarchyFallbackOccurred;
             }
             eta.observe(item, sample.TotalGenerationNanoseconds);
             allSamples.push_back(sample);
@@ -429,6 +463,7 @@ namespace PixelShipGeneratorDiagnostics
 
     void writeDiagnosticsResultCsv(std::ostream& output, const DiagnosticsResult& result)
     {
+        if (!result.PersistedCsvSnapshot.empty()) { output << result.PersistedCsvSnapshot; return; }
         std::ostringstream legacyHeader;
         writeGenerationStatisticsCsvHeader(legacyHeader);
         std::string header = legacyHeader.str();

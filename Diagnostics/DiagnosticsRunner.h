@@ -11,6 +11,7 @@
 #include "GenerationStatistics.h"
 #include "ShipDimensions.h"
 #include "ShipGenerationPerformance.h"
+#include "ShipVisualAnchorType.h"
 
 namespace PixelShipGeneratorDiagnostics
 {
@@ -98,6 +99,13 @@ namespace PixelShipGeneratorDiagnostics
         uint32_t MaterialZoneCount = 0u;
         uint32_t LiveryMarkingCount = 0u;
         uint32_t DetailMotifOccurrenceCount = 0u;
+        uint32_t MajorFeatureCount = 0u;
+        uint32_t WeaponCount = 0u;
+        uint32_t EngineCount = 0u;
+        double ComplexityUtilizationPercent = 0.0;
+        PixelShipGenerator::ShipVisualAnchorType PrimaryVisualAnchor = PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END;
+        PixelShipGenerator::ShipVisualAnchorType SecondaryVisualAnchor = PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END;
+        bool VisualHierarchyFallbackOccurred = false;
         uint64_t FinalImageSignature = 0u;
     };
 
@@ -120,6 +128,13 @@ namespace PixelShipGeneratorDiagnostics
         DiagnosticsDistributionSummary GenerationTimeMilliseconds;
         DiagnosticsDistributionSummary HullAttempts;
         DiagnosticsDistributionSummary MaterialZoneCount;
+        DiagnosticsDistributionSummary MajorFeatureCount;
+        DiagnosticsDistributionSummary WeaponCount;
+        DiagnosticsDistributionSummary EngineCount;
+        DiagnosticsDistributionSummary ComplexityUtilizationPercent;
+        std::array<uint64_t, static_cast<std::size_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)> PrimaryVisualAnchorCounts = {};
+        std::array<uint64_t, static_cast<std::size_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)> SecondaryVisualAnchorCounts = {};
+        uint64_t VisualHierarchyFallbackCount = 0u;
         std::array<DiagnosticsDistributionSummary, PixelShipGenerator::ShipGenerationPerformanceStageCount> StageTimeMilliseconds;
         uint64_t TotalHullValidationRejections = 0u;
         uint64_t StructuralNegativeSpaceAttempts = 0u;
@@ -167,6 +182,7 @@ namespace PixelShipGeneratorDiagnostics
         GenerationStatistics OverallStatistics;
         DiagnosticsAggregateSummary OverallSummary;
         std::vector<DiagnosticsConfigurationResult> ConfigurationResults;
+        std::string PersistedCsvSnapshot;
     };
 
     using DiagnosticsProgressCallback = std::function<void(const DiagnosticsProgress&)>;
@@ -176,6 +192,7 @@ namespace PixelShipGeneratorDiagnostics
     std::vector<DiagnosticsWorkItem> resolveDiagnosticsWorkSchedule(const DiagnosticsRunConfiguration& configuration);
     DiagnosticsDistributionSummary summarizeDiagnosticsValues(std::vector<double> values);
     DiagnosticsAggregateSummary aggregateDiagnosticsSamples(const std::vector<DiagnosticsRawSampleResult>& samples);
+    DiagnosticsAggregateSummary aggregateDiagnosticsSamplePointers(const std::vector<const DiagnosticsRawSampleResult*>& samples);
     std::vector<DiagnosticsGroupedResult> groupDiagnosticsSamples(const std::vector<DiagnosticsRawSampleResult>& samples, DiagnosticsGrouping grouping);
 
     class DiagnosticsRunner
