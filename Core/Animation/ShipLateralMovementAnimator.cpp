@@ -30,6 +30,7 @@ namespace
     {
         PixelShipGenerator::ShipMovementAnimatedComponentType Type = PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_VECTORING;
         uint32_t SemanticGroup = 0u;
+        uint32_t SourceComponentIndex = std::numeric_limits<uint32_t>::max();
         std::vector<PixelCoordinate> SourcePixels;
         int32_t MaximumOffsetX = 0;
         double SustainPhaseOffset = 0.0;
@@ -476,6 +477,7 @@ namespace
             MovableGroup group;
             group.Type = PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_VECTORING;
             group.SemanticGroup = static_cast<uint32_t>(engineIndex);
+            group.SourceComponentIndex = static_cast<uint32_t>(engineIndex);
             group.SourcePixels = exhaustPixels[engineIndex];
             const uint32_t centerX = component.NozzleStartX + component.NozzleWidth / 2u;
             const uint64_t hash = getAnimationHash(plan.Seed, getCanonicalX(width, centerX), component.NozzleY, EnginePhaseSalt);
@@ -504,6 +506,7 @@ namespace
             MovableGroup group;
             group.Type = PixelShipGenerator::ShipMovementAnimatedComponentType::WEAPON_STABILIZATION;
             group.SemanticGroup = component.SymmetryGroup != 0u ? component.SymmetryGroup : static_cast<uint32_t>(weaponIndex + 1u);
+            group.SourceComponentIndex = static_cast<uint32_t>(weaponIndex);
             group.SourcePixels = collectWeaponPixels(ship, component);
             if (group.SourcePixels.empty() || desiredTravel == 0u || !weaponSourcePixelsAreMovable(ship, group.SourcePixels)) { continue; }
 
@@ -543,6 +546,7 @@ namespace
             MovableGroup group;
             group.Type = PixelShipGenerator::ShipMovementAnimatedComponentType::ATTACHMENT_ARTICULATION;
             group.SemanticGroup = placement.SymmetryGroup != 0u ? placement.SymmetryGroup : static_cast<uint32_t>(placementIndex + 1u);
+            group.SourceComponentIndex = static_cast<uint32_t>(placementIndex);
             group.SourcePixels = collectAttachmentPixels(ship, placement);
             if (group.SourcePixels.empty() || !attachmentSourcePixelsAreMovable(ship, group.SourcePixels)) { continue; }
 
@@ -692,23 +696,46 @@ namespace
         }
     }
 
-    PixelShipGenerator::Image evaluateMovementFrame(const PixelShipGenerator::GeneratedShip& ship, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, const LateralMovementPlan& plan)
+    PixelShipGenerator::ShipAnimationSemanticComponentType getPoseComponentType(PixelShipGenerator::ShipMovementAnimatedComponentType type)
+    {
+        switch (type)
+        {
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_VECTORING:
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_PROPULSION:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::ENGINE;
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::WEAPON_STABILIZATION:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::WEAPON;
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ATTACHMENT_ARTICULATION:
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::BRAKING_ARTICULATION:
+        default:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::ATTACHMENT;
+        }
+    }
+
+    PixelShipGenerator::ShipAnimationPose evaluateMovementPose(const PixelShipGenerator::GeneratedShip& ship, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, const LateralMovementPlan& plan)
     {
         const double time = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? wrapNormalizedTime(normalizedTime) : clampNormalizedTime(normalizedTime);
-        PixelShipGenerator::Image frame = ship.FinalImage;
+        PixelShipGenerator::ShipAnimationPose pose;
+        pose.Frame = ship.FinalImage;
+        pose.Layer = PixelShipGenerator::ShipAnimationPoseLayer::MOVEMENT;
+        pose.UnderlyingAnimationType = plan.Type;
 
-        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER && time <= 0.0) { return frame; }
-        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT && time >= 1.0) { return frame; }
+        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER && time <= 0.0) { return pose; }
+        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT && time >= 1.0) { return pose; }
 
         for (const MovableGroup& group : plan.Groups)
         {
             const double response = getGroupResponse(ship, plan, phase, time, group.SustainPhaseOffset);
             const int32_t offsetX = quantizeOffset(group.MaximumOffsetX, response);
-            applyMovableGroup(frame, ship, group, offsetX);
+            applyMovableGroup(pose.Frame, ship, group, offsetX);
+            if (group.SourceComponentIndex != std::numeric_limits<uint32_t>::max())
+            {
+                pose.ComponentTransforms.push_back({ getPoseComponentType(group.Type), group.SourceComponentIndex, offsetX, 0 });
+            }
         }
 
-        applyEngineVectoringPosture(frame, ship, plan, phase, time);
-        return frame;
+        applyEngineVectoringPosture(pose.Frame, ship, plan, phase, time);
+        return pose;
     }
 
     PixelShipGenerator::ShipMovementAnimationClip generateClip(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementPlan& plan, PixelShipGenerator::ShipMovementAnimationPhase phase, const PixelShipGenerator::AnimationSamplingRequirements& requirements)
@@ -740,7 +767,7 @@ namespace
             }
 
             clip.NormalizedSampleTimes.push_back(normalizedTime);
-            clip.Frames.push_back(evaluateMovementFrame(ship, phase, normalizedTime, plan));
+            clip.Frames.push_back(evaluateMovementPose(ship, phase, normalizedTime, plan).Frame);
         }
 
         return clip;
@@ -770,6 +797,14 @@ namespace PixelShipGenerator
         if (!isLateralAnimationType(type)) { throw std::invalid_argument("ShipLateralMovementAnimator requires MOVE_LEFT or MOVE_RIGHT."); }
         const uint64_t seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ LateralMovementSeedSalt);
         const LateralMovementPlan movementPlan = createLateralMovementPlan(ship, type, settings, seed);
-        return evaluateMovementFrame(ship, phase, normalizedTime, movementPlan);
+        return evaluateMovementPose(ship, phase, normalizedTime, movementPlan).Frame;
+    }
+
+    ShipAnimationPose ShipLateralMovementAnimator::evaluatePoseAtNormalizedTime(const GeneratedShip& ship, ShipAnimationType type, ShipMovementAnimationPhase phase, double normalizedTime, const ShipMovementAnimationSettings& settings) const
+    {
+        if (!isLateralAnimationType(type)) { throw std::invalid_argument("ShipLateralMovementAnimator requires MOVE_LEFT or MOVE_RIGHT."); }
+        const uint64_t seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ LateralMovementSeedSalt);
+        const LateralMovementPlan movementPlan = createLateralMovementPlan(ship, type, settings, seed);
+        return evaluateMovementPose(ship, phase, normalizedTime, movementPlan);
     }
 }

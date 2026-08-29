@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <set>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -32,6 +33,8 @@ namespace
         std::vector<PixelCoordinate> FrontEdgePixels;
         uint32_t MaximumRecoilTravel = 0u;
         uint32_t MaximumPreFireExtension = 0u;
+        int32_t UnderlyingOffsetX = 0;
+        int32_t UnderlyingOffsetY = 0;
     };
 
     struct FiringProfile
@@ -255,32 +258,34 @@ namespace
         return pixels.empty() ? 0u : maximumDepth;
     }
 
-    bool isPreFireExtensionSafe(const GeneratedShip& ship, const FiringWeaponPlan& weapon, uint32_t extension)
+    bool isPreFireExtensionSafe(const GeneratedShip& ship, const Image& underlyingFrame, const FiringWeaponPlan& weapon, uint32_t extension)
     {
         if (extension == 0u || weapon.FrontEdgePixels.empty()) { return true; }
         const auto [stepX, stepY] = getForwardStep(weapon.Component.Direction);
         for (const PixelCoordinate& source : weapon.FrontEdgePixels)
         {
+            const int32_t sourceX = static_cast<int32_t>(source.X) + weapon.UnderlyingOffsetX;
+            const int32_t sourceY = static_cast<int32_t>(source.Y) + weapon.UnderlyingOffsetY;
             for (uint32_t distance = 1u; distance <= extension; ++distance)
             {
-                const int32_t x = static_cast<int32_t>(source.X) + stepX * static_cast<int32_t>(distance);
-                const int32_t y = static_cast<int32_t>(source.Y) + stepY * static_cast<int32_t>(distance);
-                if (x < 0 || y < 0 || x >= static_cast<int32_t>(ship.FinalImage.getWidth()) || y >= static_cast<int32_t>(ship.FinalImage.getHeight())) { return false; }
+                const int32_t x = sourceX + stepX * static_cast<int32_t>(distance);
+                const int32_t y = sourceY + stepY * static_cast<int32_t>(distance);
+                if (x < 0 || y < 0 || x >= static_cast<int32_t>(underlyingFrame.getWidth()) || y >= static_cast<int32_t>(underlyingFrame.getHeight())) { return false; }
                 const uint32_t px = static_cast<uint32_t>(x);
                 const uint32_t py = static_cast<uint32_t>(y);
-                if (ship.FinalImage.getPixel(px, py).A != 0u) { return false; }
+                if (underlyingFrame.getPixel(px, py).A != 0u) { return false; }
                 if (isLikelyStructuralVoid(ship, px, py)) { return false; }
             }
         }
         return true;
     }
 
-    uint32_t findSafePreFireExtension(const GeneratedShip& ship, const FiringWeaponPlan& weapon, uint32_t desiredExtension)
+    uint32_t findSafePreFireExtension(const GeneratedShip& ship, const Image& underlyingFrame, const FiringWeaponPlan& weapon, uint32_t desiredExtension)
     {
         uint32_t safe = 0u;
         for (uint32_t extension = 1u; extension <= desiredExtension; ++extension)
         {
-            if (!isPreFireExtensionSafe(ship, weapon, extension)) { break; }
+            if (!isPreFireExtensionSafe(ship, underlyingFrame, weapon, extension)) { break; }
             safe = extension;
         }
         return safe;
@@ -341,8 +346,12 @@ namespace
         return indices;
     }
 
-    FiringPlan buildPlan(const GeneratedShip& ship, const ShipFiringAnimationTarget& target, const ShipFiringAnimationSettings& settings)
+    FiringPlan buildPlan(const GeneratedShip& ship, const ShipAnimationPose& underlyingPose, const ShipFiringAnimationTarget& target, const ShipFiringAnimationSettings& settings)
     {
+        if (underlyingPose.Frame.getWidth() != ship.FinalImage.getWidth() || underlyingPose.Frame.getHeight() != ship.FinalImage.getHeight())
+        {
+            throw std::invalid_argument("ShipFiringAnimator underlying pose dimensions must match the GeneratedShip.");
+        }
         FiringPlan plan;
         plan.Target = target;
         plan.Diagnostics.TargetWeaponComponentIndex = target.WeaponComponentIndex;
@@ -366,6 +375,11 @@ namespace
             weapon.Component = component;
             weapon.MovablePixels = collectMovablePixels(ship, component);
             weapon.FrontEdgePixels = collectFrontEdgePixels(component, weapon.MovablePixels);
+            if (const ShipAnimationComponentTransform* transform = findAnimationComponentTransform(underlyingPose, ShipAnimationSemanticComponentType::WEAPON, index))
+            {
+                weapon.UnderlyingOffsetX = transform->OffsetX;
+                weapon.UnderlyingOffsetY = transform->OffsetY;
+            }
 
             const uint32_t recoilCapacity = getMaximumRecoilCapacity(component, weapon.MovablePixels);
             const uint32_t profileRecoil = std::max(1u, static_cast<uint32_t>((static_cast<uint64_t>(plan.Profile.RecoilLimit) * plan.Profile.ResponseStrengthPercent + 99u) / 100u));
@@ -373,7 +387,7 @@ namespace
 
             if (settings.PreFireMotion && plan.Profile.PreFireExtensionLimit > 0u)
             {
-                weapon.MaximumPreFireExtension = findSafePreFireExtension(ship, weapon, std::min(plan.Profile.PreFireExtensionLimit, scaleTravelCapacity));
+                weapon.MaximumPreFireExtension = findSafePreFireExtension(ship, underlyingPose.Frame, weapon, std::min(plan.Profile.PreFireExtensionLimit, scaleTravelCapacity));
             }
 
             maximumRecoil = std::max(maximumRecoil, weapon.MaximumRecoilTravel);
@@ -425,31 +439,39 @@ namespace
         return plan;
     }
 
-    void applyWeaponFrame(Image& frame, const GeneratedShip& ship, const FiringWeaponPlan& weapon, uint32_t recoilTravel, uint32_t preFireExtension)
+    void applyWeaponFrame(Image& frame, const Image& underlyingFrame, const FiringWeaponPlan& weapon, uint32_t recoilTravel, uint32_t preFireExtension)
     {
         for (const PixelCoordinate& pixel : weapon.MovablePixels)
         {
             if (recoilTravel == 0u || getForwardDepth(weapon.Component, pixel) >= recoilTravel) { continue; }
-            frame.setPixel(pixel.X, pixel.Y, Color(0u, 0u, 0u, 0u));
+            const int32_t x = static_cast<int32_t>(pixel.X) + weapon.UnderlyingOffsetX;
+            const int32_t y = static_cast<int32_t>(pixel.Y) + weapon.UnderlyingOffsetY;
+            if (x >= 0 && y >= 0 && x < static_cast<int32_t>(frame.getWidth()) && y < static_cast<int32_t>(frame.getHeight()))
+            {
+                frame.setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), Color(0u, 0u, 0u, 0u));
+            }
         }
 
         if (preFireExtension == 0u || weapon.FrontEdgePixels.empty()) { return; }
         const auto [stepX, stepY] = getForwardStep(weapon.Component.Direction);
         for (const PixelCoordinate& source : weapon.FrontEdgePixels)
         {
-            const Color color = ship.FinalImage.getPixel(source.X, source.Y);
+            const int32_t sourceX = static_cast<int32_t>(source.X) + weapon.UnderlyingOffsetX;
+            const int32_t sourceY = static_cast<int32_t>(source.Y) + weapon.UnderlyingOffsetY;
+            if (sourceX < 0 || sourceY < 0 || sourceX >= static_cast<int32_t>(underlyingFrame.getWidth()) || sourceY >= static_cast<int32_t>(underlyingFrame.getHeight())) { continue; }
+            const Color color = underlyingFrame.getPixel(static_cast<uint32_t>(sourceX), static_cast<uint32_t>(sourceY));
             for (uint32_t distance = 1u; distance <= preFireExtension; ++distance)
             {
-                const int32_t x = static_cast<int32_t>(source.X) + stepX * static_cast<int32_t>(distance);
-                const int32_t y = static_cast<int32_t>(source.Y) + stepY * static_cast<int32_t>(distance);
+                const int32_t x = sourceX + stepX * static_cast<int32_t>(distance);
+                const int32_t y = sourceY + stepY * static_cast<int32_t>(distance);
                 if (x >= 0 && y >= 0 && x < static_cast<int32_t>(frame.getWidth()) && y < static_cast<int32_t>(frame.getHeight())) { frame.setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color); }
             }
         }
     }
 
-    Image evaluatePlanFrame(const GeneratedShip& ship, const FiringPlan& plan, double normalizedTime)
+    Image evaluatePlanFrame(const ShipAnimationPose& underlyingPose, const FiringPlan& plan, double normalizedTime)
     {
-        Image frame = ship.FinalImage;
+        Image frame = underlyingPose.Frame;
         if (!plan.Diagnostics.ValidTarget) { return frame; }
         const double t = clampNormalizedTime(normalizedTime);
         if (t <= 0.0 || t >= 1.0) { return frame; }
@@ -460,7 +482,7 @@ namespace
         {
             const uint32_t recoil = quantizeTravel(weapon.MaximumRecoilTravel, recoilResponse);
             const uint32_t preFire = quantizeTravel(weapon.MaximumPreFireExtension, preFireResponse);
-            applyWeaponFrame(frame, ship, weapon, recoil, preFire);
+            applyWeaponFrame(frame, underlyingPose.Frame, weapon, recoil, preFire);
         }
         return frame;
     }
@@ -501,11 +523,20 @@ namespace PixelShipGenerator
 
     ShipFiringAnimation ShipFiringAnimator::generate(const GeneratedShip& ship, const ShipFiringAnimationTarget& target, const ShipFiringAnimationSettings& settings) const
     {
+        ShipAnimationPose neutralPose;
+        neutralPose.Frame = ship.FinalImage;
+        neutralPose.Layer = ShipAnimationPoseLayer::STATIC_NEUTRAL;
+        neutralPose.UnderlyingAnimationType = ShipAnimationType::IDLE;
+        return generate(ship, neutralPose, target, settings);
+    }
+
+    ShipFiringAnimation ShipFiringAnimator::generate(const GeneratedShip& ship, const ShipAnimationPose& underlyingPose, const ShipFiringAnimationTarget& target, const ShipFiringAnimationSettings& settings) const
+    {
         ShipFiringAnimation animation;
         animation.Target = target;
         animation.FrameWidth = ship.FinalImage.getWidth();
         animation.FrameHeight = ship.FinalImage.getHeight();
-        const FiringPlan plan = buildPlan(ship, target, settings);
+        const FiringPlan plan = buildPlan(ship, underlyingPose, target, settings);
         animation.Seed = plan.Seed;
         animation.DurationMilliseconds = plan.DurationMilliseconds;
         animation.Diagnostics = plan.Diagnostics;
@@ -524,14 +555,23 @@ namespace PixelShipGenerator
         {
             const double normalizedTime = static_cast<double>(frameIndex) / static_cast<double>(animation.Sampling.ActualFrameCount);
             animation.NormalizedSampleTimes.push_back(normalizedTime);
-            animation.Frames.push_back(evaluatePlanFrame(ship, plan, normalizedTime));
+            animation.Frames.push_back(evaluatePlanFrame(underlyingPose, plan, normalizedTime));
         }
         return animation;
     }
 
     Image ShipFiringAnimator::evaluateFrameAtNormalizedTime(const GeneratedShip& ship, const ShipFiringAnimationTarget& target, double normalizedTime, const ShipFiringAnimationSettings& settings) const
     {
-        const FiringPlan plan = buildPlan(ship, target, settings);
-        return evaluatePlanFrame(ship, plan, normalizedTime);
+        ShipAnimationPose neutralPose;
+        neutralPose.Frame = ship.FinalImage;
+        neutralPose.Layer = ShipAnimationPoseLayer::STATIC_NEUTRAL;
+        neutralPose.UnderlyingAnimationType = ShipAnimationType::IDLE;
+        return evaluateFrameAtNormalizedTime(ship, neutralPose, target, normalizedTime, settings);
+    }
+
+    Image ShipFiringAnimator::evaluateFrameAtNormalizedTime(const GeneratedShip& ship, const ShipAnimationPose& underlyingPose, const ShipFiringAnimationTarget& target, double normalizedTime, const ShipFiringAnimationSettings& settings) const
+    {
+        const FiringPlan plan = buildPlan(ship, underlyingPose, target, settings);
+        return evaluatePlanFrame(underlyingPose, plan, normalizedTime);
     }
 }

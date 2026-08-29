@@ -30,6 +30,7 @@ namespace
     {
         PixelShipGenerator::ShipMovementAnimatedComponentType Type = PixelShipGenerator::ShipMovementAnimatedComponentType::WEAPON_STABILIZATION;
         uint32_t SemanticGroup = 0u;
+        uint32_t SourceComponentIndex = std::numeric_limits<uint32_t>::max();
         std::vector<PixelCoordinate> SourcePixels;
         int32_t MaximumOffsetX = 0;
         int32_t MaximumOffsetY = 0;
@@ -567,6 +568,7 @@ namespace
             MovableGroup group;
             group.Type = PixelShipGenerator::ShipMovementAnimatedComponentType::WEAPON_STABILIZATION;
             group.SemanticGroup = component.SymmetryGroup != 0u ? component.SymmetryGroup : static_cast<uint32_t>(weaponIndex + 1u);
+            group.SourceComponentIndex = static_cast<uint32_t>(weaponIndex);
             group.SourcePixels = collectWeaponPixels(ship, component);
             if (group.SourcePixels.empty() || !sourcePixelsAreMovable(ship, group.SourcePixels, false)) { continue; }
             group.SustainPhaseOffset = getPhaseOffset(getAnimationHash(plan.Seed, component.AnchorX, component.AnchorY, WeaponPhaseSalt ^ static_cast<uint64_t>(group.SemanticGroup)), plan.Profile);
@@ -611,6 +613,7 @@ namespace
             MovableGroup group;
             group.Type = acceleration ? PixelShipGenerator::ShipMovementAnimatedComponentType::ATTACHMENT_ARTICULATION : PixelShipGenerator::ShipMovementAnimatedComponentType::BRAKING_ARTICULATION;
             group.SemanticGroup = placement.SymmetryGroup != 0u ? placement.SymmetryGroup : static_cast<uint32_t>(placementIndex + 1u);
+            group.SourceComponentIndex = static_cast<uint32_t>(placementIndex);
             group.SourcePixels = collectAttachmentPixels(ship, placement);
             if (group.SourcePixels.empty() || !sourcePixelsAreMovable(ship, group.SourcePixels, true)) { continue; }
             group.SustainPhaseOffset = getPhaseOffset(getAnimationHash(plan.Seed, placement.AnchorX, placement.AnchorY, AttachmentPhaseSalt ^ static_cast<uint64_t>(group.SemanticGroup)), plan.Profile);
@@ -654,32 +657,32 @@ namespace
 
         const uint32_t activeComponentCount = plan.Diagnostics.ActiveEngineCount + plan.Diagnostics.ActiveWeaponCount + plan.Diagnostics.ActiveAttachmentCount;
         auto configure = [&](PixelShipGenerator::AnimationSamplingRequirements& requirements, PixelShipGenerator::ShipMovementAnimationPhase phase)
-        {
-            requirements.Type = plan.Type;
-            requirements.Mode = settings.SamplingMode;
-            requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;
-            requirements.MaximumMechanicalTravelPixels = plan.Diagnostics.MaximumMechanicalTravelPixels;
-            requirements.MaximumExhaustTravelPixels = plan.Diagnostics.MaximumExhaustTravelPixels;
-            requirements.ActiveAnimatedComponentCount = activeComponentCount;
-            requirements.IndependentPhaseGroupCount = plan.Diagnostics.IndependentPhaseGroupCount;
-            requirements.MaximumTemporalCyclesPerClip = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN && activeComponentCount > 0u ? 2u : activeComponentCount > 0u ? 1u : 0u;
-            requirements.MaximumFrameCount = std::max(1u, settings.MaximumFrameCount);
+            {
+                requirements.Type = plan.Type;
+                requirements.Mode = settings.SamplingMode;
+                requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;
+                requirements.MaximumMechanicalTravelPixels = plan.Diagnostics.MaximumMechanicalTravelPixels;
+                requirements.MaximumExhaustTravelPixels = plan.Diagnostics.MaximumExhaustTravelPixels;
+                requirements.ActiveAnimatedComponentCount = activeComponentCount;
+                requirements.IndependentPhaseGroupCount = plan.Diagnostics.IndependentPhaseGroupCount;
+                requirements.MaximumTemporalCyclesPerClip = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN && activeComponentCount > 0u ? 2u : activeComponentCount > 0u ? 1u : 0u;
+                requirements.MaximumFrameCount = std::max(1u, settings.MaximumFrameCount);
 
-            if (phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN)
-            {
-                requirements.DurationMilliseconds = std::max(1u, settings.SustainLoopDurationMilliseconds);
-                requirements.ExactFrameCount = std::max(1u, settings.SustainFrameCount);
-                requirements.MinimumFrameCount = std::max(1u, settings.MinimumSustainFrameCount);
-            }
-            else
-            {
-                requirements.DurationMilliseconds = std::max(1u, phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER ? settings.EnterDurationMilliseconds : settings.ExitDurationMilliseconds);
-                requirements.ExactFrameCount = std::max(2u, settings.TransitionFrameCount);
-                requirements.MinimumFrameCount = std::max(2u, settings.MinimumTransitionFrameCount);
-            }
-            if (activeComponentCount == 0u && settings.SamplingMode == PixelShipGenerator::AnimationSamplingMode::ADAPTIVE) { requirements.MinimumFrameCount = 1u; }
-            requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, requirements.MaximumFrameCount);
-        };
+                if (phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN)
+                {
+                    requirements.DurationMilliseconds = std::max(1u, settings.SustainLoopDurationMilliseconds);
+                    requirements.ExactFrameCount = std::max(1u, settings.SustainFrameCount);
+                    requirements.MinimumFrameCount = std::max(1u, settings.MinimumSustainFrameCount);
+                }
+                else
+                {
+                    requirements.DurationMilliseconds = std::max(1u, phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER ? settings.EnterDurationMilliseconds : settings.ExitDurationMilliseconds);
+                    requirements.ExactFrameCount = std::max(2u, settings.TransitionFrameCount);
+                    requirements.MinimumFrameCount = std::max(2u, settings.MinimumTransitionFrameCount);
+                }
+                if (activeComponentCount == 0u && settings.SamplingMode == PixelShipGenerator::AnimationSamplingMode::ADAPTIVE) { requirements.MinimumFrameCount = 1u; }
+                requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, requirements.MaximumFrameCount);
+            };
 
         configure(plan.EnterSampling, PixelShipGenerator::ShipMovementAnimationPhase::ENTER);
         configure(plan.SustainSampling, PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN);
@@ -786,21 +789,46 @@ namespace
         }
     }
 
-    PixelShipGenerator::Image evaluateMovementFrame(const PixelShipGenerator::GeneratedShip& ship, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, const LongitudinalMovementPlan& plan, const PixelShipGenerator::ShipMovementAnimationSettings& settings)
+    PixelShipGenerator::ShipAnimationSemanticComponentType getPoseComponentType(PixelShipGenerator::ShipMovementAnimatedComponentType type)
+    {
+        switch (type)
+        {
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_VECTORING:
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ENGINE_PROPULSION:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::ENGINE;
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::WEAPON_STABILIZATION:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::WEAPON;
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::ATTACHMENT_ARTICULATION:
+        case PixelShipGenerator::ShipMovementAnimatedComponentType::BRAKING_ARTICULATION:
+        default:
+            return PixelShipGenerator::ShipAnimationSemanticComponentType::ATTACHMENT;
+        }
+    }
+
+    PixelShipGenerator::ShipAnimationPose evaluateMovementPose(const PixelShipGenerator::GeneratedShip& ship, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, const LongitudinalMovementPlan& plan, const PixelShipGenerator::ShipMovementAnimationSettings& settings)
     {
         const double time = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? wrapNormalizedTime(normalizedTime) : clampNormalizedTime(normalizedTime);
-        PixelShipGenerator::Image frame = ship.FinalImage;
-        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER && time <= 0.0) { return frame; }
-        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT && time >= 1.0) { return frame; }
+        PixelShipGenerator::ShipAnimationPose pose;
+        pose.Frame = ship.FinalImage;
+        pose.Layer = PixelShipGenerator::ShipAnimationPoseLayer::MOVEMENT;
+        pose.UnderlyingAnimationType = plan.Type;
+        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::ENTER && time <= 0.0) { return pose; }
+        if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT && time >= 1.0) { return pose; }
 
-        applyEnginePropulsion(frame, ship, plan, phase, time, settings);
+        applyEnginePropulsion(pose.Frame, ship, plan, phase, time, settings);
         for (const MovableGroup& group : plan.Groups)
         {
             const double response = getGroupResponse(ship, plan, phase, time, group.SustainPhaseOffset);
-            applyMovableGroup(frame, ship, group, quantizeOffset(group.MaximumOffsetX, response), quantizeOffset(group.MaximumOffsetY, response));
+            const int32_t offsetX = quantizeOffset(group.MaximumOffsetX, response);
+            const int32_t offsetY = quantizeOffset(group.MaximumOffsetY, response);
+            applyMovableGroup(pose.Frame, ship, group, offsetX, offsetY);
+            if (group.SourceComponentIndex != std::numeric_limits<uint32_t>::max())
+            {
+                pose.ComponentTransforms.push_back({ getPoseComponentType(group.Type), group.SourceComponentIndex, offsetX, offsetY });
+            }
         }
-        applyEngineHousingPosture(frame, ship, plan, phase, time, settings);
-        return frame;
+        applyEngineHousingPosture(pose.Frame, ship, plan, phase, time, settings);
+        return pose;
     }
 
     PixelShipGenerator::ShipMovementAnimationClip generateClip(const PixelShipGenerator::GeneratedShip& ship, const LongitudinalMovementPlan& plan, PixelShipGenerator::ShipMovementAnimationPhase phase, const PixelShipGenerator::AnimationSamplingRequirements& requirements, const PixelShipGenerator::ShipMovementAnimationSettings& settings)
@@ -824,7 +852,7 @@ namespace
             if (clip.Looping) { normalizedTime = static_cast<double>(frameIndex) / static_cast<double>(clip.Sampling.ActualFrameCount); }
             else if (clip.Sampling.ActualFrameCount > 1u) { normalizedTime = static_cast<double>(frameIndex) / static_cast<double>(clip.Sampling.ActualFrameCount - 1u); }
             clip.NormalizedSampleTimes.push_back(normalizedTime);
-            clip.Frames.push_back(evaluateMovementFrame(ship, phase, normalizedTime, plan, settings));
+            clip.Frames.push_back(evaluateMovementPose(ship, phase, normalizedTime, plan, settings).Frame);
         }
         return clip;
     }
@@ -851,6 +879,14 @@ namespace PixelShipGenerator
         if (!isLongitudinalAnimationType(type)) { throw std::invalid_argument("ShipLongitudinalMovementAnimator requires MOVE_UP or MOVE_DOWN."); }
         const uint64_t seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ LongitudinalMovementSeedSalt);
         const LongitudinalMovementPlan movementPlan = createLongitudinalMovementPlan(ship, type, settings, seed);
-        return evaluateMovementFrame(ship, phase, normalizedTime, movementPlan, settings);
+        return evaluateMovementPose(ship, phase, normalizedTime, movementPlan, settings).Frame;
+    }
+
+    ShipAnimationPose ShipLongitudinalMovementAnimator::evaluatePoseAtNormalizedTime(const GeneratedShip& ship, ShipAnimationType type, ShipMovementAnimationPhase phase, double normalizedTime, const ShipMovementAnimationSettings& settings) const
+    {
+        if (!isLongitudinalAnimationType(type)) { throw std::invalid_argument("ShipLongitudinalMovementAnimator requires MOVE_UP or MOVE_DOWN."); }
+        const uint64_t seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ LongitudinalMovementSeedSalt);
+        const LongitudinalMovementPlan movementPlan = createLongitudinalMovementPlan(ship, type, settings, seed);
+        return evaluateMovementPose(ship, phase, normalizedTime, movementPlan, settings);
     }
 }
