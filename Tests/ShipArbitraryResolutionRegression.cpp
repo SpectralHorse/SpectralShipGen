@@ -64,7 +64,7 @@ int PixelShipGeneratorTests::runArbitraryResolutionRegression()
             animationSettings.FrameCount = 6u;
             animationSettings.Seed = 0xA24BAED4963EE407ull ^ resolution;
             const PixelShipGenerator::ShipIdleAnimation animation = animator.generate(ship, animationSettings);
-            if (animation.FrameWidth != resolution || animation.FrameHeight != resolution || animation.Frames.size() != animationSettings.FrameCount)
+            if (animation.FrameWidth != resolution || animation.FrameHeight != resolution || animation.Frames.size() != animation.Sampling.ActualFrameCount)
             {
                 success = false;
                 std::cerr << resolution << "x" << resolution << " animation dimensions/frame count are incorrect.\n";
@@ -77,7 +77,7 @@ int PixelShipGeneratorTests::runArbitraryResolutionRegression()
             }
 
             const PixelShipGenerator::Image spritesheet = PixelShipGenerator::createHorizontalSpritesheet(animation);
-            if (spritesheet.getWidth() != resolution * animationSettings.FrameCount || spritesheet.getHeight() != resolution)
+            if (spritesheet.getWidth() != resolution * animation.Sampling.ActualFrameCount || spritesheet.getHeight() != resolution)
             {
                 success = false;
                 std::cerr << resolution << "x" << resolution << " spritesheet dimensions are incorrect.\n";

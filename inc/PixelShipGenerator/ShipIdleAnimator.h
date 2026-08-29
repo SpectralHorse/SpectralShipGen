@@ -9,5 +9,6 @@ namespace PixelShipGenerator
     {
     public:
         ShipIdleAnimation generate(const GeneratedShip& ship, const ShipIdleAnimationSettings& settings = {}) const;
+        Image evaluateFrameAtNormalizedTime(const GeneratedShip& ship, double normalizedTime, const ShipIdleAnimationSettings& settings = {}) const;
     };
 }

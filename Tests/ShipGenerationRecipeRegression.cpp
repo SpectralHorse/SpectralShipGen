@@ -82,7 +82,11 @@ namespace
     PixelShipGenerator::ShipIdleAnimationSettings createAnimationSettings(uint64_t seed)
     {
         PixelShipGenerator::ShipIdleAnimationSettings settings;
-        settings.FrameCount = 10u;
+        settings.AnimationDurationMilliseconds = 1500u;
+        settings.FrameCount = 12u;
+        settings.MinimumFrameCount = 8u;
+        settings.MaximumFrameCount = 48u;
+        settings.SamplingMode = PixelShipGenerator::AnimationSamplingMode::ADAPTIVE;
         settings.EngineFlicker = true;
         settings.LightBlinking = true;
         settings.MechanicalMicroMovement = true;
@@ -94,7 +98,7 @@ namespace
 
     bool animationSettingsEqual(const PixelShipGenerator::ShipIdleAnimationSettings& first, const PixelShipGenerator::ShipIdleAnimationSettings& second)
     {
-        return first.FrameCount == second.FrameCount && first.EngineFlicker == second.EngineFlicker && first.LightBlinking == second.LightBlinking && first.MechanicalMicroMovement == second.MechanicalMicroMovement && first.HoverOffset == second.HoverOffset && first.SmallDetailVariation == second.SmallDetailVariation && first.Seed == second.Seed;
+        return first.AnimationDurationMilliseconds == second.AnimationDurationMilliseconds && first.FrameCount == second.FrameCount && first.MinimumFrameCount == second.MinimumFrameCount && first.MaximumFrameCount == second.MaximumFrameCount && first.SamplingMode == second.SamplingMode && first.EngineFlicker == second.EngineFlicker && first.LightBlinking == second.LightBlinking && first.MechanicalMicroMovement == second.MechanicalMicroMovement && first.HoverOffset == second.HoverOffset && first.SmallDetailVariation == second.SmallDetailVariation && first.Seed == second.Seed;
     }
 }
 
@@ -210,6 +214,60 @@ int PixelShipGeneratorTests::runGenerationRecipeRegression()
     {
         success = false;
         std::cerr << "Legacy scalar resolution recipe did not migrate to square dimensions.\n";
+    }
+
+
+    const std::string legacyAnimationRecipe = R"JSON({
+  "format_version": 3,
+  "ship": {
+    "dimensions": { "width": 64, "height": 48 },
+    "style": "INDUSTRIAL",
+    "faction": "FRONTIER",
+    "seeds": { "master": 101, "structure": 102, "palette": 103, "details": 104, "attachments": 105, "rng_mode": "DOMAIN_SUBSTREAMS" },
+    "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": true }
+  },
+  "animation": {
+    "seed": 106,
+    "frame_count": 20,
+    "engine_flicker": true,
+    "light_blinking": true,
+    "mechanical_micro_movement": true,
+    "hover_offset": true,
+    "small_detail_variation": true
+  }
+})JSON";
+    const auto legacyAnimation = PixelShipGeneratorPreview::deserializeShipGenerationRecipe(legacyAnimationRecipe);
+    if (!legacyAnimation.Success || !legacyAnimation.Document.AnimationSettings.has_value())
+    {
+        success = false;
+        std::cerr << "Task-67 legacy animation recipe failed to migrate.\n";
+    }
+    else
+    {
+        const PixelShipGenerator::ShipIdleAnimationSettings& migrated = *legacyAnimation.Document.AnimationSettings;
+        if (migrated.SamplingMode != PixelShipGenerator::AnimationSamplingMode::EXACT_FRAME_COUNT || migrated.FrameCount != 20u || migrated.MinimumFrameCount != 20u || migrated.MaximumFrameCount != 20u || migrated.AnimationDurationMilliseconds != 2000u)
+        {
+            success = false;
+            std::cerr << "Task-67 legacy animation recipe did not preserve exact frame-count/100ms timing semantics.\n";
+        }
+        else
+        {
+            try
+            {
+                const PixelShipGenerator::GeneratedShip migratedShip = generator.generate(createSettings(legacyAnimation.Document.Recipe));
+                const PixelShipGenerator::ShipIdleAnimation migratedAnimation = animator.generate(migratedShip, migrated);
+                if (migratedAnimation.Frames.size() != 20u || migratedAnimation.DurationMilliseconds != 2000u || migratedAnimation.FrameDurationMilliseconds != 100.0)
+                {
+                    success = false;
+                    std::cerr << "Task-67 migrated legacy animation did not preserve exact output/timing semantics.\n";
+                }
+            }
+            catch (const std::exception& exception)
+            {
+                success = false;
+                std::cerr << "Task-67 migrated legacy animation generation failed: " << exception.what() << '\n';
+            }
+        }
     }
 
     const auto unsupportedVersion = PixelShipGeneratorPreview::deserializeShipGenerationRecipe("{ \"format_version\": 999, \"ship\": {} }");

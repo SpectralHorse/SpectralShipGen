@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <exception>
 #include <iostream>
@@ -504,29 +505,54 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             const PixelShipGenerator::ShipIdleAnimation firstAnimation = animator.generate(ship, settings);
             const PixelShipGenerator::ShipIdleAnimation secondAnimation = animator.generate(ship, settings);
 
-            if (firstAnimation.FrameWidth != recipe.Resolution || firstAnimation.FrameHeight != recipe.Resolution || firstAnimation.Frames.size() != settings.FrameCount)
+            if (firstAnimation.FrameWidth != recipe.Resolution || firstAnimation.FrameHeight != recipe.Resolution || firstAnimation.Frames.size() != firstAnimation.Sampling.ActualFrameCount || firstAnimation.Frames.size() < settings.MinimumFrameCount || firstAnimation.Frames.size() > settings.MaximumFrameCount)
             {
                 success = false;
-                std::cerr << recipe.Name << " returned unexpected animation dimensions or frame count.\n";
+                std::cerr << recipe.Name << " returned unexpected animation dimensions or adaptive frame count.\n";
                 continue;
             }
 
-            if (firstAnimation.Frames.empty() || !imagesEqual(firstAnimation.Frames.front(), ship.FinalImage))
+            if (firstAnimation.DurationMilliseconds != settings.AnimationDurationMilliseconds || std::abs(firstAnimation.FrameDurationMilliseconds * static_cast<double>(firstAnimation.Frames.size()) - static_cast<double>(settings.AnimationDurationMilliseconds)) > 0.0001)
+            {
+                success = false;
+                std::cerr << recipe.Name << " did not preserve semantic duration / derived frame duration.\n";
+            }
+
+            if (firstAnimation.NormalizedSampleTimes.size() != firstAnimation.Frames.size() || firstAnimation.NormalizedSampleTimes.empty() || firstAnimation.NormalizedSampleTimes.front() != 0.0 || firstAnimation.NormalizedSampleTimes.back() >= 1.0)
+            {
+                success = false;
+                std::cerr << recipe.Name << " did not sample the normalized [0,1) timeline correctly.\n";
+            }
+            else
+            {
+                for (std::size_t frameIndex = 0u; frameIndex < firstAnimation.NormalizedSampleTimes.size(); ++frameIndex)
+                {
+                    const double expectedTime = static_cast<double>(frameIndex) / static_cast<double>(firstAnimation.Frames.size());
+                    if (std::abs(firstAnimation.NormalizedSampleTimes[frameIndex] - expectedTime) > 0.000000000001)
+                    {
+                        success = false;
+                        std::cerr << recipe.Name << " does not sample frameIndex / ActualFrameCount exactly.\n";
+                        break;
+                    }
+                }
+            }
+
+            if (firstAnimation.Frames.empty() || !imagesEqual(firstAnimation.Frames.front(), ship.FinalImage) || !imagesEqual(animator.evaluateFrameAtNormalizedTime(ship, 0.0, settings), ship.FinalImage))
             {
                 success = false;
                 std::cerr << recipe.Name << " frame 0 does not exactly equal the static generated image.\n";
             }
 
-            if (!firstAnimation.Frames.empty() && !imagesEqual(firstAnimation.Frames.back(), ship.FinalImage))
+            if (!imagesEqual(animator.evaluateFrameAtNormalizedTime(ship, 1.0, settings), ship.FinalImage))
             {
                 success = false;
-                std::cerr << recipe.Name << " does not close its loop cleanly back to the static pose.\n";
+                std::cerr << recipe.Name << " looping t=1 evaluation does not wrap to the static t=0 state.\n";
             }
 
-            if (firstAnimation.Frames.size() != secondAnimation.Frames.size())
+            if (firstAnimation.Frames.size() != secondAnimation.Frames.size() || firstAnimation.Sampling.ActualFrameCount != secondAnimation.Sampling.ActualFrameCount || firstAnimation.Sampling.ActiveAnimatedComponentCount != secondAnimation.Sampling.ActiveAnimatedComponentCount || firstAnimation.Sampling.IndependentPhaseGroupCount != secondAnimation.Sampling.IndependentPhaseGroupCount || firstAnimation.Sampling.MaximumMechanicalTravelPixels != secondAnimation.Sampling.MaximumMechanicalTravelPixels || firstAnimation.Sampling.MaximumExhaustTravelPixels != secondAnimation.Sampling.MaximumExhaustTravelPixels)
             {
                 success = false;
-                std::cerr << recipe.Name << " is not deterministic in frame count.\n";
+                std::cerr << recipe.Name << " is not deterministic in adaptive sampling diagnostics.\n";
             }
             else
             {
@@ -549,25 +575,22 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             }
 
             const PixelShipGenerator::Image spritesheet = PixelShipGenerator::createHorizontalSpritesheet(firstAnimation);
-            const std::size_t expectedSpritesheetPixelCount = static_cast<std::size_t>(recipe.Resolution) * firstAnimation.Frames.size() * recipe.Resolution;
-
+            const std::size_t expectedSpritesheetPixelCount = static_cast<std::size_t>(recipe.Resolution) * firstAnimation.Sampling.ActualFrameCount * recipe.Resolution;
             if (spritesheet.getPixels().size() != expectedSpritesheetPixelCount || !validateSpritesheetOrder(firstAnimation, spritesheet))
             {
                 success = false;
-                std::cerr << recipe.Name << " spritesheet has incorrect dimensions or frame ordering.\n";
+                std::cerr << recipe.Name << " spritesheet has incorrect actual-count dimensions or frame ordering.\n";
             }
 
             PixelShipGenerator::ShipIdleAnimationSettings structuralSettings = settings;
             structuralSettings.HoverOffset = false;
             const PixelShipGenerator::ShipIdleAnimation structuralAnimation = animator.generate(ship, structuralSettings);
             const uint32_t baseOpaquePixelCount = getOpaquePixelCount(ship.FinalImage);
-
             for (const PixelShipGenerator::Image& frame : structuralAnimation.Frames)
             {
                 const uint32_t opaquePixelCount = getOpaquePixelCount(frame);
                 const uint32_t maximumAllowedDelta = std::max(6u, baseOpaquePixelCount / 10u);
                 const uint32_t opaqueDelta = opaquePixelCount > baseOpaquePixelCount ? opaquePixelCount - baseOpaquePixelCount : baseOpaquePixelCount - opaquePixelCount;
-
                 if (opaqueDelta > maximumAllowedDelta || !isOpaqueImageEightConnected(frame, recipe.Resolution, recipe.Resolution) || hasIsolatedOpaquePixel(frame, recipe.Resolution, recipe.Resolution) || !validateTaperedExhaust(frame, ship))
                 {
                     success = false;
@@ -596,7 +619,6 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             for (std::size_t frameIndex = 0u; frameIndex < propulsionAnimation.Frames.size(); ++frameIndex)
             {
                 const PixelShipGenerator::Image& frame = propulsionAnimation.Frames[frameIndex];
-
                 if (!validateAnimatedExhaustFrame(frame, ship))
                 {
                     success = false;
@@ -605,13 +627,9 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
                 }
 
                 changedExhaustPixels += countChangedPixelsInExhaustEnvelope(frame, ship.FinalImage, ship);
-
                 for (const PixelShipGenerator::ShipEngineAnimationComponent& component : ship.IdleAnimationMetadata.EngineComponents)
                 {
-                    if (getAnimatedExhaustLength(frame, ship, component) != component.ExhaustLength)
-                    {
-                        exhaustLengthChanged = true;
-                    }
+                    if (getAnimatedExhaustLength(frame, ship, component) != component.ExhaustLength) { exhaustLengthChanged = true; }
                 }
             }
 
@@ -630,12 +648,7 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             engineMechanicalSettings.Seed = *propulsionSettings.Seed;
             const PixelShipGenerator::ShipIdleAnimation engineMechanicalAnimation = animator.generate(ship, engineMechanicalSettings);
             uint32_t changedEnginePixels = 0u;
-
-            for (const PixelShipGenerator::Image& frame : engineMechanicalAnimation.Frames)
-            {
-                changedEnginePixels += countChangedPixelsInMask(frame, ship.FinalImage, ship.EngineMask);
-            }
-
+            for (const PixelShipGenerator::Image& frame : engineMechanicalAnimation.Frames) { changedEnginePixels += countChangedPixelsInMask(frame, ship.FinalImage, ship.EngineMask); }
             if (!ship.IdleAnimationMetadata.EngineComponents.empty() && changedExhaustPixels <= changedEnginePixels)
             {
                 success = false;
@@ -649,9 +662,7 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             hoverSettings.HoverOffset = true;
             hoverSettings.SmallDetailVariation = false;
             hoverSettings.Seed = 0ull;
-
             const PixelShipGenerator::ShipIdleAnimation hoverAnimation = animator.generate(ship, hoverSettings);
-
             for (const PixelShipGenerator::Image& frame : hoverAnimation.Frames)
             {
                 if (getOpaquePixelCount(frame) != baseOpaquePixelCount)
@@ -672,7 +683,6 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
                 mechanicalOnly.SmallDetailVariation = false;
                 mechanicalOnly.Seed = 0x1234ull;
                 const PixelShipGenerator::ShipIdleAnimation restrainedAnimation = animator.generate(ship, mechanicalOnly);
-
                 for (const PixelShipGenerator::Image& frame : restrainedAnimation.Frames)
                 {
                     if (!imagesEqual(frame, ship.FinalImage))
@@ -691,6 +701,7 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
         }
     }
 
+    // Preserve the existing optional-component coverage fixture. This is intentionally not replaced by Task-67-specific output hashes.
     try
     {
         PixelShipGenerator::ShipGenerationSettings settings;
@@ -707,14 +718,12 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
         bool techChanged = false;
         bool ventChanged = false;
         bool weaponChanged = false;
-
         for (const PixelShipGenerator::Image& frame : animation.Frames)
         {
             techChanged = techChanged || maskRegionChanged(frame, ship.FinalImage, ship.IdleAnimationMetadata.MajorFeatureEmissiveMask);
             ventChanged = ventChanged || maskRegionChanged(frame, ship.FinalImage, ship.IdleAnimationMetadata.MajorFeatureMechanicalMask);
             weaponChanged = weaponChanged || maskRegionChanged(frame, ship.FinalImage, ship.IdleAnimationMetadata.WeaponOccupiedMask);
         }
-
         if (!techChanged || !ventChanged || !weaponChanged)
         {
             success = false;
@@ -727,64 +736,157 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
         std::cerr << "animation_component_coverage failed: " << exception.what() << '\n';
     }
 
+    // Equivalent normalized positions must be frame-density independent.
     try
     {
         PixelShipGenerator::ShipGenerationSettings settings;
         settings.Seed = 0x6A09E667F3BCC909ull;
-        settings.Dimensions.Width = 64u;
+        settings.Dimensions.Width = 96u;
         settings.Dimensions.Height = 64u;
-        settings.Style = PixelShipGenerator::ShipStyle::FIGHTER;
-        settings.Faction = PixelShipGenerator::ShipFactionType::FRONTIER;
+        settings.Style = PixelShipGenerator::ShipStyle::INDUSTRIAL;
+        settings.Faction = PixelShipGenerator::ShipFactionType::XENO;
         const PixelShipGenerator::GeneratedShip ship = generator.generate(settings);
-        constexpr std::array<uint32_t, 5u> FrameCounts = { 2u, 3u, 4u, 6u, 12u };
+        constexpr std::array<uint32_t, 3u> FrameCounts = { 10u, 20u, 60u };
+        constexpr std::array<uint32_t, 2u> Numerators = { 3u, 6u };
+        constexpr std::array<uint32_t, 2u> Denominator = { 10u, 10u };
+        std::array<PixelShipGenerator::ShipIdleAnimation, 3u> animations;
 
-        for (uint32_t frameCount : FrameCounts)
+        for (std::size_t densityIndex = 0u; densityIndex < FrameCounts.size(); ++densityIndex)
         {
             PixelShipGenerator::ShipIdleAnimationSettings animationSettings;
-            animationSettings.FrameCount = frameCount;
-            animationSettings.EngineFlicker = true;
-            animationSettings.LightBlinking = false;
-            animationSettings.MechanicalMicroMovement = false;
-            animationSettings.HoverOffset = false;
-            animationSettings.SmallDetailVariation = false;
+            animationSettings.AnimationDurationMilliseconds = 1500u;
+            animationSettings.FrameCount = FrameCounts[densityIndex];
+            animationSettings.SamplingMode = PixelShipGenerator::AnimationSamplingMode::EXACT_FRAME_COUNT;
             animationSettings.Seed = 0xBB67AE8584CAA73Bull;
-            const PixelShipGenerator::ShipIdleAnimation first = animator.generate(ship, animationSettings);
-            const PixelShipGenerator::ShipIdleAnimation second = animator.generate(ship, animationSettings);
-            bool foundAnimatedFrame = false;
-
-            if (first.Frames.size() != frameCount || second.Frames.size() != frameCount || !imagesEqual(first.Frames.front(), ship.FinalImage) || !imagesEqual(first.Frames.back(), ship.FinalImage))
+            animations[densityIndex] = animator.generate(ship, animationSettings);
+            if (animations[densityIndex].Frames.size() != FrameCounts[densityIndex] || animations[densityIndex].NormalizedSampleTimes.back() >= 1.0)
             {
                 success = false;
-                std::cerr << "variable_frame_count_" << frameCount << " did not preserve frame count or static loop anchors.\n";
-                continue;
+                std::cerr << "normalized_density_" << FrameCounts[densityIndex] << " did not preserve exact test density or [0,1) sampling.\n";
             }
+        }
 
-            for (std::size_t frameIndex = 0u; frameIndex < first.Frames.size(); ++frameIndex)
+        std::size_t uniqueSixtyFrameStates = 0u;
+        for (std::size_t frameIndex = 0u; frameIndex < animations[2].Frames.size(); ++frameIndex)
+        {
+            bool seenEarlier = false;
+            for (std::size_t earlierIndex = 0u; earlierIndex < frameIndex; ++earlierIndex)
             {
-                if (!imagesEqual(first.Frames[frameIndex], second.Frames[frameIndex]) || !validateAnimatedExhaustFrame(first.Frames[frameIndex], ship))
+                if (imagesEqual(animations[2].Frames[frameIndex], animations[2].Frames[earlierIndex]))
                 {
-                    success = false;
-                    std::cerr << "variable_frame_count_" << frameCount << " is non-deterministic or produced invalid exhaust geometry.\n";
+                    seenEarlier = true;
                     break;
                 }
-
-                if (frameIndex > 0u && frameIndex + 1u < first.Frames.size() && !imagesEqual(first.Frames[frameIndex], ship.FinalImage))
-                {
-                    foundAnimatedFrame = true;
-                }
             }
+            if (!seenEarlier) { ++uniqueSixtyFrameStates; }
+        }
+        if (uniqueSixtyFrameStates <= 10u)
+        {
+            success = false;
+            std::cerr << "60-frame normalized sampling still collapses to approximately ten raster states.\n";
+        }
 
-            if (frameCount >= 3u && !foundAnimatedFrame)
+        for (std::size_t sampleIndex = 0u; sampleIndex < Numerators.size(); ++sampleIndex)
+        {
+            const double normalizedTime = static_cast<double>(Numerators[sampleIndex]) / static_cast<double>(Denominator[sampleIndex]);
+            const PixelShipGenerator::Image direct = animator.evaluateFrameAtNormalizedTime(ship, normalizedTime, [&]() { PixelShipGenerator::ShipIdleAnimationSettings s; s.Seed = 0xBB67AE8584CAA73Bull; return s; }());
+            const uint32_t index10 = static_cast<uint32_t>(normalizedTime * 10.0 + 0.5);
+            const uint32_t index20 = static_cast<uint32_t>(normalizedTime * 20.0 + 0.5);
+            const uint32_t index60 = static_cast<uint32_t>(normalizedTime * 60.0 + 0.5);
+            if (!imagesEqual(animations[0].Frames[index10], animations[1].Frames[index20]) || !imagesEqual(animations[0].Frames[index10], animations[2].Frames[index60]) || !imagesEqual(animations[0].Frames[index10], direct))
             {
                 success = false;
-                std::cerr << "variable_frame_count_" << frameCount << " did not produce a useful propulsion state.\n";
+                std::cerr << "normalized-time equivalence failed at t=" << normalizedTime << ".\n";
             }
         }
     }
     catch (const std::exception& exception)
     {
         success = false;
-        std::cerr << "variable_frame_count_coverage failed: " << exception.what() << '\n';
+        std::cerr << "normalized-time equivalence coverage failed: " << exception.what() << '\n';
+    }
+
+    // Adaptive sampling must react to actual animated complexity rather than canvas resolution alone.
+    try
+    {
+        PixelShipGenerator::ShipGenerationSettings complexSettings;
+        complexSettings.Seed = 0xA4093822299F31D0ull;
+        complexSettings.Dimensions.Width = 96u;
+        complexSettings.Dimensions.Height = 96u;
+        complexSettings.Style = PixelShipGenerator::ShipStyle::INDUSTRIAL;
+        complexSettings.Faction = PixelShipGenerator::ShipFactionType::FRONTIER;
+        const PixelShipGenerator::GeneratedShip complexShip = generator.generate(complexSettings);
+        PixelShipGenerator::ShipIdleAnimationSettings adaptiveSettings;
+        adaptiveSettings.Seed = 0x082EFA98EC4E6C89ull;
+        const PixelShipGenerator::ShipIdleAnimation complexAnimation = animator.generate(complexShip, adaptiveSettings);
+
+        PixelShipGenerator::ShipGenerationSettings largeSimpleSettings;
+        largeSimpleSettings.Seed = 0x452821E638D01377ull;
+        largeSimpleSettings.Dimensions.Width = 160u;
+        largeSimpleSettings.Dimensions.Height = 160u;
+        largeSimpleSettings.Style = PixelShipGenerator::ShipStyle::SLEEK;
+        largeSimpleSettings.Faction = PixelShipGenerator::ShipFactionType::CORPORATE;
+        const PixelShipGenerator::GeneratedShip largeSimpleShip = generator.generate(largeSimpleSettings);
+        const PixelShipGenerator::ShipIdleAnimation naturallySimpleLargeAnimation = animator.generate(largeSimpleShip, adaptiveSettings);
+        if (complexAnimation.Sampling.ActiveAnimatedComponentCount <= naturallySimpleLargeAnimation.Sampling.ActiveAnimatedComponentCount || complexAnimation.Sampling.ActualFrameCount <= naturallySimpleLargeAnimation.Sampling.ActualFrameCount)
+        {
+            success = false;
+            std::cerr << "complex smaller ship did not receive denser adaptive sampling than naturally simpler larger ship.\n";
+        }
+
+        PixelShipGenerator::ShipIdleAnimationSettings noEffects = adaptiveSettings;
+        noEffects.EngineFlicker = false;
+        noEffects.LightBlinking = false;
+        noEffects.MechanicalMicroMovement = false;
+        noEffects.HoverOffset = false;
+        noEffects.SmallDetailVariation = false;
+        const PixelShipGenerator::ShipIdleAnimation disabledLargeAnimation = animator.generate(largeSimpleShip, noEffects);
+
+        if (disabledLargeAnimation.Sampling.ActiveAnimatedComponentCount != 0u || disabledLargeAnimation.Sampling.ActualFrameCount != noEffects.MinimumFrameCount)
+        {
+            success = false;
+            std::cerr << "large ship with no active animation was forced to extra frames solely by resolution.\n";
+        }
+
+        PixelShipGenerator::ShipIdleAnimationSettings legacyCountHint = noEffects;
+        legacyCountHint.FrameCount = 60u;
+        const PixelShipGenerator::ShipIdleAnimation adaptiveIgnoresLegacyCount = animator.generate(largeSimpleShip, legacyCountHint);
+        if (adaptiveIgnoresLegacyCount.Sampling.ActualFrameCount != legacyCountHint.MinimumFrameCount)
+        {
+            success = false;
+            std::cerr << "adaptive sampling still treats legacy FrameCount as a mandatory output count.\n";
+        }
+    }
+    catch (const std::exception& exception)
+    {
+        success = false;
+        std::cerr << "adaptive complexity coverage failed: " << exception.what() << '\n';
+    }
+
+    // Rectangular output must use the actual adaptive frame count without changing native frame dimensions.
+    try
+    {
+        PixelShipGenerator::ShipGenerationSettings settings;
+        settings.Seed = 0x243F6A8885A308D3ull;
+        settings.Dimensions.Width = 96u;
+        settings.Dimensions.Height = 44u;
+        settings.Style = PixelShipGenerator::ShipStyle::SPEARHEAD;
+        settings.Faction = PixelShipGenerator::ShipFactionType::RELIC;
+        const PixelShipGenerator::GeneratedShip ship = generator.generate(settings);
+        PixelShipGenerator::ShipIdleAnimationSettings animationSettings;
+        animationSettings.Seed = 0x13198A2E03707344ull;
+        const PixelShipGenerator::ShipIdleAnimation animation = animator.generate(ship, animationSettings);
+        const PixelShipGenerator::Image sheet = PixelShipGenerator::createHorizontalSpritesheet(animation);
+        if (animation.FrameWidth != 96u || animation.FrameHeight != 44u || animation.Frames.empty() || !imagesEqual(animation.Frames.front(), ship.FinalImage) || sheet.getPixels().size() != static_cast<std::size_t>(96u) * animation.Frames.size() * 44u)
+        {
+            success = false;
+            std::cerr << "rectangular adaptive animation/spritesheet dimensions are invalid.\n";
+        }
+    }
+    catch (const std::exception& exception)
+    {
+        success = false;
+        std::cerr << "rectangular adaptive animation coverage failed: " << exception.what() << '\n';
     }
 
     for (const PropulsionLayoutRecipe& recipe : PropulsionLayoutRecipes)
@@ -799,7 +901,6 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             settings.Faction = recipe.Faction;
             PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
             const PixelShipGenerator::GeneratedShip ship = generator.generate(settings, &debugInfo);
-
             if (debugInfo.EngineLayout != recipe.ExpectedLayout)
             {
                 success = false;
@@ -816,7 +917,6 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
             animationSettings.Seed = recipe.Seed ^ 0xE7037ED1A0B428DBull;
             const PixelShipGenerator::ShipIdleAnimation animation = animator.generate(ship, animationSettings);
             bool changed = false;
-
             for (const PixelShipGenerator::Image& frame : animation.Frames)
             {
                 if (!validateAnimatedExhaustFrame(frame, ship))
@@ -825,10 +925,8 @@ int PixelShipGeneratorTests::runIdleAnimationRegression()
                     std::cerr << recipe.Name << " produced invalid exhaust geometry.\n";
                     break;
                 }
-
                 changed = changed || countChangedPixelsInExhaustEnvelope(frame, ship.FinalImage, ship) > 0u;
             }
-
             if (!changed)
             {
                 success = false;

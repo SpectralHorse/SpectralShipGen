@@ -160,7 +160,7 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
                 animationSettings.FrameCount = 6u;
                 animationSettings.Seed = settings.Seed ^ 0xA24BAED4963EE407ull;
                 const PixelShipGenerator::ShipIdleAnimation animation = animator.generate(first, animationSettings);
-                if (animation.FrameWidth != dimensions.Width || animation.FrameHeight != dimensions.Height || animation.Frames.size() != animationSettings.FrameCount)
+                if (animation.FrameWidth != dimensions.Width || animation.FrameHeight != dimensions.Height || animation.Frames.size() != animation.Sampling.ActualFrameCount)
                 {
                     success = false;
                     std::cerr << dimensions.Width << 'x' << dimensions.Height << " idle animation dimensions are incorrect.\n";
@@ -182,7 +182,7 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
                 }
 
                 const PixelShipGenerator::Image spritesheet = PixelShipGenerator::createHorizontalSpritesheet(animation);
-                if (spritesheet.getWidth() != dimensions.Width * animationSettings.FrameCount || spritesheet.getHeight() != dimensions.Height)
+                if (spritesheet.getWidth() != dimensions.Width * animation.Sampling.ActualFrameCount || spritesheet.getHeight() != dimensions.Height)
                 {
                     success = false;
                     std::cerr << dimensions.Width << 'x' << dimensions.Height << " horizontal spritesheet dimensions are incorrect.\n";

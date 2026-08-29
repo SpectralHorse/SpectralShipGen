@@ -2,11 +2,14 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <utility>
 #include <vector>
 
+#include "AnimationSamplingPlanner.h"
 #include "ShipPainter.h"
 #include "ShipGenerationSeeds.h"
 
@@ -52,13 +55,54 @@ namespace
         bool IrregularEngineCycle = false;
     };
 
-    struct EnginePulseState
+    struct EnginePulseSample
     {
-        int32_t Length = 0;
-        int32_t Intensity = 0;
-        int32_t TaperBias = 0;
-        int32_t InnerLength = 0;
-        int32_t CoreLength = 0;
+        double Length = 0.0;
+        double Intensity = 0.0;
+        double TaperBias = 0.0;
+        double InnerLength = 0.0;
+        double CoreLength = 0.0;
+    };
+
+    struct EngineAnimationParameters
+    {
+        uint32_t CurveVariant = 0u;
+        uint32_t ExhaustAmplitudePercent = 100u;
+        bool ReverseTime = false;
+        bool MechanicalActive = false;
+        bool MechanicalAlternatePhase = false;
+    };
+
+    struct WeaponAnimationParameters
+    {
+        bool MechanicalActive = false;
+        bool AlternatePhase = false;
+    };
+
+    struct MajorFeatureAnimationParameters
+    {
+        bool Active = false;
+        bool AlternatePhase = false;
+        uint32_t PatternParity = 0u;
+    };
+
+    struct IdleAnimationPlan
+    {
+        IdleAnimationProfile Profile;
+        std::vector<EngineAnimationParameters> EngineParameters;
+        std::vector<WeaponAnimationParameters> WeaponParameters;
+        std::vector<MajorFeatureAnimationParameters> MajorFeatureParameters;
+        std::array<std::vector<PixelCoordinate>, 2u> LightGroupPixels;
+        int32_t PreferredMicroMovementDirection = 1;
+        std::optional<std::size_t> MicroMovementPlacementIndex;
+        std::optional<PixelCoordinate> DetailVariationPixel;
+        PixelShipGenerator::AnimationSamplingRequirements SamplingRequirements;
+    };
+
+    struct CurvePoint
+    {
+        double Time = 0.0;
+        double Value = 0.0;
     };
 
     uint64_t getAnimationHash(uint64_t seed, uint32_t x, uint32_t y, uint64_t salt)
@@ -70,14 +114,53 @@ namespace
         return PixelShipGenerator::mixGenerationSeed64(value);
     }
 
-    uint32_t getLoopStep(uint32_t frameIndex, uint32_t frameCount)
+    double wrapNormalizedTime(double normalizedTime)
     {
-        if (frameCount <= 1u)
+        if (!std::isfinite(normalizedTime))
         {
-            return 0u;
+            return 0.0;
         }
 
-        return std::min(8u, static_cast<uint32_t>((static_cast<uint64_t>(frameIndex) * 8u) / (frameCount - 1u)));
+        double wrapped = normalizedTime - std::floor(normalizedTime);
+        if (wrapped < 0.0) { wrapped += 1.0; }
+        return wrapped;
+    }
+
+    template <std::size_t PointCount>
+    double sampleCurve(double normalizedTime, const std::array<CurvePoint, PointCount>& points)
+    {
+        const double time = std::clamp(normalizedTime, 0.0, 1.0);
+        if (time <= points.front().Time) { return points.front().Value; }
+
+        for (std::size_t index = 0u; index + 1u < points.size(); ++index)
+        {
+            const CurvePoint& first = points[index];
+            const CurvePoint& second = points[index + 1u];
+            if (time > second.Time) { continue; }
+
+            const double range = second.Time - first.Time;
+            if (range <= 0.0) { return second.Value; }
+            const double local = (time - first.Time) / range;
+            return first.Value + (second.Value - first.Value) * local;
+        }
+
+        return points.back().Value;
+    }
+
+    double samplePulseEnvelope(double normalizedTime, double start, double attackEnd, double holdEnd, double releaseEnd)
+    {
+        const double time = std::clamp(normalizedTime, 0.0, 1.0);
+        if (time <= start || time >= releaseEnd) { return 0.0; }
+        if (time < attackEnd) { return (time - start) / std::max(0.000001, attackEnd - start); }
+        if (time <= holdEnd) { return 1.0; }
+        return (releaseEnd - time) / std::max(0.000001, releaseEnd - holdEnd);
+    }
+
+    int32_t quantizeSignedUnit(double value, uint32_t maximumMagnitude = 1u)
+    {
+        const double clamped = std::clamp(value, -1.0, 1.0);
+        const double scaled = clamped * static_cast<double>(maximumMagnitude);
+        return scaled >= 0.0 ? static_cast<int32_t>(std::floor(scaled + 0.5)) : static_cast<int32_t>(std::ceil(scaled - 0.5));
     }
 
     IdleAnimationProfile getIdleAnimationProfile(const PixelShipGenerator::GeneratedShip& ship)
@@ -292,80 +375,91 @@ namespace
         return color;
     }
 
-    EnginePulseState getEnginePulseState(uint32_t loopStep, const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t engineIndex, uint64_t seed, const IdleAnimationProfile& profile)
+    EnginePulseSample getEnginePulseSample(double normalizedTime, const EngineAnimationParameters& parameters, const IdleAnimationProfile& profile)
     {
-        constexpr std::array<EnginePulseState, 9u> Standard =
+        constexpr std::array<CurvePoint, 8u> StandardLength =
         { {
-            { 0, 0, 0, 0, 0 },
-            { 1, 1, 0, 1, 1 },
-            { 2, 2, 1, 1, 2 },
-            { 1, 1, 0, 2, 1 },
-            { -1, -1, -1, 0, -1 },
-            { -2, -1, 0, -1, -1 },
-            { -1, -2, 1, -1, 0 },
-            { 1, -1, 0, 1, 1 },
-            { 0, 0, 0, 0, 0 }
+            { 0.00, 0.00 }, { 0.14, 0.72 }, { 0.27, 1.00 }, { 0.40, 0.45 },
+            { 0.55, -0.55 }, { 0.68, -1.00 }, { 0.84, 0.35 }, { 1.00, 0.00 }
         } };
-        constexpr std::array<EnginePulseState, 9u> IrregularA =
+        constexpr std::array<CurvePoint, 8u> IrregularLengthA =
         { {
-            { 0, 0, 0, 0, 0 },
-            { 1, 1, 0, 1, 0 },
-            { 1, 2, 1, 2, 1 },
-            { 2, 1, 1, 1, 2 },
-            { -1, 0, -1, 0, -1 },
-            { -1, -1, 0, -1, 0 },
-            { -2, -2, 1, -1, -1 },
-            { -1, -1, 0, 0, 1 },
-            { 0, 0, 0, 0, 0 }
+            { 0.00, 0.00 }, { 0.11, 0.48 }, { 0.25, 0.82 }, { 0.39, 1.00 },
+            { 0.51, -0.20 }, { 0.66, -0.88 }, { 0.83, -0.38 }, { 1.00, 0.00 }
         } };
-        constexpr std::array<EnginePulseState, 9u> IrregularB =
+        constexpr std::array<CurvePoint, 8u> IrregularLengthB =
         { {
-            { 0, 0, 0, 0, 0 },
-            { 2, 1, 1, 1, 1 },
-            { 1, 2, 0, 2, 2 },
-            { 1, 1, 0, 1, 1 },
-            { -1, -1, -1, 0, -1 },
-            { -2, -2, 0, -1, -1 },
-            { -1, -1, 1, 0, 0 },
-            { 1, 0, 0, 1, 1 },
-            { 0, 0, 0, 0, 0 }
+            { 0.00, 0.00 }, { 0.13, 1.00 }, { 0.29, 0.62 }, { 0.43, 0.36 },
+            { 0.56, -0.48 }, { 0.70, -1.00 }, { 0.86, 0.48 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 8u> StandardIntensity =
+        { {
+            { 0.00, 0.00 }, { 0.10, 0.55 }, { 0.24, 1.00 }, { 0.39, 0.58 },
+            { 0.52, -0.32 }, { 0.69, -0.86 }, { 0.84, -0.30 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 8u> IrregularIntensityA =
+        { {
+            { 0.00, 0.00 }, { 0.09, 0.42 }, { 0.23, 1.00 }, { 0.42, 0.38 },
+            { 0.55, -0.12 }, { 0.70, -1.00 }, { 0.85, -0.42 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 8u> IrregularIntensityB =
+        { {
+            { 0.00, 0.00 }, { 0.12, 0.68 }, { 0.28, 1.00 }, { 0.43, 0.50 },
+            { 0.57, -0.52 }, { 0.72, -0.82 }, { 0.87, 0.08 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 7u> InnerLengthCurve =
+        { {
+            { 0.00, 0.00 }, { 0.18, 0.72 }, { 0.36, 1.00 }, { 0.53, -0.20 },
+            { 0.70, -0.78 }, { 0.86, 0.38 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 7u> CoreLengthCurve =
+        { {
+            { 0.00, 0.00 }, { 0.16, 0.52 }, { 0.31, 1.00 }, { 0.49, -0.28 },
+            { 0.68, -0.62 }, { 0.84, 0.50 }, { 1.00, 0.00 }
+        } };
+        constexpr std::array<CurvePoint, 7u> TaperCurve =
+        { {
+            { 0.00, 0.00 }, { 0.20, 0.42 }, { 0.34, 0.88 }, { 0.52, -0.58 },
+            { 0.70, 0.32 }, { 0.86, 0.18 }, { 1.00, 0.00 }
         } };
 
-        if (loopStep == 0u || loopStep >= 8u)
+        if (normalizedTime <= 0.0)
         {
             return {};
         }
 
-        const uint32_t centerX = component.NozzleStartX + component.NozzleWidth / 2u;
-        const uint64_t hash = getAnimationHash(seed, centerX, component.NozzleY, EngineVariationSalt ^ static_cast<uint64_t>(engineIndex));
-        uint32_t effectiveStep = loopStep;
+        double effectiveTime = std::clamp(normalizedTime, 0.0, 1.0);
+        if (parameters.ReverseTime) { effectiveTime = 1.0 - effectiveTime; }
 
-        if (!profile.SynchronizeEngines)
+        EnginePulseSample sample;
+        if (parameters.CurveVariant == 1u)
         {
-            const bool reversePhase = profile.AlternateEnginePhases ? (engineIndex & 1u) != 0u : profile.AsynchronousEngines && ((hash >> 12u) & 1ull) != 0ull;
-            if (reversePhase) { effectiveStep = 8u - loopStep; }
+            sample.Length = sampleCurve(effectiveTime, IrregularLengthA);
+            sample.Intensity = sampleCurve(effectiveTime, IrregularIntensityA);
+        }
+        else if (parameters.CurveVariant == 2u)
+        {
+            sample.Length = sampleCurve(effectiveTime, IrregularLengthB);
+            sample.Intensity = sampleCurve(effectiveTime, IrregularIntensityB);
+        }
+        else
+        {
+            sample.Length = sampleCurve(effectiveTime, StandardLength);
+            sample.Intensity = sampleCurve(effectiveTime, StandardIntensity);
         }
 
-        const std::array<EnginePulseState, 9u>* sequence = &Standard;
-
-        if (!profile.SynchronizeEngines && (profile.IrregularEngineCycle || profile.AsynchronousEngines))
-        {
-            const uint32_t variation = static_cast<uint32_t>((hash >> 20u) % 3ull);
-            if (variation == 1u) { sequence = &IrregularA; }
-            if (variation == 2u) { sequence = &IrregularB; }
-        }
-
-        EnginePulseState state = (*sequence)[effectiveStep];
+        sample.InnerLength = sampleCurve(effectiveTime, InnerLengthCurve);
+        sample.CoreLength = sampleCurve(effectiveTime, CoreLengthCurve);
+        sample.TaperBias = sampleCurve(effectiveTime, TaperCurve);
 
         if (profile.EnginePulseStrength <= 1u)
         {
-            state.Length = std::clamp(state.Length, -1, 1);
-            state.Intensity = std::clamp(state.Intensity, -1, 1);
-            state.InnerLength = std::clamp(state.InnerLength, -1, 1);
-            state.CoreLength = std::clamp(state.CoreLength, -1, 1);
+            sample.Intensity *= 0.72;
+            sample.InnerLength *= 0.72;
+            sample.CoreLength *= 0.72;
         }
 
-        return state;
+        return sample;
     }
 
     uint32_t getCenteredStartX(uint32_t centerXTimesTwo, uint32_t width)
@@ -417,30 +511,30 @@ namespace
         return outerWidth - inset * 2u;
     }
 
-    uint32_t getLengthDelta(uint32_t available, int32_t signal, uint32_t amplitudePercent)
+    uint32_t getContinuousLengthDelta(uint32_t available, double signal, uint32_t amplitudePercent)
     {
-        if (available == 0u || signal == 0)
+        if (available == 0u || signal == 0.0)
         {
             return 0u;
         }
 
-        const uint32_t scaledAvailable = std::max(1u, static_cast<uint32_t>((static_cast<uint64_t>(available) * amplitudePercent + 99u) / 100u));
-        const uint32_t magnitude = static_cast<uint32_t>(signal < 0 ? -signal : signal);
-        return magnitude >= 2u ? std::min(available, scaledAvailable) : std::min(available, std::max(1u, (scaledAvailable + 1u) / 2u));
+        const double scaledSignal = std::clamp(std::abs(signal) * static_cast<double>(amplitudePercent) / 100.0, 0.0, 1.0);
+        return std::min(available, static_cast<uint32_t>(std::floor(static_cast<double>(available) * scaledSignal + 0.5)));
     }
 
-    uint32_t getTargetExhaustLength(const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseState& pulse, uint32_t amplitudePercent)
+    uint32_t getTargetExhaustLength(const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
     {
         uint32_t length = component.ExhaustLength;
 
-        if (pulse.Length > 0)
+        if (pulse.Length > 0.0)
         {
-            length += getLengthDelta(component.MaximumExhaustLength > length ? component.MaximumExhaustLength - length : 0u, pulse.Length, amplitudePercent);
+            const uint32_t available = component.MaximumExhaustLength > length ? component.MaximumExhaustLength - length : 0u;
+            length += getContinuousLengthDelta(available, pulse.Length, amplitudePercent);
         }
-        else if (pulse.Length < 0)
+        else if (pulse.Length < 0.0)
         {
             const uint32_t available = length > component.MinimumExhaustLength ? length - component.MinimumExhaustLength : 0u;
-            length -= getLengthDelta(available, pulse.Length, amplitudePercent);
+            length -= getContinuousLengthDelta(available, pulse.Length, amplitudePercent);
         }
 
         return std::clamp(length, component.MinimumExhaustLength, component.MaximumExhaustLength);
@@ -529,17 +623,19 @@ namespace
         return shiftExhaustColor(color, palette, intensity);
     }
 
-    uint32_t getLayerLength(uint32_t outerLength, uint32_t numerator, uint32_t denominator, int32_t pulseSignal)
+    uint32_t getLayerLength(uint32_t outerLength, uint32_t numerator, uint32_t denominator, double pulseSignal)
     {
         uint32_t length = std::max(1u, outerLength * numerator / denominator);
+        const uint32_t maximumAdjustment = std::max(1u, outerLength / 4u);
+        const uint32_t adjustment = static_cast<uint32_t>(std::floor(std::clamp(std::abs(pulseSignal), 0.0, 1.0) * static_cast<double>(maximumAdjustment) + 0.5));
 
-        if (pulseSignal > 0 && length < outerLength)
+        if (pulseSignal > 0.0 && length < outerLength)
         {
-            length = std::min(outerLength, length + static_cast<uint32_t>(pulseSignal));
+            length = std::min(outerLength, length + adjustment);
         }
-        else if (pulseSignal < 0 && length > 1u)
+        else if (pulseSignal < 0.0 && length > 1u)
         {
-            length = std::max(1u, length - static_cast<uint32_t>(-pulseSignal));
+            length = adjustment >= length ? 1u : std::max(1u, length - adjustment);
         }
 
         return length;
@@ -562,7 +658,7 @@ namespace
         }
     }
 
-    void redrawEngineExhaust(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseState& pulse, uint32_t amplitudePercent)
+    void redrawEngineExhaust(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
     {
         if (component.ExhaustLength == 0u || component.ExhaustStartY >= ship.EngineExhaustMask.getHeight())
         {
@@ -570,7 +666,8 @@ namespace
         }
 
         const uint32_t requestedLength = getTargetExhaustLength(component, pulse, amplitudePercent);
-        const uint32_t desiredLength = clampExhaustLengthToSafeEnvelope(frame, ship, component, requestedLength, pulse.TaperBias);
+        const int32_t taperBias = quantizeSignedUnit(pulse.TaperBias);
+        const uint32_t desiredLength = clampExhaustLengthToSafeEnvelope(frame, ship, component, requestedLength, taperBias);
         const uint32_t innerLength = std::min(desiredLength, getLayerLength(desiredLength, 3u, 4u, pulse.InnerLength));
         const uint32_t coreLength = std::min(innerLength, getLayerLength(desiredLength, 1u, 2u, pulse.CoreLength));
         const uint32_t centerXTimesTwo = component.NozzleStartX * 2u + component.NozzleWidth - 1u;
@@ -579,13 +676,13 @@ namespace
 
         for (uint32_t row = 0u; row < desiredLength; ++row)
         {
-            const uint32_t width = getTaperedExhaustRowWidth(component.NozzleWidth, desiredLength, row, component.TaperMode, pulse.TaperBias);
+            const uint32_t width = getTaperedExhaustRowWidth(component.NozzleWidth, desiredLength, row, component.TaperMode, taperBias);
             const uint32_t startX = getCenteredStartX(centerXTimesTwo, width);
             const uint32_t y = component.ExhaustStartY + row;
 
             for (uint32_t offset = 0u; offset < width; ++offset)
             {
-                frame.setPixel(startX + offset, y, getAnimatedExhaustPixelColor(offset, width, row, innerLength, coreLength, pulse.Intensity, ship.Palette));
+                frame.setPixel(startX + offset, y, getAnimatedExhaustPixelColor(offset, width, row, innerLength, coreLength, quantizeSignedUnit(pulse.Intensity, 2u), ship.Palette));
             }
         }
     }
@@ -628,70 +725,70 @@ namespace
         }
     }
 
-    void applyEngineAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed, const IdleAnimationProfile& profile)
+    uint32_t getMechanicalTravelPixels(double normalizedTime, bool alternatePhase, bool slowCycle, uint32_t maximumTravelPixels = 1u)
     {
-        if (loopStep == 0u || loopStep >= 8u)
+        if (normalizedTime <= 0.0 || maximumTravelPixels == 0u)
+        {
+            return 0u;
+        }
+
+        double envelope = 0.0;
+        if (slowCycle)
+        {
+            envelope = alternatePhase
+                ? samplePulseEnvelope(normalizedTime, 0.44, 0.56, 0.70, 0.88)
+                : samplePulseEnvelope(normalizedTime, 0.12, 0.26, 0.46, 0.64);
+        }
+        else
+        {
+            envelope = alternatePhase
+                ? samplePulseEnvelope(normalizedTime, 0.50, 0.60, 0.72, 0.84)
+                : samplePulseEnvelope(normalizedTime, 0.14, 0.24, 0.36, 0.48);
+        }
+
+        return static_cast<uint32_t>(std::floor(envelope * static_cast<double>(maximumTravelPixels) + 0.5));
+    }
+
+    void applyEngineAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    {
+        if (normalizedTime <= 0.0)
         {
             return;
         }
 
-        const std::size_t engineCount = ship.IdleAnimationMetadata.EngineComponents.size();
+        const std::size_t engineCount = std::min(ship.IdleAnimationMetadata.EngineComponents.size(), plan.EngineParameters.size());
 
         for (std::size_t engineIndex = 0u; engineIndex < engineCount; ++engineIndex)
         {
             const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
-            const EnginePulseState pulse = getEnginePulseState(loopStep, component, static_cast<uint32_t>(engineIndex), seed, profile);
-            redrawEngineExhaust(frame, ship, component, pulse, getEngineAmplitudePercent(profile, component, engineCount));
-            applyNozzleGlow(frame, ship, component, pulse.Intensity);
+            const EngineAnimationParameters& parameters = plan.EngineParameters[engineIndex];
+            const EnginePulseSample pulse = getEnginePulseSample(normalizedTime, parameters, plan.Profile);
+            redrawEngineExhaust(frame, ship, component, pulse, parameters.ExhaustAmplitudePercent);
+            applyNozzleGlow(frame, ship, component, quantizeSignedUnit(pulse.Intensity, plan.Profile.EnginePulseStrength));
         }
     }
 
-    bool isMechanicalPhaseActive(uint32_t loopStep, bool alternatePhase, bool slowCycle)
-    {
-        if (loopStep == 0u || loopStep >= 8u)
-        {
-            return false;
-        }
-
-        if (slowCycle)
-        {
-            return alternatePhase ? loopStep >= 4u && loopStep <= 6u : loopStep >= 2u && loopStep <= 4u;
-        }
-
-        return alternatePhase ? loopStep == 5u || loopStep == 6u : loopStep == 2u || loopStep == 3u;
-    }
-
-    void applyEngineMechanicalAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed, const IdleAnimationProfile& profile)
+    void applyEngineMechanicalAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
         const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.EngineMask.getWidth(), ship.EngineMask.getHeight() });
 
-        if (scaleTraits.AnimationComplexity < 20u)
+        if (normalizedTime <= 0.0 || scaleTraits.AnimationComplexity < 20u)
         {
             return;
         }
 
-        for (const PixelShipGenerator::ShipEngineAnimationComponent& component : ship.IdleAnimationMetadata.EngineComponents)
+        const std::size_t engineCount = std::min(ship.IdleAnimationMetadata.EngineComponents.size(), plan.EngineParameters.size());
+        for (std::size_t engineIndex = 0u; engineIndex < engineCount; ++engineIndex)
         {
-            if (component.NozzleWidth < 3u || component.HousingWidth < 3u || component.NozzleY >= ship.EngineMask.getHeight())
+            const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
+            const EngineAnimationParameters& parameters = plan.EngineParameters[engineIndex];
+
+            if (!parameters.MechanicalActive || getMechanicalTravelPixels(normalizedTime, parameters.MechanicalAlternatePhase, plan.Profile.SlowMechanicalCycle) == 0u)
             {
                 continue;
             }
 
             const uint32_t centerX = component.NozzleStartX + component.NozzleWidth / 2u;
-            const uint64_t hash = getAnimationHash(seed, centerX, component.NozzleY, EngineMechanicalSalt);
-
-            if (hash % 100u >= profile.EngineMechanicalChance)
-            {
-                continue;
-            }
-
-            const bool alternatePhase = profile.AlternateEnginePhases && (hash & 1ull) != 0ull;
-
-            if (!isMechanicalPhaseActive(loopStep, alternatePhase, profile.SlowMechanicalCycle))
-            {
-                continue;
-            }
-
             if (component.NozzleStartX > component.HousingStartX)
             {
                 const uint32_t x = component.NozzleStartX - 1u;
@@ -700,7 +797,6 @@ namespace
 
             const uint32_t nozzleEndX = component.NozzleStartX + component.NozzleWidth - 1u;
             const uint32_t housingEndX = component.HousingStartX + component.HousingWidth - 1u;
-
             if (nozzleEndX < housingEndX && nozzleEndX + 1u < ship.EngineMask.getWidth())
             {
                 const uint32_t x = nozzleEndX + 1u;
@@ -715,97 +811,81 @@ namespace
         }
     }
 
-    void applyLightBlinking(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed)
+    void applyLightBlinking(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
-        int32_t activeGroup = -1;
-
-        if (loopStep == 2u || loopStep == 3u) { activeGroup = 0; }
-        if (loopStep == 5u || loopStep == 6u) { activeGroup = 1; }
-
-        if (activeGroup < 0)
+        if (normalizedTime <= 0.0)
         {
             return;
         }
 
-        const uint32_t width = ship.LightMask.getWidth();
-        const uint32_t height = ship.LightMask.getHeight();
+        const double firstPulse = samplePulseEnvelope(normalizedTime, 0.12, 0.20, 0.32, 0.44);
+        const double secondPulse = samplePulseEnvelope(normalizedTime, 0.54, 0.62, 0.74, 0.86);
+        int32_t activeGroup = -1;
+        if (firstPulse >= 0.5) { activeGroup = 0; }
+        else if (secondPulse >= 0.5) { activeGroup = 1; }
+        if (activeGroup < 0) { return; }
 
-        for (uint32_t y = 0u; y < height; ++y)
+        for (uint32_t groupIndex = 0u; groupIndex < plan.LightGroupPixels.size(); ++groupIndex)
         {
-            for (uint32_t x = 0u; x < width; ++x)
+            const PixelShipGenerator::Color color = groupIndex == static_cast<uint32_t>(activeGroup) ? ship.Palette.LightHighlight : ship.Palette.LightBase;
+            for (const PixelCoordinate& pixel : plan.LightGroupPixels[groupIndex])
             {
-                if (!ship.LightMask.get(x, y))
-                {
-                    continue;
-                }
-
-                const uint32_t canonicalX = std::min(x, width - 1u - x);
-                const uint32_t group = static_cast<uint32_t>(getAnimationHash(seed, canonicalX, y, LightVariationSalt) & 1ull);
-                frame.setPixel(x, y, group == static_cast<uint32_t>(activeGroup) ? ship.Palette.LightHighlight : ship.Palette.LightBase);
+                frame.setPixel(pixel.X, pixel.Y, color);
             }
         }
     }
 
-    void applyMajorFeatureAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed, const IdleAnimationProfile& profile, bool lightsEnabled, bool detailVariationEnabled)
+    void applyMajorFeatureAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool lightsEnabled, bool detailVariationEnabled)
     {
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
-
-        for (const PixelShipGenerator::ShipMajorFeatureAnimationComponent& component : ship.IdleAnimationMetadata.MajorFeatureComponents)
+        if (normalizedTime <= 0.0)
         {
-            if (component.Type == PixelShipGenerator::ShipMajorFeatureType::TECH_CORE && lightsEnabled && loopStep > 0u && loopStep < 8u)
+            return;
+        }
+
+        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+        const std::size_t componentCount = std::min(ship.IdleAnimationMetadata.MajorFeatureComponents.size(), plan.MajorFeatureParameters.size());
+
+        for (std::size_t componentIndex = 0u; componentIndex < componentCount; ++componentIndex)
+        {
+            const PixelShipGenerator::ShipMajorFeatureAnimationComponent& component = ship.IdleAnimationMetadata.MajorFeatureComponents[componentIndex];
+            const MajorFeatureAnimationParameters& parameters = plan.MajorFeatureParameters[componentIndex];
+            if (!parameters.Active) { continue; }
+
+            if (component.Type == PixelShipGenerator::ShipMajorFeatureType::TECH_CORE && lightsEnabled)
             {
-                const uint64_t hash = getAnimationHash(seed, component.MinimumX, component.MinimumY, MajorFeatureSalt);
-                const bool alternatePhase = ship.Faction == PixelShipGenerator::ShipFactionType::XENO && (hash & 1ull) != 0ull;
-                const bool bright = alternatePhase ? loopStep >= 5u && loopStep <= 7u : loopStep >= 1u && loopStep <= 3u;
-                const bool dim = alternatePhase ? loopStep >= 1u && loopStep <= 2u : loopStep >= 5u && loopStep <= 6u;
+                const double primaryPulse = parameters.AlternatePhase
+                    ? samplePulseEnvelope(normalizedTime, 0.54, 0.62, 0.75, 0.88)
+                    : samplePulseEnvelope(normalizedTime, 0.10, 0.20, 0.34, 0.47);
+                const double secondaryPulse = parameters.AlternatePhase
+                    ? samplePulseEnvelope(normalizedTime, 0.10, 0.20, 0.31, 0.43)
+                    : samplePulseEnvelope(normalizedTime, 0.55, 0.64, 0.74, 0.84);
+                const bool bright = primaryPulse >= 0.45;
+                const bool dim = secondaryPulse >= 0.45 && plan.Profile.TechPulseStrength >= 2u;
+                if (!bright && !dim) { continue; }
 
                 for (uint32_t y = component.MinimumY; y <= component.MaximumY && y < ship.HullMask.getHeight(); ++y)
                 {
                     for (uint32_t x = component.MinimumX; x <= component.MaximumX && x < ship.HullMask.getWidth(); ++x)
                     {
-                        if (!ship.IdleAnimationMetadata.MajorFeatureEmissiveMask.get(x, y))
-                        {
-                            continue;
-                        }
-
-                        if (bright)
-                        {
-                            frame.setPixel(x, y, ship.Palette.LightHighlight);
-                        }
-                        else if (dim && profile.TechPulseStrength >= 2u)
-                        {
-                            frame.setPixel(x, y, ship.Palette.LightBase);
-                        }
+                        if (!ship.IdleAnimationMetadata.MajorFeatureEmissiveMask.get(x, y)) { continue; }
+                        frame.setPixel(x, y, bright ? ship.Palette.LightHighlight : ship.Palette.LightBase);
                     }
                 }
             }
-            else if (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK && detailVariationEnabled && scaleTraits.AnimationComplexity >= 20u && loopStep > 0u && loopStep < 8u)
+            else if (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK && detailVariationEnabled && scaleTraits.AnimationComplexity >= 20u)
             {
-                const uint64_t hash = getAnimationHash(seed, component.MinimumX, component.MinimumY, MajorFeatureSalt ^ DetailVariationSalt);
-
-                if (hash % 100u >= profile.VentActivityChance)
-                {
-                    continue;
-                }
-
-                const uint32_t phase = (loopStep == 2u || loopStep == 3u) ? 0u : (loopStep == 5u || loopStep == 6u) ? 1u : 2u;
-
-                if (phase >= 2u)
-                {
-                    continue;
-                }
+                const double firstPulse = samplePulseEnvelope(normalizedTime, 0.16, 0.24, 0.34, 0.44);
+                const double secondPulse = samplePulseEnvelope(normalizedTime, 0.56, 0.64, 0.74, 0.84);
+                const uint32_t phase = firstPulse >= 0.5 ? 0u : secondPulse >= 0.5 ? 1u : 2u;
+                if (phase >= 2u) { continue; }
 
                 for (uint32_t y = component.MinimumY; y <= component.MaximumY && y < ship.HullMask.getHeight(); ++y)
                 {
                     for (uint32_t x = component.MinimumX; x <= component.MaximumX && x < ship.HullMask.getWidth(); ++x)
                     {
-                        if (!ship.IdleAnimationMetadata.MajorFeatureMechanicalMask.get(x, y))
-                        {
-                            continue;
-                        }
-
+                        if (!ship.IdleAnimationMetadata.MajorFeatureMechanicalMask.get(x, y)) { continue; }
                         const uint32_t canonicalX = std::min(x, ship.HullMask.getWidth() - 1u - x);
-                        const bool highlighted = ((canonicalX + y + phase + static_cast<uint32_t>(hash & 1ull)) & 1u) == 0u;
+                        const bool highlighted = ((canonicalX + y + phase + parameters.PatternParity) & 1u) == 0u;
                         frame.setPixel(x, y, highlighted ? ship.Palette.MechanicalBase : ship.Palette.MechanicalDark);
                     }
                 }
@@ -813,43 +893,18 @@ namespace
         }
     }
 
-    void applySmallDetailVariation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed)
+    void applySmallDetailVariation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
-        if (loopStep != 3u && loopStep != 6u)
+        if (normalizedTime <= 0.0 || !plan.DetailVariationPixel.has_value())
         {
             return;
         }
 
-        uint64_t bestHash = std::numeric_limits<uint64_t>::max();
-        PixelCoordinate selectedPixel;
-        bool foundPixel = false;
-
-        for (uint32_t y = 0u; y < ship.MechanicalDetailMask.getHeight(); ++y)
-        {
-            for (uint32_t x = 0u; x < ship.MechanicalDetailMask.getWidth(); ++x)
-            {
-                if (!ship.MechanicalDetailMask.get(x, y) || getMaskNeighbourCount(ship.MechanicalDetailMask, static_cast<int32_t>(x), static_cast<int32_t>(y)) > 2u)
-                {
-                    continue;
-                }
-
-                const uint64_t hash = getAnimationHash(seed, x, y, DetailVariationSalt);
-
-                if (hash < bestHash)
-                {
-                    bestHash = hash;
-                    selectedPixel = { x, y };
-                    foundPixel = true;
-                }
-            }
-        }
-
-        if (!foundPixel)
-        {
-            return;
-        }
-
-        frame.setPixel(selectedPixel.X, selectedPixel.Y, loopStep == 3u ? ship.Palette.HullAccentHighlight : ship.Palette.MechanicalBase);
+        const double highlightPulse = samplePulseEnvelope(normalizedTime, 0.22, 0.29, 0.35, 0.42);
+        const double mechanicalPulse = samplePulseEnvelope(normalizedTime, 0.60, 0.67, 0.73, 0.80);
+        const PixelCoordinate& selectedPixel = *plan.DetailVariationPixel;
+        if (highlightPulse >= 0.5) { frame.setPixel(selectedPixel.X, selectedPixel.Y, ship.Palette.HullAccentHighlight); }
+        else if (mechanicalPulse >= 0.5) { frame.setPixel(selectedPixel.X, selectedPixel.Y, ship.Palette.MechanicalBase); }
     }
 
     std::pair<int32_t, int32_t> getRetractionOffset(PixelShipGenerator::ShipAttachmentDirection direction)
@@ -1002,9 +1057,9 @@ namespace
         return true;
     }
 
-    void applyWeaponAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed, const IdleAnimationProfile& profile, bool mechanicalEnabled, bool lightsEnabled)
+    void applyWeaponAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool mechanicalEnabled, bool lightsEnabled)
     {
-        if (ship.IdleAnimationMetadata.WeaponComponents.empty())
+        if (ship.IdleAnimationMetadata.WeaponComponents.empty() || normalizedTime <= 0.0)
         {
             return;
         }
@@ -1015,35 +1070,15 @@ namespace
         PixelShipGenerator::PixelMask emissiveMask = ship.IdleAnimationMetadata.WeaponEmissiveMask;
         PixelShipGenerator::PixelMask affectedMask(occupiedMask.getWidth(), occupiedMask.getHeight(), false);
         const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+        const std::size_t componentCount = std::min(ship.IdleAnimationMetadata.WeaponComponents.size(), plan.WeaponParameters.size());
 
-        if (mechanicalEnabled && scaleTraits.AnimationComplexity >= 20u && loopStep > 0u && loopStep < 8u)
+        if (mechanicalEnabled && scaleTraits.AnimationComplexity >= 20u)
         {
-            for (const PixelShipGenerator::ShipWeaponAnimationComponent& component : ship.IdleAnimationMetadata.WeaponComponents)
+            for (std::size_t componentIndex = 0u; componentIndex < componentCount; ++componentIndex)
             {
-                if (!component.MovableBarrel)
-                {
-                    continue;
-                }
-
-                const uint64_t hash = getAnimationHash(seed, component.AnchorX, component.AnchorY, WeaponMovementSalt);
-
-                if (hash % 100u >= profile.WeaponMechanicalChance)
-                {
-                    continue;
-                }
-
-                bool alternatePhase = false;
-
-                if (profile.AlternateWeaponPhases && component.SymmetryGroup != 0u)
-                {
-                    alternatePhase = component.AnchorX > occupiedMask.getWidth() / 2u;
-                }
-                else if (ship.Faction == PixelShipGenerator::ShipFactionType::FRONTIER && component.SymmetryGroup != 0u && ((hash >> 8u) & 1ull) != 0ull)
-                {
-                    alternatePhase = component.AnchorX > occupiedMask.getWidth() / 2u;
-                }
-
-                if (!isMechanicalPhaseActive(loopStep, alternatePhase, profile.SlowMechanicalCycle))
+                const PixelShipGenerator::ShipWeaponAnimationComponent& component = ship.IdleAnimationMetadata.WeaponComponents[componentIndex];
+                const WeaponAnimationParameters& parameters = plan.WeaponParameters[componentIndex];
+                if (!parameters.MechanicalActive || getMechanicalTravelPixels(normalizedTime, parameters.AlternatePhase, plan.Profile.SlowMechanicalCycle) == 0u)
                 {
                     continue;
                 }
@@ -1058,28 +1093,22 @@ namespace
             painter.paintIdleWeaponLayer(frame, ship, occupiedMask, movableMask, muzzleMask, emissiveMask, affectedMask);
         }
 
-        if (!lightsEnabled || loopStep == 0u || loopStep >= 8u)
+        if (!lightsEnabled)
         {
             return;
         }
 
-        const bool bright = loopStep >= 1u && loopStep <= 3u;
-        const bool dim = loopStep >= 5u && loopStep <= 6u;
-
-        if (!bright && !dim)
-        {
-            return;
-        }
+        const double brightPulse = samplePulseEnvelope(normalizedTime, 0.10, 0.18, 0.34, 0.46);
+        const double dimPulse = samplePulseEnvelope(normalizedTime, 0.54, 0.62, 0.74, 0.84);
+        const bool bright = brightPulse >= 0.5;
+        const bool dim = dimPulse >= 0.5;
+        if (!bright && !dim) { return; }
 
         for (uint32_t y = 0u; y < emissiveMask.getHeight(); ++y)
         {
             for (uint32_t x = 0u; x < emissiveMask.getWidth(); ++x)
             {
-                if (!emissiveMask.get(x, y))
-                {
-                    continue;
-                }
-
+                if (!emissiveMask.get(x, y)) { continue; }
                 frame.setPixel(x, y, bright ? ship.Palette.LightHighlight : ship.Palette.LightBase);
             }
         }
@@ -1195,72 +1224,38 @@ namespace
         return false;
     }
 
-    void applyMechanicalMicroMovement(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep, uint64_t seed, int32_t preferredDirection)
+    void applyMechanicalMicroMovement(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
         const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.AttachmentMask.getWidth(), ship.AttachmentMask.getHeight() });
-        if (scaleTraits.AnimationComplexity < 20u)
+        if (normalizedTime <= 0.0 || scaleTraits.AnimationComplexity < 20u || !plan.MicroMovementPlacementIndex.has_value() || *plan.MicroMovementPlacementIndex >= ship.AttachmentPlacements.size())
         {
             return;
         }
 
-        int32_t movement = 0;
+        const double firstPulse = samplePulseEnvelope(normalizedTime, 0.14, 0.23, 0.35, 0.46);
+        const double secondPulse = samplePulseEnvelope(normalizedTime, 0.54, 0.63, 0.75, 0.86);
+        const int32_t signedPulse = quantizeSignedUnit(firstPulse - secondPulse);
+        const int32_t movement = signedPulse * plan.PreferredMicroMovementDirection;
+        if (movement == 0) { return; }
 
-        if (loopStep == 2u || loopStep == 3u) { movement = preferredDirection; }
-        if (loopStep == 5u || loopStep == 6u) { movement = -preferredDirection; }
-
-        if (movement == 0)
-        {
-            return;
-        }
-
-        const PixelShipGenerator::ShipAttachmentPlacement* selectedPlacement = nullptr;
-        uint64_t selectedHash = std::numeric_limits<uint64_t>::max();
-        const uint32_t maximumPixelCount = scaleTraits.AnimationComplexity >= 80u ? 36u : 20u;
-
-        for (const PixelShipGenerator::ShipAttachmentPlacement& placement : ship.AttachmentPlacements)
-        {
-            if (placement.Type != PixelShipGenerator::ShipAttachmentType::SENSOR_ARRAY && placement.Type != PixelShipGenerator::ShipAttachmentType::TECHNOLOGY_NODE)
-            {
-                continue;
-            }
-
-            if (getAttachmentMaximumOutwardDistance(placement) < 2u || countAttachmentPixels(ship, placement) > maximumPixelCount)
-            {
-                continue;
-            }
-
-            const uint64_t hash = getAnimationHash(seed, placement.AnchorX, placement.AnchorY, MicroMovementSalt);
-
-            if (hash < selectedHash)
-            {
-                selectedHash = hash;
-                selectedPlacement = &placement;
-            }
-        }
-
-        if (selectedPlacement == nullptr)
-        {
-            return;
-        }
-
-        const uint32_t maximumOutwardDistance = getAttachmentMaximumOutwardDistance(*selectedPlacement);
-        const auto [tangentX, tangentY] = getAttachmentTangentOffset(selectedPlacement->Direction);
+        const PixelShipGenerator::ShipAttachmentPlacement& selectedPlacement = ship.AttachmentPlacements[*plan.MicroMovementPlacementIndex];
+        const uint32_t maximumOutwardDistance = getAttachmentMaximumOutwardDistance(selectedPlacement);
+        const auto [tangentX, tangentY] = getAttachmentTangentOffset(selectedPlacement.Direction);
         std::vector<PixelCoordinate> origins;
         std::vector<PixelCoordinate> destinations;
         std::vector<PixelShipGenerator::Color> colors;
 
-        for (uint32_t y = selectedPlacement->MinimumY; y <= selectedPlacement->MaximumY; ++y)
+        for (uint32_t y = selectedPlacement.MinimumY; y <= selectedPlacement.MaximumY; ++y)
         {
-            for (uint32_t x = selectedPlacement->MinimumX; x <= selectedPlacement->MaximumX; ++x)
+            for (uint32_t x = selectedPlacement.MinimumX; x <= selectedPlacement.MaximumX; ++x)
             {
-                if (!ship.AttachmentMask.get(x, y) || getAttachmentOutwardDistance(*selectedPlacement, x, y) != maximumOutwardDistance)
+                if (!ship.AttachmentMask.get(x, y) || getAttachmentOutwardDistance(selectedPlacement, x, y) != maximumOutwardDistance)
                 {
                     continue;
                 }
 
                 const int32_t destinationX = static_cast<int32_t>(x) + tangentX * movement;
                 const int32_t destinationY = static_cast<int32_t>(y) + tangentY * movement;
-
                 if (destinationX < 0 || destinationY < 0 || destinationX >= static_cast<int32_t>(ship.AttachmentMask.getWidth()) || destinationY >= static_cast<int32_t>(ship.AttachmentMask.getHeight()))
                 {
                     return;
@@ -1272,26 +1267,15 @@ namespace
             }
         }
 
-        if (origins.empty())
-        {
-            return;
-        }
+        if (origins.empty()) { return; }
 
         for (const PixelCoordinate& destination : destinations)
         {
-            if (isBaseStructurePixel(ship, static_cast<int32_t>(destination.X), static_cast<int32_t>(destination.Y)))
-            {
-                return;
-            }
-
-            if (ship.AttachmentMask.get(destination.X, destination.Y) && !containsCoordinate(origins, destination.X, destination.Y))
-            {
-                return;
-            }
+            if (isBaseStructurePixel(ship, static_cast<int32_t>(destination.X), static_cast<int32_t>(destination.Y))) { return; }
+            if (ship.AttachmentMask.get(destination.X, destination.Y) && !containsCoordinate(origins, destination.X, destination.Y)) { return; }
         }
 
         bool connected = false;
-
         for (const PixelCoordinate& destination : destinations)
         {
             if (hasFourConnectedAnimatedAttachmentNeighbour(ship, origins, destinations, destination))
@@ -1300,14 +1284,9 @@ namespace
                 break;
             }
         }
-
-        if (!connected)
-        {
-            return;
-        }
+        if (!connected) { return; }
 
         std::vector<PixelCoordinate> affectedPixels;
-
         for (const PixelCoordinate& pixel : origins)
         {
             for (int32_t offsetY = -1; offsetY <= 1; ++offsetY)
@@ -1336,16 +1315,8 @@ namespace
 
         for (const PixelCoordinate& pixel : affectedPixels)
         {
-            if (isBaseStructurePixel(ship, static_cast<int32_t>(pixel.X), static_cast<int32_t>(pixel.Y)))
-            {
-                continue;
-            }
-
-            if (isAnimatedAttachmentPixel(ship, origins, destinations, static_cast<int32_t>(pixel.X), static_cast<int32_t>(pixel.Y)))
-            {
-                continue;
-            }
-
+            if (isBaseStructurePixel(ship, static_cast<int32_t>(pixel.X), static_cast<int32_t>(pixel.Y))) { continue; }
+            if (isAnimatedAttachmentPixel(ship, origins, destinations, static_cast<int32_t>(pixel.X), static_cast<int32_t>(pixel.Y))) { continue; }
             frame.setPixel(pixel.X, pixel.Y, hasNeighbouringAnimatedStructurePixel(ship, origins, destinations, static_cast<int32_t>(pixel.X), static_cast<int32_t>(pixel.Y)) ? ship.Palette.Outline : ship.Palette.Transparent);
         }
 
@@ -1381,10 +1352,15 @@ namespace
         return bounds;
     }
 
-    int32_t getHoverOffset(uint32_t loopStep)
+    int32_t getHoverOffset(double normalizedTime)
     {
-        constexpr std::array<int32_t, 9u> Offsets = { 0, -1, -1, 0, 1, 1, 0, 0, 0 };
-        return Offsets[std::min<std::size_t>(loopStep, Offsets.size() - 1u)];
+        constexpr std::array<CurvePoint, 7u> HoverCurve =
+        { {
+            { 0.00, 0.00 }, { 0.16, -1.00 }, { 0.32, -1.00 }, { 0.50, 0.00 },
+            { 0.66, 1.00 }, { 0.82, 1.00 }, { 1.00, 0.00 }
+        } };
+        if (normalizedTime <= 0.0) { return 0; }
+        return quantizeSignedUnit(sampleCurve(std::clamp(normalizedTime, 0.0, 1.0), HoverCurve));
     }
 
     PixelShipGenerator::Image translateImageVertically(const PixelShipGenerator::Image& source, uint32_t width, uint32_t height, int32_t offsetY, const PixelShipGenerator::Color& transparent)
@@ -1416,9 +1392,9 @@ namespace
         return translated;
     }
 
-    void applyHoverOffset(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, uint32_t loopStep)
+    void applyHoverOffset(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime)
     {
-        const int32_t desiredOffset = getHoverOffset(loopStep);
+        const int32_t desiredOffset = getHoverOffset(normalizedTime);
 
         if (desiredOffset == 0)
         {
@@ -1446,6 +1422,251 @@ namespace
 
         frame = translateImageVertically(frame, width, height, desiredOffset, ship.Palette.Transparent);
     }
+
+    uint32_t getPlannedMaximumExhaustTravel(const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t amplitudePercent)
+    {
+        const uint32_t extension = component.MaximumExhaustLength > component.ExhaustLength ? component.MaximumExhaustLength - component.ExhaustLength : 0u;
+        const uint32_t contraction = component.ExhaustLength > component.MinimumExhaustLength ? component.ExhaustLength - component.MinimumExhaustLength : 0u;
+        return std::max(getContinuousLengthDelta(extension, 1.0, amplitudePercent), getContinuousLengthDelta(contraction, 1.0, amplitudePercent));
+    }
+
+    IdleAnimationPlan createIdleAnimationPlan(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipIdleAnimationSettings& settings, uint64_t seed)
+    {
+        IdleAnimationPlan plan;
+        plan.Profile = getIdleAnimationProfile(ship);
+        plan.PreferredMicroMovementDirection = (getAnimationHash(seed, 0u, 0u, MicroMovementSalt) & 1ull) == 0ull ? -1 : 1;
+        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+
+        if (settings.LightBlinking)
+        {
+            const uint32_t width = ship.LightMask.getWidth();
+            for (uint32_t y = 0u; y < ship.LightMask.getHeight(); ++y)
+            {
+                for (uint32_t x = 0u; x < width; ++x)
+                {
+                    if (!ship.LightMask.get(x, y)) { continue; }
+                    const uint32_t canonicalX = std::min(x, width - 1u - x);
+                    const uint32_t group = static_cast<uint32_t>(getAnimationHash(seed, canonicalX, y, LightVariationSalt) & 1ull);
+                    plan.LightGroupPixels[group].push_back({ x, y });
+                }
+            }
+        }
+
+        plan.EngineParameters.reserve(ship.IdleAnimationMetadata.EngineComponents.size());
+        std::vector<uint32_t> enginePhaseKeys;
+        bool hasEngineMechanicalNormalPhase = false;
+        bool hasEngineMechanicalAlternatePhase = false;
+
+        for (std::size_t engineIndex = 0u; engineIndex < ship.IdleAnimationMetadata.EngineComponents.size(); ++engineIndex)
+        {
+            const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
+            const uint32_t centerX = component.NozzleStartX + component.NozzleWidth / 2u;
+            const uint64_t variationHash = getAnimationHash(seed, centerX, component.NozzleY, EngineVariationSalt ^ static_cast<uint64_t>(engineIndex));
+            const uint64_t mechanicalHash = getAnimationHash(seed, centerX, component.NozzleY, EngineMechanicalSalt);
+            EngineAnimationParameters parameters;
+            parameters.ExhaustAmplitudePercent = getEngineAmplitudePercent(plan.Profile, component, ship.IdleAnimationMetadata.EngineComponents.size());
+
+            if (!plan.Profile.SynchronizeEngines)
+            {
+                parameters.ReverseTime = plan.Profile.AlternateEnginePhases ? (engineIndex & 1u) != 0u : plan.Profile.AsynchronousEngines && ((variationHash >> 12u) & 1ull) != 0ull;
+                if (plan.Profile.IrregularEngineCycle || plan.Profile.AsynchronousEngines) { parameters.CurveVariant = static_cast<uint32_t>((variationHash >> 20u) % 3ull); }
+            }
+
+            parameters.MechanicalAlternatePhase = plan.Profile.AlternateEnginePhases && (mechanicalHash & 1ull) != 0ull;
+            parameters.MechanicalActive = settings.MechanicalMicroMovement && scaleTraits.AnimationComplexity >= 20u && component.NozzleWidth >= 3u && component.HousingWidth >= 3u && component.NozzleY < ship.EngineMask.getHeight() && mechanicalHash % 100u < plan.Profile.EngineMechanicalChance;
+            plan.EngineParameters.push_back(parameters);
+
+            if (settings.EngineFlicker)
+            {
+                const uint32_t phaseKey = parameters.CurveVariant * 2u + (parameters.ReverseTime ? 1u : 0u);
+                if (std::find(enginePhaseKeys.begin(), enginePhaseKeys.end(), phaseKey) == enginePhaseKeys.end()) { enginePhaseKeys.push_back(phaseKey); }
+            }
+            if (parameters.MechanicalActive)
+            {
+                hasEngineMechanicalNormalPhase = hasEngineMechanicalNormalPhase || !parameters.MechanicalAlternatePhase;
+                hasEngineMechanicalAlternatePhase = hasEngineMechanicalAlternatePhase || parameters.MechanicalAlternatePhase;
+            }
+        }
+
+        plan.WeaponParameters.reserve(ship.IdleAnimationMetadata.WeaponComponents.size());
+        bool hasWeaponMechanicalNormalPhase = false;
+        bool hasWeaponMechanicalAlternatePhase = false;
+        for (const PixelShipGenerator::ShipWeaponAnimationComponent& component : ship.IdleAnimationMetadata.WeaponComponents)
+        {
+            const uint64_t hash = getAnimationHash(seed, component.AnchorX, component.AnchorY, WeaponMovementSalt);
+            WeaponAnimationParameters parameters;
+            if (component.MovableBarrel && settings.MechanicalMicroMovement && scaleTraits.AnimationComplexity >= 20u && hash % 100u < plan.Profile.WeaponMechanicalChance)
+            {
+                parameters.MechanicalActive = true;
+                if (plan.Profile.AlternateWeaponPhases && component.SymmetryGroup != 0u)
+                {
+                    parameters.AlternatePhase = component.AnchorX > ship.IdleAnimationMetadata.WeaponOccupiedMask.getWidth() / 2u;
+                }
+                else if (ship.Faction == PixelShipGenerator::ShipFactionType::FRONTIER && component.SymmetryGroup != 0u && ((hash >> 8u) & 1ull) != 0ull)
+                {
+                    parameters.AlternatePhase = component.AnchorX > ship.IdleAnimationMetadata.WeaponOccupiedMask.getWidth() / 2u;
+                }
+                hasWeaponMechanicalNormalPhase = hasWeaponMechanicalNormalPhase || !parameters.AlternatePhase;
+                hasWeaponMechanicalAlternatePhase = hasWeaponMechanicalAlternatePhase || parameters.AlternatePhase;
+            }
+            plan.WeaponParameters.push_back(parameters);
+        }
+
+        plan.MajorFeatureParameters.reserve(ship.IdleAnimationMetadata.MajorFeatureComponents.size());
+        uint32_t activeMajorFeatureCount = 0u;
+        bool hasActiveVentBank = false;
+        for (const PixelShipGenerator::ShipMajorFeatureAnimationComponent& component : ship.IdleAnimationMetadata.MajorFeatureComponents)
+        {
+            const uint64_t hash = getAnimationHash(seed, component.MinimumX, component.MinimumY, MajorFeatureSalt ^ (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK ? DetailVariationSalt : 0ull));
+            MajorFeatureAnimationParameters parameters;
+            if (component.Type == PixelShipGenerator::ShipMajorFeatureType::TECH_CORE && settings.LightBlinking)
+            {
+                parameters.Active = true;
+                parameters.AlternatePhase = ship.Faction == PixelShipGenerator::ShipFactionType::XENO && (hash & 1ull) != 0ull;
+            }
+            else if (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK && settings.SmallDetailVariation && scaleTraits.AnimationComplexity >= 20u && hash % 100u < plan.Profile.VentActivityChance)
+            {
+                parameters.Active = true;
+                parameters.PatternParity = static_cast<uint32_t>(hash & 1ull);
+                hasActiveVentBank = true;
+            }
+            if (parameters.Active) { ++activeMajorFeatureCount; }
+            plan.MajorFeatureParameters.push_back(parameters);
+        }
+
+        if (settings.SmallDetailVariation)
+        {
+            uint64_t bestHash = std::numeric_limits<uint64_t>::max();
+            for (uint32_t y = 0u; y < ship.MechanicalDetailMask.getHeight(); ++y)
+            {
+                for (uint32_t x = 0u; x < ship.MechanicalDetailMask.getWidth(); ++x)
+                {
+                    if (!ship.MechanicalDetailMask.get(x, y) || getMaskNeighbourCount(ship.MechanicalDetailMask, static_cast<int32_t>(x), static_cast<int32_t>(y)) > 2u) { continue; }
+                    const uint64_t hash = getAnimationHash(seed, x, y, DetailVariationSalt);
+                    if (hash < bestHash)
+                    {
+                        bestHash = hash;
+                        plan.DetailVariationPixel = PixelCoordinate{ x, y };
+                    }
+                }
+            }
+        }
+
+        if (settings.MechanicalMicroMovement && scaleTraits.AnimationComplexity >= 20u)
+        {
+            uint64_t selectedHash = std::numeric_limits<uint64_t>::max();
+            const uint32_t maximumPixelCount = scaleTraits.AnimationComplexity >= 80u ? 36u : 20u;
+            for (std::size_t placementIndex = 0u; placementIndex < ship.AttachmentPlacements.size(); ++placementIndex)
+            {
+                const PixelShipGenerator::ShipAttachmentPlacement& placement = ship.AttachmentPlacements[placementIndex];
+                if (placement.Type != PixelShipGenerator::ShipAttachmentType::SENSOR_ARRAY && placement.Type != PixelShipGenerator::ShipAttachmentType::TECHNOLOGY_NODE) { continue; }
+                if (getAttachmentMaximumOutwardDistance(placement) < 2u || countAttachmentPixels(ship, placement) > maximumPixelCount) { continue; }
+                const uint64_t hash = getAnimationHash(seed, placement.AnchorX, placement.AnchorY, MicroMovementSalt);
+                if (hash < selectedHash)
+                {
+                    selectedHash = hash;
+                    plan.MicroMovementPlacementIndex = placementIndex;
+                }
+            }
+        }
+
+        PixelShipGenerator::AnimationSamplingRequirements& requirements = plan.SamplingRequirements;
+        requirements.Type = PixelShipGenerator::ShipAnimationType::IDLE;
+        requirements.Mode = settings.SamplingMode;
+        requirements.DurationMilliseconds = std::max(1u, settings.AnimationDurationMilliseconds);
+        requirements.ExactFrameCount = std::max(1u, settings.FrameCount);
+        requirements.MinimumFrameCount = std::max(1u, settings.MinimumFrameCount);
+        requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, settings.MaximumFrameCount);
+        requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;
+
+        if (settings.EngineFlicker)
+        {
+            requirements.ActiveAnimatedComponentCount += static_cast<uint32_t>(ship.IdleAnimationMetadata.EngineComponents.size());
+            requirements.IndependentPhaseGroupCount += static_cast<uint32_t>(enginePhaseKeys.size());
+            for (std::size_t engineIndex = 0u; engineIndex < ship.IdleAnimationMetadata.EngineComponents.size(); ++engineIndex)
+            {
+                requirements.MaximumExhaustTravelPixels = std::max(requirements.MaximumExhaustTravelPixels, getPlannedMaximumExhaustTravel(ship.IdleAnimationMetadata.EngineComponents[engineIndex], plan.EngineParameters[engineIndex].ExhaustAmplitudePercent));
+            }
+        }
+
+        for (const EngineAnimationParameters& parameters : plan.EngineParameters)
+        {
+            if (parameters.MechanicalActive) { ++requirements.ActiveAnimatedComponentCount; requirements.MaximumMechanicalTravelPixels = 1u; }
+        }
+        if (hasEngineMechanicalNormalPhase) { ++requirements.IndependentPhaseGroupCount; }
+        if (hasEngineMechanicalAlternatePhase) { ++requirements.IndependentPhaseGroupCount; }
+
+        for (std::size_t weaponIndex = 0u; weaponIndex < plan.WeaponParameters.size(); ++weaponIndex)
+        {
+            const WeaponAnimationParameters& parameters = plan.WeaponParameters[weaponIndex];
+            if (parameters.MechanicalActive) { ++requirements.ActiveAnimatedComponentCount; requirements.MaximumMechanicalTravelPixels = 1u; }
+            if (settings.LightBlinking && ship.IdleAnimationMetadata.WeaponComponents[weaponIndex].Emissive) { ++requirements.ActiveAnimatedComponentCount; }
+        }
+        if (hasWeaponMechanicalNormalPhase) { ++requirements.IndependentPhaseGroupCount; }
+        if (hasWeaponMechanicalAlternatePhase) { ++requirements.IndependentPhaseGroupCount; }
+        if (settings.LightBlinking && PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(ship.IdleAnimationMetadata.WeaponEmissiveMask) > 0u) { ++requirements.IndependentPhaseGroupCount; }
+
+        uint32_t activeLightGroupCount = 0u;
+        for (const std::vector<PixelCoordinate>& group : plan.LightGroupPixels)
+        {
+            if (!group.empty()) { ++activeLightGroupCount; }
+        }
+        if (activeLightGroupCount > 0u)
+        {
+            ++requirements.ActiveAnimatedComponentCount;
+            requirements.IndependentPhaseGroupCount += activeLightGroupCount;
+            requirements.MaximumTemporalCyclesPerClip = std::max(requirements.MaximumTemporalCyclesPerClip, 2u);
+        }
+
+        requirements.ActiveAnimatedComponentCount += activeMajorFeatureCount;
+        requirements.IndependentPhaseGroupCount += activeMajorFeatureCount;
+        if (hasActiveVentBank) { requirements.MaximumTemporalCyclesPerClip = std::max(requirements.MaximumTemporalCyclesPerClip, 2u); }
+
+        if (plan.DetailVariationPixel.has_value())
+        {
+            ++requirements.ActiveAnimatedComponentCount;
+            ++requirements.IndependentPhaseGroupCount;
+            requirements.MaximumTemporalCyclesPerClip = std::max(requirements.MaximumTemporalCyclesPerClip, 2u);
+        }
+        if (plan.MicroMovementPlacementIndex.has_value())
+        {
+            ++requirements.ActiveAnimatedComponentCount;
+            ++requirements.IndependentPhaseGroupCount;
+            requirements.MaximumMechanicalTravelPixels = 1u;
+            requirements.MaximumTemporalCyclesPerClip = std::max(requirements.MaximumTemporalCyclesPerClip, 2u);
+        }
+
+        if (settings.HoverOffset)
+        {
+            const OpaqueBounds bounds = calculateOpaqueBounds(ship.FinalImage, ship.HullMask.getWidth(), ship.HullMask.getHeight());
+            if (bounds.Valid && (bounds.MinY > 0u || bounds.MaxY + 1u < ship.HullMask.getHeight()))
+            {
+                ++requirements.ActiveAnimatedComponentCount;
+                ++requirements.IndependentPhaseGroupCount;
+                requirements.MaximumMechanicalTravelPixels = 1u;
+            }
+        }
+
+        if (requirements.ActiveAnimatedComponentCount > 0u && requirements.MaximumTemporalCyclesPerClip == 0u) { requirements.MaximumTemporalCyclesPerClip = 1u; }
+        return plan;
+    }
+
+    PixelShipGenerator::Image evaluateIdleFrame(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipIdleAnimationSettings& settings, double normalizedTime, const IdleAnimationPlan& plan)
+    {
+        const double time = wrapNormalizedTime(normalizedTime);
+        PixelShipGenerator::Image frame = ship.FinalImage;
+        if (time <= 0.0) { return frame; }
+
+        if (settings.MechanicalMicroMovement) { applyEngineMechanicalAnimation(frame, ship, time, plan); }
+        if (settings.LightBlinking) { applyLightBlinking(frame, ship, time, plan); }
+        applyMajorFeatureAnimation(frame, ship, time, plan, settings.LightBlinking, settings.SmallDetailVariation);
+        if (settings.SmallDetailVariation) { applySmallDetailVariation(frame, ship, time, plan); }
+        applyWeaponAnimation(frame, ship, time, plan, settings.MechanicalMicroMovement, settings.LightBlinking);
+        if (settings.MechanicalMicroMovement) { applyMechanicalMicroMovement(frame, ship, time, plan); }
+        if (settings.EngineFlicker) { applyEngineAnimation(frame, ship, time, plan); }
+        if (settings.HoverOffset) { applyHoverOffset(frame, ship, time); }
+        return frame;
+    }
 }
 
 namespace PixelShipGenerator
@@ -1453,39 +1674,33 @@ namespace PixelShipGenerator
     ShipIdleAnimation ShipIdleAnimator::generate(const GeneratedShip& ship, const ShipIdleAnimationSettings& settings) const
     {
         ShipIdleAnimation animation;
+        animation.Type = ShipAnimationType::IDLE;
         animation.FrameWidth = ship.HullMask.getWidth();
         animation.FrameHeight = ship.HullMask.getHeight();
         animation.Seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ AnimationSeedSalt);
 
-        const uint32_t frameCount = std::max(1u, settings.FrameCount);
-        animation.Frames.reserve(frameCount);
-        const int32_t preferredMicroMovementDirection = (getAnimationHash(animation.Seed, 0u, 0u, MicroMovementSalt) & 1ull) == 0ull ? -1 : 1;
-        const IdleAnimationProfile profile = getIdleAnimationProfile(ship);
+        const IdleAnimationPlan idlePlan = createIdleAnimationPlan(ship, settings, animation.Seed);
+        AnimationSamplingPlanner samplingPlanner;
+        animation.Sampling = samplingPlanner.plan(idlePlan.SamplingRequirements);
+        animation.DurationMilliseconds = animation.Sampling.DurationMilliseconds;
+        animation.FrameDurationMilliseconds = animation.Sampling.ActualFrameDurationMilliseconds;
+        animation.Frames.reserve(animation.Sampling.ActualFrameCount);
+        animation.NormalizedSampleTimes.reserve(animation.Sampling.ActualFrameCount);
 
-        for (uint32_t frameIndex = 0u; frameIndex < frameCount; ++frameIndex)
+        for (uint32_t frameIndex = 0u; frameIndex < animation.Sampling.ActualFrameCount; ++frameIndex)
         {
-            Image frame = ship.FinalImage;
-
-            if (frameIndex == 0u)
-            {
-                animation.Frames.push_back(std::move(frame));
-                continue;
-            }
-
-            const uint32_t loopStep = getLoopStep(frameIndex, frameCount);
-
-            if (settings.MechanicalMicroMovement) { applyEngineMechanicalAnimation(frame, ship, loopStep, animation.Seed, profile); }
-            if (settings.LightBlinking) { applyLightBlinking(frame, ship, loopStep, animation.Seed); }
-            applyMajorFeatureAnimation(frame, ship, loopStep, animation.Seed, profile, settings.LightBlinking, settings.SmallDetailVariation);
-            if (settings.SmallDetailVariation) { applySmallDetailVariation(frame, ship, loopStep, animation.Seed); }
-            applyWeaponAnimation(frame, ship, loopStep, animation.Seed, profile, settings.MechanicalMicroMovement, settings.LightBlinking);
-            if (settings.MechanicalMicroMovement) { applyMechanicalMicroMovement(frame, ship, loopStep, animation.Seed, preferredMicroMovementDirection); }
-            if (settings.EngineFlicker) { applyEngineAnimation(frame, ship, loopStep, animation.Seed, profile); }
-            if (settings.HoverOffset) { applyHoverOffset(frame, ship, loopStep); }
-
-            animation.Frames.push_back(std::move(frame));
+            const double normalizedTime = static_cast<double>(frameIndex) / static_cast<double>(animation.Sampling.ActualFrameCount);
+            animation.NormalizedSampleTimes.push_back(normalizedTime);
+            animation.Frames.push_back(evaluateIdleFrame(ship, settings, normalizedTime, idlePlan));
         }
 
         return animation;
+    }
+
+    Image ShipIdleAnimator::evaluateFrameAtNormalizedTime(const GeneratedShip& ship, double normalizedTime, const ShipIdleAnimationSettings& settings) const
+    {
+        const uint64_t seed = settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ AnimationSeedSalt);
+        const IdleAnimationPlan idlePlan = createIdleAnimationPlan(ship, settings, seed);
+        return evaluateIdleFrame(ship, settings, normalizedTime, idlePlan);
     }
 }
