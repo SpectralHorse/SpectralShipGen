@@ -1,0 +1,961 @@
+{
+  "format_version": 5,
+  "ship": {
+    "dimensions": {
+      "height": 64,
+      "width": 96
+    },
+    "faction": {
+      "profile": {
+        "Animation": {
+          "Firing": {
+            "DurationAdditionMilliseconds": 65,
+            "DurationScale": {
+              "Denominator": 1,
+              "Numerator": 1
+            },
+            "HeavyResponse": 1,
+            "MaximumPreFireExtensionLimit": 0,
+            "ResponseStrengthScale": {
+              "Denominator": 1,
+              "Numerator": 1
+            }
+          },
+          "Idle": {
+            "AlternateEnginePhases": 0,
+            "AlternateTechCorePhases": false,
+            "AlternateWeaponPhases": 0,
+            "AsynchronousEngines": 0,
+            "EngineMechanicalChanceMaximum": 2,
+            "EngineMechanicalChanceMinimum": 0,
+            "EngineMechanicalChanceOffset": 0,
+            "EnginePulseStrengthMinimum": 1,
+            "ExhaustAmplitudeScale": {
+              "Denominator": 10,
+              "Numerator": 7
+            },
+            "IrregularEngineCycle": 2,
+            "RandomizeSymmetricWeaponAlternatePhase": false,
+            "SlowMechanicalCycle": 1,
+            "SynchronizeEngines": 0,
+            "TechPulseStrength": 2,
+            "VentActivityChanceScale": {
+              "Denominator": 2,
+              "Numerator": 1
+            },
+            "WeaponMechanicalChanceMaximum": 0,
+            "WeaponMechanicalChanceMinimum": 18,
+            "WeaponMechanicalChanceOffset": 0,
+            "WeaponMechanicalChanceScale": {
+              "Denominator": 3,
+              "Numerator": 2
+            }
+          },
+          "LateralMovement": {
+            "HeavyResponse": 1,
+            "MinimumExhaustVariationLimit": 0,
+            "ResponseStrengthScale": {
+              "Denominator": 4,
+              "Numerator": 3
+            },
+            "SquareTransitionInput": true,
+            "Staggered": 0,
+            "Synchronized": 0
+          },
+          "LongitudinalMovement": {
+            "HeavyResponse": 1,
+            "MinimumExhaustVariationLimit": 0,
+            "ResponseStrengthScale": {
+              "Denominator": 4,
+              "Numerator": 3
+            },
+            "SquareTransitionInput": true,
+            "Staggered": 0,
+            "Synchronized": 0
+          }
+        },
+        "Attachments": {
+          "AttachmentChancePercent": 72,
+          "SymmetryChanceOffset": 4,
+          "WeightMultipliersPercent": {
+            "ArmorFin": 105,
+            "AuxiliaryPod": 42,
+            "Radiator": 28,
+            "SensorArray": 72,
+            "TechnologyNode": 175,
+            "WeaponMount": 70
+          }
+        },
+        "Cockpit": {
+          "ShapeWeightMultipliersPercent": {
+            "CompactCanopy": 45,
+            "DorsalBridge": 300,
+            "ElongatedCanopy": 50,
+            "LayeredBridge": 450,
+            "SplitCanopy": 110,
+            "WideCommandDeck": 105
+          },
+          "SizeWeightMultipliersPercent": {
+            "Compact": 68,
+            "Large": 126,
+            "Massive": 138,
+            "Standard": 92
+          }
+        },
+        "Complexity": {
+          "CategoryOffsets": {
+            "Attachment": -2,
+            "CockpitStructure": 3,
+            "Detail": -4,
+            "HullLayer": 5,
+            "LargeWeapon": 0,
+            "MajorFeature": 4,
+            "Silhouette": 0
+          },
+          "LegacyCategoryOffsets": {
+            "Attachment": -2,
+            "CockpitStructure": 0,
+            "Detail": -3,
+            "HullLayer": 4,
+            "LargeWeapon": 0,
+            "MajorFeature": 3,
+            "Silhouette": 0
+          },
+          "TotalBudgetPercent": 104
+        },
+        "CoreTreatment": {
+          "ChancePercent": 128,
+          "CoreChannelLuminousPattern": 1,
+          "WeightOffsets": {
+            "CentralSpine": 16,
+            "CockpitSurround": -4,
+            "CoreChannel": 22,
+            "LateralRecesses": 0,
+            "LongitudinalArmorBand": 0,
+            "RaisedCorePlate": 20
+          }
+        },
+        "Engines": {
+          "ExternalHeightPercent": 60,
+          "LayoutWeightMultipliersPercent": {
+            "Central": 148,
+            "CentralAuxiliary": 138,
+            "Quad": 55,
+            "Twin": 82,
+            "WideBank": 68
+          },
+          "NacelleChancePercent": 25,
+          "SizeWeightMultipliersPercent": {
+            "Large": 330,
+            "Medium": 55,
+            "Small": 15
+          }
+        },
+        "Finish": {
+          "CentralDorsalPlateRole": 1,
+          "CockpitBaseRole": 1,
+          "CockpitFrameRole": 1,
+          "CoreLuminousHighlightRole": 11,
+          "CoreLuminousRole": 11,
+          "CoreRaisedRole": 1,
+          "CoreSecondaryMaterialRole": 1,
+          "EngineHotCoreRole": 11,
+          "EngineInteriorHighlightRole": 10,
+          "ForceAxialRidgeEdgeHighlight": false,
+          "WeaponBodyRole": 1,
+          "WeaponMuzzleRole": 11,
+          "WeaponRaisedHighlightRole": 3
+        },
+        "Hull": {
+          "NegativeSpaceChancePercent": 115,
+          "NegativeSpaceWeightMultipliersPercent": {
+            "NacelleChannel": 115,
+            "OpenFrameBay": 155,
+            "RearFork": 135,
+            "ShoulderGap": 95,
+            "WingChannel": 78
+          },
+          "PreferAlternateArticulationOrder": true
+        },
+        "HullLayers": {
+          "ChancePercent": 124,
+          "MaximumLayerCount": 2,
+          "WeightAdjustments": {
+            "CentralDorsalPlate": {
+              "Offset": 55,
+              "Scale": {
+                "Denominator": 1,
+                "Numerator": 1
+              }
+            },
+            "ForwardArmor": {
+              "Offset": 0,
+              "Scale": {
+                "Denominator": 1,
+                "Numerator": 1
+              }
+            },
+            "RearEngineCover": {
+              "Offset": 25,
+              "Scale": {
+                "Denominator": 1,
+                "Numerator": 1
+              }
+            },
+            "ShoulderArmor": {
+              "Offset": 30,
+              "Scale": {
+                "Denominator": 1,
+                "Numerator": 1
+              }
+            },
+            "WingArmor": {
+              "Offset": 0,
+              "Scale": {
+                "Denominator": 4,
+                "Numerator": 3
+              }
+            }
+          }
+        },
+        "Livery": {
+          "AllowAsymmetricGeometricInsignia": true,
+          "AsymmetricChanceDivisor": 1,
+          "AsymmetricChanceOffset": 0,
+          "ChancePercent": 78,
+          "WeightMultipliersPercent": {
+            "CenterStripe": 82,
+            "Chevron": 145,
+            "DoubleCenterStripe": 82,
+            "GeometricInsignia": 145,
+            "IdPanel": 65,
+            "NoseBand": 82,
+            "ShoulderBlock": 82,
+            "WingBand": 65
+          }
+        },
+        "MacroAsymmetry": {
+          "ChancePercent": 88
+        },
+        "MajorFeatures": {
+          "ChancePercent": 112,
+          "WeightMultipliersPercent": {
+            "ArmorPlate": 150,
+            "CentralSpine": 175,
+            "RecessedBay": 120,
+            "TechCore": 185,
+            "VentBank": 38,
+            "WingPlate": 72
+          }
+        },
+        "Materials": {
+          "ZoneWeightMultipliersPercent": {
+            "AxialBand": 135,
+            "CockpitCollar": 90,
+            "HardpointSurround": 90,
+            "RearMechanical": 135,
+            "ShoulderSurface": 135,
+            "WingSurface": 90
+          }
+        },
+        "Palette": {
+          "Accent": {
+            "HueOffset": {
+              "Max": 45,
+              "Min": -30
+            },
+            "Saturation": {
+              "Max": 45,
+              "Min": 18
+            },
+            "Value": {
+              "Max": 58,
+              "Min": 32
+            }
+          },
+          "Cockpit": {
+            "HueOffset": {
+              "Max": 180,
+              "Min": 90
+            },
+            "Saturation": {
+              "Max": 76,
+              "Min": 46
+            },
+            "Value": {
+              "Max": 72,
+              "Min": 46
+            }
+          },
+          "Exhaust": {
+            "HueOffset": {
+              "Max": 190,
+              "Min": 90
+            },
+            "Saturation": {
+              "Max": 92,
+              "Min": 62
+            },
+            "Value": {
+              "Max": 96,
+              "Min": 78
+            }
+          },
+          "HullHue": {
+            "Max": 330,
+            "Min": 205
+          },
+          "HullSaturation": {
+            "Max": 34,
+            "Min": 10
+          },
+          "HullValue": {
+            "Max": 46,
+            "Min": 24
+          },
+          "Light": {
+            "HueOffset": {
+              "Max": 205,
+              "Min": 95
+            },
+            "Saturation": {
+              "Max": 100,
+              "Min": 76
+            },
+            "Value": {
+              "Max": 100,
+              "Min": 92
+            }
+          },
+          "MechanicalSaturation": {
+            "Max": 24,
+            "Min": 8
+          },
+          "MechanicalValue": {
+            "Max": 28,
+            "Min": 12
+          }
+        },
+        "PaletteBehavior": {
+          "AccentHueSeparationShiftA": 0,
+          "AccentHueSeparationShiftB": 0,
+          "BrightHullValue": {
+            "Max": 0,
+            "Min": 0
+          },
+          "DarkHullValue": {
+            "Max": 0,
+            "Min": 0
+          },
+          "HullValueMode": 0,
+          "MinimumAccentHueDistance": 0,
+          "SecondaryToneDirection": 2
+        },
+        "SurfaceDetails": {
+          "AccentArmorWeightPercent": 82,
+          "AccentPanelWeightPercent": 32,
+          "AccentStripeWeightPercent": 45,
+          "AsymmetricDetailChanceOffset": -2,
+          "DetailDensityPercent": 91,
+          "HorizontalVentChancePercent": 18,
+          "LightPatternCountPercent": 118,
+          "LuminousChannelCoreRegionBiasChance": 72,
+          "MechanicalPatternCountPercent": 30,
+          "MotifRepeatPercent": 78,
+          "MotifWeightMultipliersPercent": {
+            "PairedLights": 95,
+            "PairedVents": 25,
+            "ParallelSeams": 125,
+            "RecessedSlot": 155,
+            "RepeatedDashes": 80,
+            "ThreeNodeLights": 145,
+            "TripleVentBank": 20
+          },
+          "SupplementalWeightMultipliersPercent": {
+            "GeometricMarking": 155,
+            "IdentificationMarking": 8,
+            "LuminousChannel": 250,
+            "MechanicalExposure": 12,
+            "PanelSeam": 72,
+            "RepeatingMotif": 230
+          }
+        },
+        "VisualHierarchy": {
+          "AnchorWeightMultipliersPercent": {
+            "CentralCore": 135,
+            "Cockpit": 100,
+            "Engines": 100,
+            "HullLayers": 135,
+            "MacroAsymmetry": 100,
+            "MajorFeature": 135,
+            "NegativeSpace": 100,
+            "Silhouette": 100,
+            "Weapons": 90,
+            "Wings": 100
+          }
+        },
+        "Weapons": {
+          "ChancePercent": 94,
+          "EmissiveChance": 47,
+          "SymmetryChanceOffset": 4,
+          "WeightMultipliersPercent": {
+            "CompactTurret": 145,
+            "RailWeapon": 175,
+            "SingleCannon": 58,
+            "TwinCannon": 78,
+            "WeaponPod": 62
+          }
+        }
+      },
+      "source": "EMBEDDED_CUSTOM"
+    },
+    "palette": {
+      "colors": {
+        "CockpitBase": {
+          "A": 255,
+          "B": 207,
+          "G": 181,
+          "R": 29
+        },
+        "CockpitDark": {
+          "A": 255,
+          "B": 68,
+          "G": 50,
+          "R": 18
+        },
+        "CockpitGlint": {
+          "A": 255,
+          "B": 255,
+          "G": 244,
+          "R": 196
+        },
+        "CockpitHighlight": {
+          "A": 255,
+          "B": 228,
+          "G": 206,
+          "R": 116
+        },
+        "EngineBase": {
+          "A": 255,
+          "B": 98,
+          "G": 90,
+          "R": 82
+        },
+        "EngineDark": {
+          "A": 255,
+          "B": 48,
+          "G": 42,
+          "R": 38
+        },
+        "EngineHighlight": {
+          "A": 255,
+          "B": 170,
+          "G": 164,
+          "R": 154
+        },
+        "EngineHotCore": {
+          "A": 255,
+          "B": 72,
+          "G": 190,
+          "R": 255
+        },
+        "ExhaustBase": {
+          "A": 255,
+          "B": 36,
+          "G": 104,
+          "R": 255
+        },
+        "ExhaustHighlight": {
+          "A": 255,
+          "B": 92,
+          "G": 218,
+          "R": 255
+        },
+        "ExhaustHotCore": {
+          "A": 255,
+          "B": 180,
+          "G": 244,
+          "R": 255
+        },
+        "HullAccent": {
+          "A": 255,
+          "B": 141,
+          "G": 82,
+          "R": 211
+        },
+        "HullAccentDark": {
+          "A": 255,
+          "B": 86,
+          "G": 76,
+          "R": 64
+        },
+        "HullAccentHighlight": {
+          "A": 255,
+          "B": 192,
+          "G": 186,
+          "R": 174
+        },
+        "HullBase": {
+          "A": 255,
+          "B": 109,
+          "G": 77,
+          "R": 44
+        },
+        "HullDeepShadow": {
+          "A": 255,
+          "B": 62,
+          "G": 50,
+          "R": 38
+        },
+        "HullEdgeHighlight": {
+          "A": 255,
+          "B": 202,
+          "G": 192,
+          "R": 174
+        },
+        "HullHighlight": {
+          "A": 255,
+          "B": 178,
+          "G": 164,
+          "R": 142
+        },
+        "HullSecondary": {
+          "A": 255,
+          "B": 122,
+          "G": 104,
+          "R": 80
+        },
+        "HullShadow": {
+          "A": 255,
+          "B": 88,
+          "G": 72,
+          "R": 55
+        },
+        "LightBase": {
+          "A": 255,
+          "B": 176,
+          "G": 255,
+          "R": 105
+        },
+        "LightHighlight": {
+          "A": 255,
+          "B": 222,
+          "G": 255,
+          "R": 164
+        },
+        "MechanicalBase": {
+          "A": 255,
+          "B": 74,
+          "G": 66,
+          "R": 56
+        },
+        "MechanicalDark": {
+          "A": 255,
+          "B": 36,
+          "G": 30,
+          "R": 24
+        },
+        "Outline": {
+          "A": 255,
+          "B": 28,
+          "G": 22,
+          "R": 18
+        },
+        "Transparent": {
+          "A": 0,
+          "B": 0,
+          "G": 0,
+          "R": 0
+        }
+      },
+      "source": "FIXED"
+    },
+    "seeds": {
+      "attachments": 10492892223715588352,
+      "details": 6414793953402355745,
+      "domains": {
+        "details": 9727775195120275458,
+        "palette": 9727775195120275457
+      },
+      "master": 9727775195120271495,
+      "palette": 9448322634810950839,
+      "rng_mode": "DOMAIN_SUBSTREAMS",
+      "structure": 3626770547460162310
+    },
+    "settings": {
+      "asymmetric_detail_chance": 21,
+      "attachments_enabled": true,
+      "detail_density": 68
+    },
+    "structural": {
+      "profile": {
+        "AccentArmorWeight": 35,
+        "AccentPanelWeight": 55,
+        "AccentStripeWeight": 10,
+        "AllowTinyBroadSilhouetteLegacyValidationException": false,
+        "AnimationTraits": {
+          "Firing": {
+            "AdditionalRecoilLimit": 1,
+            "DurationAdditionMilliseconds": 0,
+            "HeavyResponse": false,
+            "MaximumRecoilLimit": 0,
+            "MinimumPreFireExtensionLimit": 1,
+            "RailWeaponAdditionalRecoilLimit": 0,
+            "ResponseStrengthPercent": 120,
+            "Responsive": false
+          },
+          "Idle": {
+            "AlternateEnginePhases": false,
+            "AsynchronousEngines": true,
+            "EngineMechanicalChance": 8,
+            "EnginePulseStrength": 2,
+            "ExhaustAmplitudePercent": 90,
+            "SlowMechanicalCycle": false,
+            "SynchronizeEngines": false,
+            "VentActivityChance": 90,
+            "WeaponMechanicalChance": 80
+          },
+          "LateralMovement": {
+            "AttachmentTravelLimit": 2,
+            "EngineTravelLimit": 2,
+            "HeavyResponse": false,
+            "ResponseStrengthPercent": 110,
+            "Responsive": false,
+            "Staggered": true,
+            "Synchronized": false,
+            "WeaponTravelLimit": 1
+          },
+          "LongitudinalMovement": {
+            "AccelerationExtensionPercent": 100,
+            "AttachmentTravelLimit": 2,
+            "BrakingContractionPercent": 100,
+            "BrakingTravelLimit": 2,
+            "ExhaustVariationLimit": 2,
+            "HeavyResponse": false,
+            "ResponseStrengthPercent": 115,
+            "Responsive": false,
+            "Staggered": true,
+            "Synchronized": false,
+            "WeaponTravelLimit": 1
+          }
+        },
+        "AttachmentChance": 85,
+        "AttachmentSizePercent": 110,
+        "AttachmentWeights": {
+          "ArmorFin": 70,
+          "AuxiliaryPod": 150,
+          "Radiator": 180,
+          "SensorArray": 110,
+          "TechnologyNode": 35,
+          "WeaponMount": 55
+        },
+        "AxialRidgeUsesEdgeHighlight": false,
+        "BroadWingTaperPercent": 62,
+        "BroadWingWeight": 47,
+        "BroadWingWidthPercent": {
+          "Max": 100,
+          "Min": 88
+        },
+        "BroaderShouldersModifierWeight": 75,
+        "CentralAuxiliaryEngineWeight": 3,
+        "CentralDorsalPlateTone": 1,
+        "CentralEngineWeight": 1,
+        "CleanAxialTaperArticulationExemption": false,
+        "CockpitHeightPercent": 100,
+        "CockpitShapeWeights": {
+          "CompactCanopy": 40,
+          "DorsalBridge": 85,
+          "ElongatedCanopy": 55,
+          "LayeredBridge": 130,
+          "SplitCanopy": 80,
+          "WideCommandDeck": 95
+        },
+        "CockpitSizeWeights": {
+          "Compact": 20,
+          "Large": 90,
+          "Massive": 30,
+          "Standard": 60
+        },
+        "CockpitStartPercent": {
+          "Max": 32,
+          "Min": 14
+        },
+        "CockpitWidthPercent": 105,
+        "ComplexityBudgetPercent": 112,
+        "ComplexityCategoryWeights": {
+          "Attachment": 16,
+          "CockpitStructure": 14,
+          "Detail": 10,
+          "HullLayer": 17,
+          "LargeWeapon": 14,
+          "MajorFeature": 17,
+          "Silhouette": 12
+        },
+        "CoreRaisedSurfaceTone": 1,
+        "CoreRegionWidthBasePercent": 58,
+        "CoreRegionWidthHorizontalCapacityDivisor": 5,
+        "CoreRegionWidthMaximumPercent": 0,
+        "CoreTreatmentChance": 84,
+        "CoreTreatmentWeights": {
+          "CentralSpine": 14,
+          "CockpitSurround": 14,
+          "CoreChannel": 16,
+          "LateralRecesses": 22,
+          "LongitudinalArmorBand": 16,
+          "RaisedCorePlate": 18
+        },
+        "DetailDensityPercent": 140,
+        "DetailMotifChance": 97,
+        "DetailMotifMirroringBonusPercent": 0,
+        "DetailMotifOrientationBias": 0,
+        "DetailMotifPlacementBias": 0,
+        "DetailMotifRepeatPercent": 125,
+        "DetailMotifWeights": {
+          "PairedLights": 55,
+          "PairedVents": 145,
+          "ParallelSeams": 115,
+          "RecessedSlot": 160,
+          "RepeatedDashes": 110,
+          "ThreeNodeLights": 45,
+          "TripleVentBank": 175
+        },
+        "EngineBankWeight": 7,
+        "EngineNacelleChance": 75,
+        "HorizontalVentChance": 80,
+        "HullHorizontalPaddingPercent": {
+          "Max": 12,
+          "Min": 7
+        },
+        "HullLayerChance": 72,
+        "HullLayerHierarchyUsesWingRoot": false,
+        "HullLayerWeights": {
+          "CentralDorsalPlate": 55,
+          "ForwardArmor": 75,
+          "RearEngineCover": 110,
+          "ShoulderArmor": 95,
+          "WingArmor": 85
+        },
+        "HullModifierChance": 85,
+        "HullVerticalPaddingPercent": {
+          "Max": 13,
+          "Min": 8
+        },
+        "LargeEngineSizeWeight": 5,
+        "LargeWeaponChance": 82,
+        "LargeWeaponHardpointWeights": {
+          "CentralBody": 100,
+          "CentralNose": 100,
+          "ForwardFuselageSide": 100,
+          "ForwardShoulder": 100,
+          "OuterWing": 100,
+          "WingRoot": 100
+        },
+        "LargeWeaponScalePercent": 145,
+        "LargeWeaponSymmetryChance": 55,
+        "LargeWeaponWeights": {
+          "CompactTurret": 100,
+          "RailWeapon": 65,
+          "SingleCannon": 110,
+          "TwinCannon": 90,
+          "WeaponPod": 130
+        },
+        "LegacyComplexityCategoryWeights": {
+          "Attachment": 19,
+          "CockpitStructure": 0,
+          "Detail": 14,
+          "HullLayer": 19,
+          "LargeWeapon": 16,
+          "MajorFeature": 18,
+          "Silhouette": 14
+        },
+        "LiveryAsymmetricChance": 25,
+        "LiveryChance": 70,
+        "LiveryWeights": {
+          "CenterStripe": 45,
+          "Chevron": 55,
+          "DoubleCenterStripe": 30,
+          "GeometricInsignia": 55,
+          "IdPanel": 135,
+          "NoseBand": 45,
+          "ShoulderBlock": 110,
+          "WingBand": 70
+        },
+        "MacroAsymmetryCategoryWeights": {
+          "Attachment": 50,
+          "HullLayer": 30,
+          "LargeWeapon": 20
+        },
+        "MacroAsymmetryChance": 20,
+        "MacroAsymmetryOuterRegionChance": 62,
+        "MacroAsymmetryVisualWeightPercent": 100,
+        "MacroAsymmetryWingRootRegionChance": 60,
+        "MainBodyEndPercent": {
+          "Max": 50,
+          "Min": 42
+        },
+        "MainBodyWidthPercent": {
+          "Max": 78,
+          "Min": 58
+        },
+        "MajorFeatureChance": 90,
+        "MajorFeatureScalePercent": 115,
+        "MajorFeatureWeights": {
+          "ArmorPlate": 75,
+          "CentralSpine": 35,
+          "RecessedBay": 120,
+          "TechCore": 45,
+          "VentBank": 140,
+          "WingPlate": 80
+        },
+        "MaterialAxialBandWidthPercent": 30,
+        "MaterialCompositionChance": 96,
+        "MaterialSecondaryContrastPercent": 122,
+        "MaterialWingSurfaceUsesFullWing": false,
+        "MaterialZoneWeights": {
+          "AxialBand": 65,
+          "CockpitCollar": 55,
+          "HardpointSurround": 155,
+          "RearMechanical": 180,
+          "ShoulderSurface": 105,
+          "WingSurface": 80
+        },
+        "MaximumAttachmentGroups": 3,
+        "MaximumCockpitHullPercent": 21,
+        "MaximumCoreTreatments": 3,
+        "MaximumHullLayers": 3,
+        "MaximumHullModifiers": 3,
+        "MaximumLargeWeaponGroups": 2,
+        "MaximumLiveryConnectedCoveragePercent": 9,
+        "MaximumLiveryCoveragePercent": 16,
+        "MaximumLiveryMarkings": 2,
+        "MaximumMajorFeatures": 3,
+        "MaximumMaterialZones": 4,
+        "MaximumStructuralNegativeSpaceStructures": 2,
+        "MechanicalPatternCountPercent": 180,
+        "MediumEngineSizeWeight": 5,
+        "MinimumSilhouetteHeightPercent": 70,
+        "MinimumSilhouetteWidthPercent": 52,
+        "NarrowWaistModifierWeight": 45,
+        "NoWingWeight": 20,
+        "NoseEndPercent": {
+          "Max": 18,
+          "Min": 12
+        },
+        "NoseWidthPercent": {
+          "Max": 22,
+          "Min": 14
+        },
+        "PaletteAccentSaturationPercent": 90,
+        "PaletteContrastPercent": 95,
+        "PaletteEmissiveValuePercent": 90,
+        "PaletteHullSaturationPercent": 80,
+        "PaletteHullValueOffset": -5,
+        "QuadEngineWeight": 4,
+        "RaisedCorePlateWidthPercent": 100,
+        "RearForkStartPercent": {
+          "Max": 80,
+          "Min": 68
+        },
+        "RearFuselageStartPercent": {
+          "Max": 88,
+          "Min": 82
+        },
+        "RearFuselageWidthPercent": {
+          "Max": 74,
+          "Min": 52
+        },
+        "RearWidthPercent": {
+          "Max": 62,
+          "Min": 40
+        },
+        "SecondaryDetailMotifChance": 42,
+        "SecondaryHullToneCoveragePercent": 16,
+        "SideLobesModifierWeight": 85,
+        "SilhouetteArticulationTarget": 3,
+        "SilhouetteConvexFillTriggerPercent": 70,
+        "SilhouetteGuidanceEnabled": true,
+        "SilhouetteGuidanceWeights": {
+          "BroaderShoulders": 1,
+          "SideLobes": 2,
+          "SteppedWingExtension": 3
+        },
+        "SilhouetteMaximumStableRunPercent": 46,
+        "SilhouetteProfileValidationEnabled": true,
+        "SilhouetteWeakArticulationGuidanceEnabled": true,
+        "SmallEngineSizeWeight": 2,
+        "SmallWingIncreasePercent": {
+          "Max": 18,
+          "Min": 10
+        },
+        "SmallWingTaperPercent": 45,
+        "SmallWingWeight": 20,
+        "SpatialCapacityBias": {
+          "FrontFuselage": 0,
+          "MidFuselage": 0,
+          "Nose": 0,
+          "OuterWing": 0,
+          "RearFuselage": 0,
+          "WingRoot": 0
+        },
+        "SplitNoseModifierWeight": 35,
+        "SteppedWingModifierWeight": 130,
+        "StructuralNegativeSpaceChance": 68,
+        "StructuralNegativeSpaceScalePercent": 100,
+        "StructuralNegativeSpaceWeights": {
+          "NacelleChannel": 150,
+          "OpenFrameBay": 140,
+          "RearFork": 115,
+          "ShoulderGap": 88,
+          "WingChannel": 82
+        },
+        "SupplementalDetailWeights": {
+          "GeometricMarking": 40,
+          "IdentificationMarking": 0,
+          "LuminousChannel": 0,
+          "MechanicalExposure": 140,
+          "PanelSeam": 130,
+          "RepeatingMotif": 35
+        },
+        "SupportingLiveryChance": 38,
+        "SweptWingTaperPercent": 38,
+        "SweptWingWeight": 15,
+        "SweptWingWidthPercent": {
+          "Max": 94,
+          "Min": 76
+        },
+        "SymmetricAttachmentChance": 65,
+        "TinySilhouetteExtraWidthRelaxationPercent": 0,
+        "TwinEngineWeight": 3,
+        "UpperFuselageEndPercent": {
+          "Max": 34,
+          "Min": 27
+        },
+        "UpperFuselageWidthPercent": {
+          "Max": 58,
+          "Min": 40
+        },
+        "VisualAnchorWeights": {
+          "CentralCore": 65,
+          "Cockpit": 45,
+          "Engines": 150,
+          "HullLayers": 70,
+          "MacroAsymmetry": 105,
+          "MajorFeature": 140,
+          "NegativeSpace": 145,
+          "Silhouette": 50,
+          "Weapons": 65,
+          "Wings": 55
+        },
+        "VisualHierarchyEnabled": true,
+        "VisualSecondaryAnchorChance": 46,
+        "WeaponHierarchyUsesWingRoot": false,
+        "WingCutoutModifierWeight": 110,
+        "WingLongitudinalOffsetPercent": 0,
+        "WingRootLengthPercent": 100,
+        "WingRootWidthPercent": 100,
+        "WingWedgeArticulationExemption": false
+      },
+      "source": "EMBEDDED_CUSTOM"
+    }
+  }
+}

@@ -7,6 +7,7 @@
 #include "ShipGenerationDebugInfo.h"
 #include "ShipGenerationSettings.h"
 #include "ShipGenerationPerformance.h"
+#include "ShipGenerationRecipe.h"
 
 namespace PixelShipGenerator
 {
@@ -24,6 +25,11 @@ namespace PixelShipGenerator
         GeneratedShip generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo);
         GeneratedShip generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo);
         GeneratedShip generateCalibrated(const ShipGenerationSettings& settings, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
+
+        // Portable recipe entry path. Built-in recipe sources retain truthful
+        // preset provenance; embedded custom sources use *_END provenance and
+        // the same canonical resolved-profile implementation.
+        GeneratedShip generate(const ShipGenerationRecipe& recipe, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
 
         // First-class explicit-profile API. ShipGenerationConfiguration contains
         // no built-in style identity; custom output therefore carries

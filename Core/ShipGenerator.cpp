@@ -112,6 +112,24 @@ namespace PixelShipGenerator
             return configuration;
         }
 
+        ExplicitShipGenerationConfiguration copyExplicitGenerationConfiguration(const ShipGenerationRecipe& recipe)
+        {
+            ExplicitShipGenerationConfiguration configuration;
+            configuration.Seed = recipe.Seeds.Master;
+            configuration.Dimensions = recipe.Dimensions;
+            configuration.DetailDensity = recipe.DetailDensity;
+            configuration.AsymmetricDetailChance = recipe.AsymmetricDetailChance;
+            configuration.AttachmentsEnabled = recipe.AttachmentsEnabled;
+            configuration.SeedOverrides.Structure = recipe.Seeds.Structure;
+            configuration.SeedOverrides.Palette = recipe.Seeds.Palette;
+            configuration.SeedOverrides.Details = recipe.Seeds.Details;
+            configuration.SeedOverrides.Attachments = recipe.Seeds.Attachments;
+            configuration.DomainSeedOverrides = recipe.DomainSeedOverrides;
+            configuration.RandomStreamMode = recipe.RandomStreamMode;
+            configuration.PaletteConfiguration = recipe.PaletteConfiguration;
+            return configuration;
+        }
+
         void validateBuiltInFaction(ShipFactionType faction)
         {
             if (faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
@@ -279,6 +297,45 @@ namespace PixelShipGenerator
         validateBuiltInStyle(settings.Style);
         validateBuiltInFaction(settings.Faction);
         return generateInternal(copyExplicitGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, settings.Faction, &calibrationSettings, debugInfo, nullptr);
+    }
+
+    GeneratedShip ShipGenerator::generate(const ShipGenerationRecipe& recipe, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    {
+        const ShipGenerationProfile* structuralProfile = nullptr;
+        ShipStyle styleProvenance = ShipStyle::SHIP_STYLE_END;
+        if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        {
+            validateBuiltInStyle(recipe.Style);
+            structuralProfile = &getShipGenerationProfile(recipe.Style);
+            styleProvenance = recipe.Style;
+        }
+        else if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        {
+            structuralProfile = &recipe.StructuralProfile;
+        }
+        else
+        {
+            throw std::invalid_argument("ShipGenerationRecipe.StructuralSource is invalid.");
+        }
+
+        const ShipFactionProfile* factionProfile = nullptr;
+        ShipFactionType factionProvenance = ShipFactionType::SHIP_FACTION_TYPE_END;
+        if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        {
+            validateBuiltInFaction(recipe.Faction);
+            factionProfile = &getShipFactionProfile(recipe.Faction);
+            factionProvenance = recipe.Faction;
+        }
+        else if (recipe.FactionSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        {
+            factionProfile = &recipe.FactionProfile;
+        }
+        else
+        {
+            throw std::invalid_argument("ShipGenerationRecipe.FactionSource is invalid.");
+        }
+
+        return generateInternal(copyExplicitGenerationConfiguration(recipe), *structuralProfile, *factionProfile, styleProvenance, factionProvenance, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
