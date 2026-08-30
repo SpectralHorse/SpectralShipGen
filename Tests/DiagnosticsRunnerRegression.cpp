@@ -79,7 +79,7 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
         std::cerr << "Diagnostics runner regression failed: progress/completion state is invalid.\n";
         return 1;
     }
-    if (result.Samples.size() != firstSchedule.size() || result.ConfigurationResults.size() != 4u || !finiteSummary(result.OverallSummary.GenerationTimeMilliseconds))
+    if (result.Samples.size() != firstSchedule.size() || result.ConfigurationResults.size() != 4u || !finiteSummary(result.OverallSummary.GenerationTimeMilliseconds) || !finiteSummary(result.OverallSummary.LiveryCoveragePercent) || !finiteSummary(result.OverallSummary.LiveryLargestConnectedCoveragePercent))
     {
         std::cerr << "Diagnostics runner regression failed: result model is incomplete.\n";
         return 1;
@@ -140,14 +140,32 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     synthetic[0].HullValidationRejectionCount = 0u;
     synthetic[0].StructuralNegativeSpaceAttemptCount = 2u;
     synthetic[0].StructuralNegativeSpaceSuccessCount = 1u;
+    synthetic[0].LiveryCoveragePermille = 40u;
+    synthetic[0].LiveryPrimaryCoveragePermille = 30u;
+    synthetic[0].LiverySecondaryCoveragePermille = 10u;
+    synthetic[0].LiveryLargestConnectedCoveragePermille = 20u;
+    synthetic[0].LiverySecondaryMaterialCoveragePermille = 100u;
+    synthetic[0].LiveryMechanicalMaterialCoveragePermille = 50u;
+    synthetic[0].LiveryCoverageRejectionCount = 1u;
+    synthetic[0].LiveryMaterialPreservationRejectionCount = 2u;
     synthetic[1].Success = true;
     synthetic[1].TotalGenerationNanoseconds = 3000000u;
     synthetic[1].HullAttemptCount = 2u;
     synthetic[1].HullValidationRejectionCount = 1u;
     synthetic[1].StructuralNegativeSpaceAttemptCount = 2u;
     synthetic[1].StructuralNegativeSpaceSuccessCount = 1u;
+    synthetic[1].LiveryCoveragePermille = 120u;
+    synthetic[1].LiveryPrimaryCoveragePermille = 100u;
+    synthetic[1].LiverySecondaryCoveragePermille = 20u;
+    synthetic[1].LiveryLargestConnectedCoveragePermille = 60u;
+    synthetic[1].LiverySecondaryMaterialCoveragePermille = 300u;
+    synthetic[1].LiveryMechanicalMaterialCoveragePermille = 150u;
+    synthetic[1].LiveryCoverageRejectionCount = 3u;
+    synthetic[1].LiveryMaterialPreservationRejectionCount = 4u;
     const DiagnosticsAggregateSummary aggregate = aggregateDiagnosticsSamples(synthetic);
-    if (aggregate.GenerationTimeMilliseconds.Median != 2.0 || aggregate.HullAttempts.Mean != 1.5 || aggregate.HullRetryRatePercent != 50.0 || aggregate.StructuralNegativeSpaceAttemptRatePercent != 200.0 || aggregate.StructuralNegativeSpaceSuccessRatePercent != 50.0)
+    if (aggregate.GenerationTimeMilliseconds.Median != 2.0 || aggregate.HullAttempts.Mean != 1.5 || aggregate.HullRetryRatePercent != 50.0 || aggregate.StructuralNegativeSpaceAttemptRatePercent != 200.0 || aggregate.StructuralNegativeSpaceSuccessRatePercent != 50.0 ||
+        aggregate.LiveryCoveragePercent.Mean != 8.0 || aggregate.LiveryCoveragePercent.Median != 8.0 || aggregate.LiveryCoveragePercent.P95 != 12.0 ||
+        aggregate.LiveryLargestConnectedCoveragePercent.Mean != 4.0 || aggregate.TotalLiveryCoverageRejections != 4u || aggregate.TotalLiveryMaterialPreservationRejections != 6u)
     {
         std::cerr << "Diagnostics runner regression failed: retry/rate aggregation is incorrect.\n";
         return 1;
@@ -163,7 +181,7 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     std::ostringstream csv;
     writeDiagnosticsResultCsv(csv, result);
     const std::string csvText = csv.str();
-    if (csvText.find("generation_time_median_ms") == std::string::npos || csvText.find("stage_HULL_GENERATION_mean_ms") == std::string::npos || csvText.find("negative_space_success_rate_percent") == std::string::npos)
+    if (csvText.find("generation_time_median_ms") == std::string::npos || csvText.find("stage_HULL_GENERATION_mean_ms") == std::string::npos || csvText.find("negative_space_success_rate_percent") == std::string::npos || csvText.find("livery_coverage_p95_percent") == std::string::npos)
     {
         std::cerr << "Diagnostics runner regression failed: extended CSV fields are missing.\n";
         return 1;

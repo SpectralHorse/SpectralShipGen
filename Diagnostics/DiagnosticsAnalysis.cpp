@@ -100,6 +100,10 @@ namespace PixelShipGeneratorDiagnostics
         case DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT: return summary.StructuralNegativeSpaceAttemptRatePercent;
         case DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT: return summary.StructuralNegativeSpaceSuccessRatePercent;
         case DiagnosticsMetric::MATERIAL_ZONE_AVERAGE: return summary.MaterialZoneCount.Mean;
+        case DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT: return summary.LiveryCoveragePercent.Mean;
+        case DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT: return summary.LiveryCoveragePercent.Median;
+        case DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT: return summary.LiveryCoveragePercent.P95;
+        case DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT: return summary.LiveryLargestConnectedCoveragePercent.P95;
         case DiagnosticsMetric::MAJOR_FEATURE_AVERAGE: return summary.MajorFeatureCount.Mean;
         case DiagnosticsMetric::WEAPON_AVERAGE: return summary.WeaponCount.Mean;
         case DiagnosticsMetric::ENGINE_AVERAGE: return summary.EngineCount.Mean;
@@ -121,6 +125,10 @@ namespace PixelShipGeneratorDiagnostics
         case DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT: return "NEG SPACE ATTEMPT";
         case DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT: return "NEG SPACE SUCCESS";
         case DiagnosticsMetric::MATERIAL_ZONE_AVERAGE: return "MATERIAL ZONES";
+        case DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT: return "LIVERY COVERAGE AVG";
+        case DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT: return "LIVERY COVERAGE MEDIAN";
+        case DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT: return "LIVERY COVERAGE P95";
+        case DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT: return "LIVERY CONNECTED P95";
         case DiagnosticsMetric::MAJOR_FEATURE_AVERAGE: return "MAJOR FEATURES";
         case DiagnosticsMetric::WEAPON_AVERAGE: return "WEAPONS";
         case DiagnosticsMetric::ENGINE_AVERAGE: return "ENGINES";
@@ -140,6 +148,10 @@ namespace PixelShipGeneratorDiagnostics
         case DiagnosticsMetric::HULL_RETRY_RATE_PERCENT:
         case DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT:
         case DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT:
+        case DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT:
+        case DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT:
+        case DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT:
+        case DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT:
         case DiagnosticsMetric::COMPLEXITY_UTILIZATION_PERCENT: return "%";
         default: return "";
         }
@@ -150,6 +162,10 @@ namespace PixelShipGeneratorDiagnostics
         return metric == DiagnosticsMetric::HULL_RETRY_RATE_PERCENT ||
                metric == DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT ||
                metric == DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT ||
+               metric == DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT ||
+               metric == DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT ||
+               metric == DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT ||
+               metric == DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT ||
                metric == DiagnosticsMetric::COMPLEXITY_UTILIZATION_PERCENT;
     }
 

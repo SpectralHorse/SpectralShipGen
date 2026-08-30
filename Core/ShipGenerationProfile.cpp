@@ -125,6 +125,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 32u;
             profile.LiveryAsymmetricChance = 8u;
+            profile.MaximumLiveryCoveragePercent = 18u;
+            profile.MaximumLiveryConnectedCoveragePercent = 10u;
             profile.LiveryWeights.CenterStripe = 70u;
             profile.LiveryWeights.DoubleCenterStripe = 45u;
             profile.LiveryWeights.WingBand = 145u;
@@ -299,6 +301,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 18u;
             profile.LiveryAsymmetricChance = 4u;
+            profile.MaximumLiveryCoveragePercent = 12u;
+            profile.MaximumLiveryConnectedCoveragePercent = 7u;
             profile.LiveryWeights.CenterStripe = 140u;
             profile.LiveryWeights.DoubleCenterStripe = 95u;
             profile.LiveryWeights.WingBand = 45u;
@@ -473,6 +477,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 28u;
             profile.LiveryAsymmetricChance = 8u;
+            profile.MaximumLiveryCoveragePercent = 20u;
+            profile.MaximumLiveryConnectedCoveragePercent = 11u;
             profile.LiveryWeights.CenterStripe = 55u;
             profile.LiveryWeights.DoubleCenterStripe = 40u;
             profile.LiveryWeights.WingBand = 85u;
@@ -647,6 +653,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 38u;
             profile.LiveryAsymmetricChance = 25u;
+            profile.MaximumLiveryCoveragePercent = 16u;
+            profile.MaximumLiveryConnectedCoveragePercent = 9u;
             profile.LiveryWeights.CenterStripe = 45u;
             profile.LiveryWeights.DoubleCenterStripe = 30u;
             profile.LiveryWeights.WingBand = 70u;
@@ -831,6 +839,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 18u;
             profile.LiveryAsymmetricChance = 3u;
+            profile.MaximumLiveryCoveragePercent = 18u;
+            profile.MaximumLiveryConnectedCoveragePercent = 10u;
             profile.LiveryWeights.CenterStripe = 170u;
             profile.LiveryWeights.DoubleCenterStripe = 120u;
             profile.LiveryWeights.WingBand = 25u;
@@ -1015,6 +1025,8 @@ namespace PixelShipGenerator
             profile.MaximumLiveryMarkings = 2u;
             profile.SupportingLiveryChance = 34u;
             profile.LiveryAsymmetricChance = 8u;
+            profile.MaximumLiveryCoveragePercent = 14u;
+            profile.MaximumLiveryConnectedCoveragePercent = 8u;
             profile.LiveryWeights.CenterStripe = 45u;
             profile.LiveryWeights.DoubleCenterStripe = 35u;
             profile.LiveryWeights.WingBand = 170u;

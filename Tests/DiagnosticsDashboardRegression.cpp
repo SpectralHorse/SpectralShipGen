@@ -54,6 +54,14 @@ namespace
         sample.MajorFeatureCount = majorFeatures;
         sample.WeaponCount = weapons;
         sample.EngineCount = engines;
+        sample.LiveryCoveragePermille = 20u + static_cast<uint32_t>(workIndex) * 20u;
+        sample.LiveryPrimaryCoveragePermille = 15u + static_cast<uint32_t>(workIndex) * 15u;
+        sample.LiverySecondaryCoveragePermille = 5u + static_cast<uint32_t>(workIndex) * 5u;
+        sample.LiveryLargestConnectedCoveragePermille = 10u + static_cast<uint32_t>(workIndex) * 10u;
+        sample.LiverySecondaryMaterialCoveragePermille = 50u + static_cast<uint32_t>(workIndex) * 25u;
+        sample.LiveryMechanicalMaterialCoveragePermille = 20u + static_cast<uint32_t>(workIndex) * 10u;
+        sample.LiveryCoverageRejectionCount = static_cast<uint32_t>(workIndex);
+        sample.LiveryMaterialPreservationRejectionCount = static_cast<uint32_t>(workIndex % 2u);
         sample.ComplexityUtilizationPercent = complexity;
         sample.PrimaryVisualAnchor = anchor;
         sample.FinalImageSignature = 0xABCDEF0012340000ull + workIndex;
@@ -96,7 +104,13 @@ namespace PixelShipGeneratorTests
         const DiagnosticsResult result = makeResult();
         if (!nearlyEqual(result.OverallSummary.GenerationTimeMilliseconds.Mean, 3.75) ||
             !nearlyEqual(result.OverallSummary.GenerationTimeMilliseconds.Median, 3.0) ||
-            !nearlyEqual(result.OverallSummary.MaterialZoneCount.Mean, 2.5))
+            !nearlyEqual(result.OverallSummary.MaterialZoneCount.Mean, 2.5) ||
+            !nearlyEqual(result.OverallSummary.LiveryCoveragePercent.Mean, 5.0) ||
+            !nearlyEqual(result.OverallSummary.LiveryCoveragePercent.Median, 5.0) ||
+            !nearlyEqual(result.OverallSummary.LiveryCoveragePercent.P95, 8.0) ||
+            !nearlyEqual(result.OverallSummary.LiveryLargestConnectedCoveragePercent.P95, 4.0) ||
+            result.OverallSummary.TotalLiveryCoverageRejections != 6u ||
+            result.OverallSummary.TotalLiveryMaterialPreservationRejections != 2u)
         {
             std::cerr << "Task-66 aggregate summary values are incorrect.\n";
             return 1;
@@ -131,6 +145,14 @@ namespace PixelShipGeneratorTests
             std::cerr << "Task-66 style chart series is incorrect.\n";
             return 1;
         }
+        const auto liveryStyles = prepareStyleSeries(result, {}, DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT);
+        if (liveryStyles.Points.size() != 2u || liveryStyles.Points[0].Label != "SLEEK" || liveryStyles.Points[1].Label != "INDUSTRIAL" ||
+            !nearlyEqual(liveryStyles.Points[0].Value, 6.0) || !nearlyEqual(liveryStyles.Points[1].Value, 8.0))
+        {
+            std::cerr << "Task-77 livery coverage style series is incorrect.\n";
+            return 1;
+        }
+
         const auto anchors = prepareVisualAnchorSeries(result, {});
         if (anchors.Points.size() != 4u)
         {
@@ -179,7 +201,10 @@ namespace PixelShipGeneratorTests
         if (!loaded.Success || !loaded.Result.Cancelled || loaded.Result.Completed || loaded.Result.CompletedWorkItems != 4u || loaded.Result.ScheduledWorkItems != 8u ||
             loaded.Result.Samples.size() != partial.Samples.size() || loaded.Result.Samples.front().WorkItem.Seed != partial.Samples.front().WorkItem.Seed ||
             loaded.Result.Samples.back().FinalImageSignature != partial.Samples.back().FinalImageSignature ||
-            !nearlyEqual(loaded.Result.OverallSummary.GenerationTimeMilliseconds.Median, partial.OverallSummary.GenerationTimeMilliseconds.Median))
+            loaded.Result.Samples.back().LiveryCoveragePermille != partial.Samples.back().LiveryCoveragePermille ||
+            loaded.Result.Samples.back().LiveryLargestConnectedCoveragePermille != partial.Samples.back().LiveryLargestConnectedCoveragePermille ||
+            !nearlyEqual(loaded.Result.OverallSummary.GenerationTimeMilliseconds.Median, partial.OverallSummary.GenerationTimeMilliseconds.Median) ||
+            !nearlyEqual(loaded.Result.OverallSummary.LiveryCoveragePercent.P95, partial.OverallSummary.LiveryCoveragePercent.P95))
         {
             std::cerr << "Task-66 .shipdiag.json round-trip did not preserve the result. Error: " << loaded.Error << '\n';
             return 1;

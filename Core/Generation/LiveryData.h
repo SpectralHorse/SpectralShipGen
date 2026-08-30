@@ -27,6 +27,8 @@ namespace PixelShipGenerator
             Placements.clear();
             TypeCounts.fill(0u);
             TargetMarkingCount = 0u;
+            CoverageRejectionCount = 0u;
+            MaterialPreservationRejectionCount = 0u;
         }
 
         bool empty() const { return Placements.empty(); }
@@ -36,5 +38,7 @@ namespace PixelShipGenerator
         std::vector<LiveryPlacement> Placements;
         std::array<uint32_t, static_cast<std::size_t>(ShipLiveryType::SHIP_LIVERY_TYPE_END)> TypeCounts = {};
         uint32_t TargetMarkingCount = 0u;
+        uint32_t CoverageRejectionCount = 0u;
+        uint32_t MaterialPreservationRejectionCount = 0u;
     };
 }

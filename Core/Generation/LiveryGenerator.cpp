@@ -209,7 +209,15 @@ namespace PixelShipGenerator
                 if (secondary && !data.PrimaryMarkingMask.empty())
                 {
                     const uint32_t primaryPixels = PixelMaskUtils::getMaskPixelCount(data.PrimaryMarkingMask);
-                    if (primaryPixels > 0u && pixelCount * 100u > primaryPixels * 85u) { continue; }
+                    if (primaryPixels > 0u && pixelCount * 100u > primaryPixels * getMaximumSupportingPercent(context)) { continue; }
+                }
+
+                bool materialPreservationFailure = false;
+                if (!validateCoverage(context, mask, materialPreservationFailure))
+                {
+                    if (materialPreservationFailure) { ++data.MaterialPreservationRejectionCount; }
+                    else { ++data.CoverageRejectionCount; }
+                    continue;
                 }
 
                 if (addMarking(context, type, std::move(mask), secondary, asymmetric))
@@ -371,7 +379,10 @@ namespace PixelShipGenerator
                 if (!context.Ship.HullMask.get(x, y)) { continue; }
                 const uint32_t distance2 = static_cast<uint32_t>(std::abs(static_cast<int32_t>(x) * 2 - center2));
                 const uint32_t rowWidth = PixelMaskUtils::getOccupiedRowWidth(context.Ship.HullMask, y);
-                if (rowWidth > 0u && distance2 * 100u >= rowWidth * 42u) { mask.set(x, y); }
+                // A shoulder marking is an outer-surface graphic, not a replacement
+                // for most of a broad row. Keeping the inner 60% clear preserves the
+                // material/hull read while leaving a substantial paired shoulder shape.
+                if (rowWidth > 0u && distance2 * 100u >= rowWidth * 62u) { mask.set(x, y); }
             }
         }
         return mask;
@@ -500,13 +511,92 @@ namespace PixelShipGenerator
                     || context.Weapons.OccupiedMask.get(x, y)
                     || context.CoreTreatment.RecessedMask.get(x, y)
                     || context.CoreTreatment.LuminousMask.get(x, y)
+                    || (context.VisualHierarchy.targets(ShipVisualAnchorType::CENTRAL_CORE) && context.CoreTreatment.CoreRegionMask.get(x, y))
                     || context.MajorFeatures.EmissiveMask.get(x, y)
+                    || (context.VisualHierarchy.targets(ShipVisualAnchorType::MAJOR_FEATURE) && context.MajorFeatures.OccupiedMask.get(x, y))
                     || context.StructuralNegativeSpace.ReservedMask.get(x, y)
                     || data.PrimaryMarkingMask.get(x, y)
                     || data.SecondaryMarkingMask.get(x, y);
                 if (unavailable) { mask.set(x, y, false); }
             }
         }
+    }
+
+    uint32_t LiveryGenerator::getCoverageLimitPercent(const ShipGenerationContext& context, bool connected) const
+    {
+        uint32_t limit = connected ? context.Profile.MaximumLiveryConnectedCoveragePercent : context.Profile.MaximumLiveryCoveragePercent;
+        switch (context.ScaleTraits.Tier)
+        {
+        case GenerationScaleTier::TINY: limit += connected ? 6u : 12u; break;
+        case GenerationScaleTier::SMALL: limit += connected ? 3u : 6u; break;
+        case GenerationScaleTier::MEDIUM: limit += connected ? 1u : 2u; break;
+        default: break;
+        }
+
+        return std::max(1u, std::min(100u, limit));
+    }
+
+    uint32_t LiveryGenerator::getMaximumSupportingPercent(const ShipGenerationContext& context) const
+    {
+        switch (context.ScaleTraits.Tier)
+        {
+        case GenerationScaleTier::TINY: return 85u;
+        case GenerationScaleTier::SMALL: return 75u;
+        case GenerationScaleTier::MEDIUM: return 65u;
+        case GenerationScaleTier::LARGE: return 60u;
+        default: return 60u;
+        }
+    }
+
+    bool LiveryGenerator::validateCoverage(const ShipGenerationContext& context, const PixelMask& mask, bool& materialPreservationFailure) const
+    {
+        materialPreservationFailure = false;
+        const uint32_t hullPixels = PixelMaskUtils::getMaskPixelCount(context.Ship.HullMask);
+        if (hullPixels == 0u) { return false; }
+
+        PixelMask combined = context.Livery.PrimaryMarkingMask;
+        PixelMaskUtils::mergeMask(combined, context.Livery.SecondaryMarkingMask);
+        PixelMaskUtils::mergeMask(combined, mask);
+
+        const uint32_t totalPixels = PixelMaskUtils::getMaskPixelCount(combined);
+        const uint32_t connectedPixels = PixelMaskUtils::getLargestConnectedMaskPixelCount(combined);
+        const uint32_t totalLimit = getCoverageLimitPercent(context, false);
+        const uint32_t connectedLimit = getCoverageLimitPercent(context, true);
+        if (static_cast<uint64_t>(totalPixels) * 100u > static_cast<uint64_t>(hullPixels) * totalLimit ||
+            static_cast<uint64_t>(connectedPixels) * 100u > static_cast<uint64_t>(hullPixels) * connectedLimit)
+        {
+            return false;
+        }
+
+        // Material regions are intentionally smaller than the whole hull, so allow a
+        // larger local percentage than the global livery cap while still requiring a
+        // majority of the Task-59 material read to survive. Broad surface markings use
+        // the same explicit rule rather than a style/faction special case.
+        const uint32_t materialLimit = std::min(65u, totalLimit * 3u);
+        const uint32_t mechanicalLimit = std::min(75u, materialLimit + 15u);
+
+        const uint32_t secondaryMaterialPixels = PixelMaskUtils::getMaskPixelCount(context.MaterialComposition.SecondaryHullMask);
+        if (secondaryMaterialPixels > 0u)
+        {
+            const uint32_t overlap = PixelMaskUtils::getMaskOverlapPixelCount(combined, context.MaterialComposition.SecondaryHullMask);
+            if (static_cast<uint64_t>(overlap) * 100u > static_cast<uint64_t>(secondaryMaterialPixels) * materialLimit)
+            {
+                materialPreservationFailure = true;
+                return false;
+            }
+        }
+
+        const uint32_t mechanicalMaterialPixels = PixelMaskUtils::getMaskPixelCount(context.MaterialComposition.MechanicalMask);
+        if (mechanicalMaterialPixels > 0u)
+        {
+            const uint32_t overlap = PixelMaskUtils::getMaskOverlapPixelCount(combined, context.MaterialComposition.MechanicalMask);
+            if (static_cast<uint64_t>(overlap) * 100u > static_cast<uint64_t>(mechanicalMaterialPixels) * mechanicalLimit)
+            {
+                materialPreservationFailure = true;
+                return false;
+            }
+        }
+        return true;
     }
 
     bool LiveryGenerator::addMarking(ShipGenerationContext& context, ShipLiveryType type, PixelMask mask, bool secondary, bool asymmetric) const

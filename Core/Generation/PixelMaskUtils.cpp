@@ -2,6 +2,9 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <deque>
+#include <utility>
+#include <vector>
 
 namespace PixelShipGenerator::PixelMaskUtils
 {
@@ -190,6 +193,66 @@ namespace PixelShipGenerator::PixelMaskUtils
         }
 
         return pixelCount;
+    }
+
+    uint32_t getMaskOverlapPixelCount(const PixelMask& firstMask, const PixelMask& secondMask)
+    {
+        uint32_t pixelCount = 0u;
+        for (uint32_t y = 0u; y < firstMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < firstMask.getWidth(); ++x)
+            {
+                if (firstMask.get(x, y) && secondMask.get(x, y)) { ++pixelCount; }
+            }
+        }
+        return pixelCount;
+    }
+
+    uint32_t getLargestConnectedMaskPixelCount(const PixelMask& mask)
+    {
+        if (mask.empty()) { return 0u; }
+        const uint32_t width = mask.getWidth();
+        const uint32_t height = mask.getHeight();
+        std::vector<uint8_t> visited(static_cast<std::size_t>(width) * static_cast<std::size_t>(height), 0u);
+        uint32_t largest = 0u;
+        constexpr int32_t OffsetX[4] = { 1, -1, 0, 0 };
+        constexpr int32_t OffsetY[4] = { 0, 0, 1, -1 };
+
+        for (uint32_t startY = 0u; startY < height; ++startY)
+        {
+            for (uint32_t startX = 0u; startX < width; ++startX)
+            {
+                const std::size_t startIndex = static_cast<std::size_t>(startY) * width + startX;
+                if (!mask.get(startX, startY) || visited[startIndex] != 0u) { continue; }
+
+                uint32_t componentSize = 0u;
+                std::deque<std::pair<uint32_t, uint32_t>> pending;
+                pending.emplace_back(startX, startY);
+                visited[startIndex] = 1u;
+
+                while (!pending.empty())
+                {
+                    const auto [x, y] = pending.front();
+                    pending.pop_front();
+                    ++componentSize;
+
+                    for (uint32_t direction = 0u; direction < 4u; ++direction)
+                    {
+                        const int32_t nextX = static_cast<int32_t>(x) + OffsetX[direction];
+                        const int32_t nextY = static_cast<int32_t>(y) + OffsetY[direction];
+                        if (nextX < 0 || nextY < 0 || nextX >= static_cast<int32_t>(width) || nextY >= static_cast<int32_t>(height)) { continue; }
+                        const uint32_t ux = static_cast<uint32_t>(nextX);
+                        const uint32_t uy = static_cast<uint32_t>(nextY);
+                        const std::size_t index = static_cast<std::size_t>(uy) * width + ux;
+                        if (!mask.get(ux, uy) || visited[index] != 0u) { continue; }
+                        visited[index] = 1u;
+                        pending.emplace_back(ux, uy);
+                    }
+                }
+                largest = std::max(largest, componentSize);
+            }
+        }
+        return largest;
     }
 
     uint32_t getOccupiedRowWidth(const PixelMask& mask, uint32_t y)

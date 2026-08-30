@@ -70,6 +70,12 @@ namespace PixelShipGeneratorDiagnostics
             std::vector<double> generationTimes;
             std::vector<double> hullAttempts;
             std::vector<double> materialZoneCounts;
+            std::vector<double> liveryCoverage;
+            std::vector<double> liveryPrimaryCoverage;
+            std::vector<double> liverySecondaryCoverage;
+            std::vector<double> liveryConnectedCoverage;
+            std::vector<double> liverySecondaryMaterialCoverage;
+            std::vector<double> liveryMechanicalMaterialCoverage;
             std::vector<double> majorFeatureCounts;
             std::vector<double> weaponCounts;
             std::vector<double> engineCounts;
@@ -78,6 +84,12 @@ namespace PixelShipGeneratorDiagnostics
             generationTimes.reserve(samples.size());
             hullAttempts.reserve(samples.size());
             materialZoneCounts.reserve(samples.size());
+            liveryCoverage.reserve(samples.size());
+            liveryPrimaryCoverage.reserve(samples.size());
+            liverySecondaryCoverage.reserve(samples.size());
+            liveryConnectedCoverage.reserve(samples.size());
+            liverySecondaryMaterialCoverage.reserve(samples.size());
+            liveryMechanicalMaterialCoverage.reserve(samples.size());
             majorFeatureCounts.reserve(samples.size());
             weaponCounts.reserve(samples.size());
             engineCounts.reserve(samples.size());
@@ -91,6 +103,14 @@ namespace PixelShipGeneratorDiagnostics
                 generationTimes.push_back(static_cast<double>(sample->TotalGenerationNanoseconds) / 1000000.0);
                 hullAttempts.push_back(static_cast<double>(sample->HullAttemptCount));
                 materialZoneCounts.push_back(static_cast<double>(sample->MaterialZoneCount));
+                liveryCoverage.push_back(static_cast<double>(sample->LiveryCoveragePermille) / 10.0);
+                liveryPrimaryCoverage.push_back(static_cast<double>(sample->LiveryPrimaryCoveragePermille) / 10.0);
+                liverySecondaryCoverage.push_back(static_cast<double>(sample->LiverySecondaryCoveragePermille) / 10.0);
+                liveryConnectedCoverage.push_back(static_cast<double>(sample->LiveryLargestConnectedCoveragePermille) / 10.0);
+                liverySecondaryMaterialCoverage.push_back(static_cast<double>(sample->LiverySecondaryMaterialCoveragePermille) / 10.0);
+                liveryMechanicalMaterialCoverage.push_back(static_cast<double>(sample->LiveryMechanicalMaterialCoveragePermille) / 10.0);
+                result.TotalLiveryCoverageRejections += sample->LiveryCoverageRejectionCount;
+                result.TotalLiveryMaterialPreservationRejections += sample->LiveryMaterialPreservationRejectionCount;
                 majorFeatureCounts.push_back(static_cast<double>(sample->MajorFeatureCount));
                 weaponCounts.push_back(static_cast<double>(sample->WeaponCount));
                 engineCounts.push_back(static_cast<double>(sample->EngineCount));
@@ -116,6 +136,12 @@ namespace PixelShipGeneratorDiagnostics
             result.GenerationTimeMilliseconds = summarizeDiagnosticsValues(std::move(generationTimes));
             result.HullAttempts = summarizeDiagnosticsValues(std::move(hullAttempts));
             result.MaterialZoneCount = summarizeDiagnosticsValues(std::move(materialZoneCounts));
+            result.LiveryCoveragePercent = summarizeDiagnosticsValues(std::move(liveryCoverage));
+            result.LiveryPrimaryCoveragePercent = summarizeDiagnosticsValues(std::move(liveryPrimaryCoverage));
+            result.LiverySecondaryCoveragePercent = summarizeDiagnosticsValues(std::move(liverySecondaryCoverage));
+            result.LiveryLargestConnectedCoveragePercent = summarizeDiagnosticsValues(std::move(liveryConnectedCoverage));
+            result.LiverySecondaryMaterialCoveragePercent = summarizeDiagnosticsValues(std::move(liverySecondaryMaterialCoverage));
+            result.LiveryMechanicalMaterialCoveragePercent = summarizeDiagnosticsValues(std::move(liveryMechanicalMaterialCoverage));
             result.MajorFeatureCount = summarizeDiagnosticsValues(std::move(majorFeatureCounts));
             result.WeaponCount = summarizeDiagnosticsValues(std::move(weaponCounts));
             result.EngineCount = summarizeDiagnosticsValues(std::move(engineCounts));
@@ -398,6 +424,14 @@ namespace PixelShipGeneratorDiagnostics
             {
                 sample.MaterialZoneCount = debugInfo.MaterialZoneCount;
                 sample.LiveryMarkingCount = debugInfo.LiveryMarkingCount;
+                sample.LiveryPrimaryCoveragePermille = debugInfo.LiveryPrimaryCoveragePermille;
+                sample.LiverySecondaryCoveragePermille = debugInfo.LiverySecondaryCoveragePermille;
+                sample.LiveryCoveragePermille = debugInfo.LiveryCoveragePermille;
+                sample.LiveryLargestConnectedCoveragePermille = debugInfo.LiveryLargestConnectedCoveragePermille;
+                sample.LiverySecondaryMaterialCoveragePermille = debugInfo.LiverySecondaryMaterialCoveragePermille;
+                sample.LiveryMechanicalMaterialCoveragePermille = debugInfo.LiveryMechanicalMaterialCoveragePermille;
+                sample.LiveryCoverageRejectionCount = debugInfo.LiveryCoverageRejectionCount;
+                sample.LiveryMaterialPreservationRejectionCount = debugInfo.LiveryMaterialPreservationRejectionCount;
                 sample.DetailMotifOccurrenceCount = debugInfo.PrimaryDetailMotifOccurrenceCount + debugInfo.SecondaryDetailMotifOccurrenceCount;
                 sample.MajorFeatureCount = debugInfo.MajorFeatureCount;
                 sample.WeaponCount = debugInfo.WeaponCount;
@@ -460,6 +494,8 @@ namespace PixelShipGeneratorDiagnostics
         output << "Negative-space attempt rate: " << result.OverallSummary.StructuralNegativeSpaceAttemptRatePercent << "%\n";
         output << "Negative-space success rate: " << result.OverallSummary.StructuralNegativeSpaceSuccessRatePercent << "%\n";
         output << "Average material zones: " << result.OverallSummary.MaterialZoneCount.Mean << '\n';
+        output << "Livery coverage %: avg " << result.OverallSummary.LiveryCoveragePercent.Mean << " | median " << result.OverallSummary.LiveryCoveragePercent.Median << " | P95 " << result.OverallSummary.LiveryCoveragePercent.P95 << '\n';
+        output << "Livery largest connected coverage %: avg " << result.OverallSummary.LiveryLargestConnectedCoveragePercent.Mean << " | P95 " << result.OverallSummary.LiveryLargestConnectedCoveragePercent.P95 << '\n';
         output << "Most common silhouette rejection: " << PixelShipGenerator::getSilhouetteValidationFailureReasonName(result.OverallSummary.MostCommonSilhouetteRejection) << '\n';
         if (result.Configuration.DetailedPerformanceInstrumentation)
         {
@@ -483,7 +519,7 @@ namespace PixelShipGeneratorDiagnostics
         writeGenerationStatisticsCsvHeader(legacyHeader);
         std::string header = legacyHeader.str();
         while (!header.empty() && (header.back() == '\n' || header.back() == '\r')) { header.pop_back(); }
-        output << header << ",timing_mode,build_configuration,version_identifier,generation_time_mean_ms,generation_time_median_ms,generation_time_p95_ms,generation_time_max_ms,hull_retry_attempts_per_100,negative_space_attempt_rate_percent,negative_space_success_rate_percent";
+        output << header << ",timing_mode,build_configuration,version_identifier,generation_time_mean_ms,generation_time_median_ms,generation_time_p95_ms,generation_time_max_ms,hull_retry_attempts_per_100,negative_space_attempt_rate_percent,negative_space_success_rate_percent,livery_coverage_mean_percent,livery_coverage_median_percent,livery_coverage_p95_percent,livery_largest_connected_mean_percent,livery_largest_connected_p95_percent,livery_coverage_rejections,livery_material_rejections";
         for (std::size_t stage = 0u; stage < PixelShipGenerator::ShipGenerationPerformanceStageCount; ++stage)
         {
             output << ",stage_" << PixelShipGenerator::getShipGenerationPerformanceStageName(static_cast<PixelShipGenerator::ShipGenerationPerformanceStage>(stage)) << "_mean_ms";
@@ -496,7 +532,7 @@ namespace PixelShipGeneratorDiagnostics
             std::string row = legacyRow.str();
             while (!row.empty() && (row.back() == '\n' || row.back() == '\r')) { row.pop_back(); }
             const auto& summary = configurationResult.PerformanceSummary;
-            output << row << ',' << (result.Configuration.DetailedPerformanceInstrumentation ? "DETAILED" : "TOTAL_ONLY") << ',' << result.Configuration.BuildConfiguration << ',' << result.Configuration.VersionIdentifier << ',' << summary.GenerationTimeMilliseconds.Mean << ',' << summary.GenerationTimeMilliseconds.Median << ',' << summary.GenerationTimeMilliseconds.P95 << ',' << summary.GenerationTimeMilliseconds.Maximum << ',' << summary.HullRetryRatePercent << ',' << summary.StructuralNegativeSpaceAttemptRatePercent << ',' << summary.StructuralNegativeSpaceSuccessRatePercent;
+            output << row << ',' << (result.Configuration.DetailedPerformanceInstrumentation ? "DETAILED" : "TOTAL_ONLY") << ',' << result.Configuration.BuildConfiguration << ',' << result.Configuration.VersionIdentifier << ',' << summary.GenerationTimeMilliseconds.Mean << ',' << summary.GenerationTimeMilliseconds.Median << ',' << summary.GenerationTimeMilliseconds.P95 << ',' << summary.GenerationTimeMilliseconds.Maximum << ',' << summary.HullRetryRatePercent << ',' << summary.StructuralNegativeSpaceAttemptRatePercent << ',' << summary.StructuralNegativeSpaceSuccessRatePercent << ',' << summary.LiveryCoveragePercent.Mean << ',' << summary.LiveryCoveragePercent.Median << ',' << summary.LiveryCoveragePercent.P95 << ',' << summary.LiveryLargestConnectedCoveragePercent.Mean << ',' << summary.LiveryLargestConnectedCoveragePercent.P95 << ',' << summary.TotalLiveryCoverageRejections << ',' << summary.TotalLiveryMaterialPreservationRejections;
             for (const auto& stage : summary.StageTimeMilliseconds) { output << ',' << stage.Mean; }
             output << '\n';
         }

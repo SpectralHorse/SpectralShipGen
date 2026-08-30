@@ -9,6 +9,8 @@
 #include "ShipGenerationDebugInfo.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationSettings.h"
+#include "ShipGenerationProfile.h"
+#include "GenerationScaleTraits.h"
 #include "ShipGenerator.h"
 #include "ShipLiveryType.h"
 #include "ShipIdleAnimator.h"
@@ -60,6 +62,50 @@ namespace
                     return false;
                 }
             }
+        }
+        PixelMask combined = debug.LiveryPrimaryMask;
+        PixelMaskUtils::mergeMask(combined, debug.LiverySecondaryMask);
+        if (PixelMaskUtils::masksOverlap(combined, debug.PrimaryDetailMotifMask) || PixelMaskUtils::masksOverlap(combined, debug.SecondaryDetailMotifMask))
+        {
+            std::cerr << "Task-61 motif geometry overlaps Task-60 livery.\n";
+            return false;
+        }
+        return true;
+    }
+
+    uint32_t coverageAllowance(GenerationScaleTier tier, bool connected)
+    {
+        switch (tier)
+        {
+        case GenerationScaleTier::TINY: return connected ? 6u : 12u;
+        case GenerationScaleTier::SMALL: return connected ? 3u : 6u;
+        case GenerationScaleTier::MEDIUM: return connected ? 1u : 2u;
+        default: return 0u;
+        }
+    }
+
+    bool validateCoverageBounds(const ShipGenerationSettings& settings, const ShipGenerationDebugInfo& debug)
+    {
+        const ShipGenerationProfile& profile = getShipGenerationProfile(settings.Style);
+        const GenerationScaleTraits traits = GenerationScaleTraits::fromDimensions(settings.Dimensions);
+        const uint32_t totalLimit = std::min(100u, profile.MaximumLiveryCoveragePercent + coverageAllowance(traits.Tier, false));
+        const uint32_t connectedLimit = std::min(100u, profile.MaximumLiveryConnectedCoveragePercent + coverageAllowance(traits.Tier, true));
+        const uint32_t materialLimit = std::min(65u, totalLimit * 3u);
+        const uint32_t mechanicalLimit = std::min(75u, materialLimit + 15u);
+        if (debug.LiveryCoveragePermille > totalLimit * 10u + 1u)
+        {
+            std::cerr << "Livery exceeded total coverage bound for style " << static_cast<uint32_t>(settings.Style) << ".\n";
+            return false;
+        }
+        if (debug.LiveryLargestConnectedCoveragePermille > connectedLimit * 10u + 1u)
+        {
+            std::cerr << "Livery exceeded connected coverage bound for style " << static_cast<uint32_t>(settings.Style) << ".\n";
+            return false;
+        }
+        if (debug.LiverySecondaryMaterialCoveragePermille > materialLimit * 10u + 1u || debug.LiveryMechanicalMaterialCoveragePermille > mechanicalLimit * 10u + 1u)
+        {
+            std::cerr << "Livery obscured too much Task-59 material differentiation.\n";
+            return false;
         }
         return true;
     }
@@ -150,7 +196,7 @@ namespace
                 ShipGenerationDebugInfo debug;
                 const GeneratedShip ship = generator.generate(settings, &debug);
                 ++generatedShips;
-                if (!validateLiveryMasks(ship, debug)) { return false; }
+                if (!validateLiveryMasks(ship, debug) || !validateCoverageBounds(settings, debug)) { return false; }
                 if (debug.LiveryMarkingCount > getShipGenerationProfile(settings.Style).MaximumLiveryMarkings)
                 {
                     std::cerr << "Livery count exceeds style profile maximum.\n";
@@ -246,6 +292,78 @@ namespace
         return true;
     }
 
+    bool checkCoverageRestraintAndReferenceCases()
+    {
+        struct ReferenceCase
+        {
+            uint64_t Seed;
+            ShipDimensions Dimensions;
+            ShipStyle Style;
+            uint32_t MaximumCoveragePermille;
+            uint32_t MaximumConnectedPermille;
+            uint32_t MaximumSecondaryMaterialPermille;
+            uint32_t MinimumCoveragePermille;
+        };
+        const std::array<ReferenceCase, 5u> references = {{
+            { 9389559069918625290ull, {64u,64u}, ShipStyle::INDUSTRIAL, 180u, 100u, 480u, 40u },
+            { 12956067519892845964ull, {128u,128u}, ShipStyle::INDUSTRIAL, 160u, 90u, 480u, 70u },
+            { 12956067519892845964ull, {160u,160u}, ShipStyle::INDUSTRIAL, 160u, 90u, 480u, 70u },
+            { 12956067519892845964ull, {160u,160u}, ShipStyle::DELTA, 140u, 80u, 420u, 35u },
+            { 12956067519892845964ull, {160u,160u}, ShipStyle::SPEARHEAD, 180u, 100u, 540u, 70u }
+        }};
+
+        ShipGenerator generator;
+        for (const ReferenceCase& reference : references)
+        {
+            ShipGenerationSettings settings;
+            settings.Seed = reference.Seed;
+            settings.Dimensions = reference.Dimensions;
+            settings.Style = reference.Style;
+            settings.Faction = ShipFactionType::MILITARY;
+            ShipGenerationDebugInfo debug;
+            const GeneratedShip ship = generator.generate(settings, &debug);
+            if (!validateLiveryMasks(ship, debug) || !validateCoverageBounds(settings, debug)) { return false; }
+            if (debug.LiveryCoveragePermille > reference.MaximumCoveragePermille || debug.LiveryLargestConnectedCoveragePermille > reference.MaximumConnectedPermille ||
+                debug.LiverySecondaryMaterialCoveragePermille > reference.MaximumSecondaryMaterialPermille || debug.LiveryCoveragePermille < reference.MinimumCoveragePermille)
+            {
+                std::cerr << "Task-77 supplied livery reference case fell outside the accepted composition range.\n";
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool checkCoverageAcrossStylesFactionsAndScales()
+    {
+        const std::array<ShipStyle, 6u> styles = { ShipStyle::SLEEK, ShipStyle::FIGHTER, ShipStyle::HEAVY, ShipStyle::INDUSTRIAL, ShipStyle::SPEARHEAD, ShipStyle::DELTA };
+        const std::array<ShipFactionType, 6u> factions = { ShipFactionType::FRONTIER, ShipFactionType::MILITARY, ShipFactionType::ASCENDANT, ShipFactionType::XENO, ShipFactionType::CORPORATE, ShipFactionType::RELIC };
+        const std::array<ShipDimensions, 5u> dimensions = { ShipDimensions{24u,24u}, {32u,32u}, {64u,64u}, {128u,96u}, {160u,160u} };
+        ShipGenerator generator;
+        for (std::size_t styleIndex = 0u; styleIndex < styles.size(); ++styleIndex)
+        {
+            for (std::size_t factionIndex = 0u; factionIndex < factions.size(); ++factionIndex)
+            {
+                for (std::size_t dimensionIndex = 0u; dimensionIndex < dimensions.size(); ++dimensionIndex)
+                {
+                    ShipGenerationSettings settings;
+                    settings.Seed = 0x77C0000000000000ull ^ (static_cast<uint64_t>(styleIndex) << 36u) ^ (static_cast<uint64_t>(factionIndex) << 28u) ^ (static_cast<uint64_t>(dimensionIndex) << 20u);
+                    settings.Dimensions = dimensions[dimensionIndex];
+                    settings.Style = styles[styleIndex];
+                    settings.Faction = factions[factionIndex];
+                    ShipGenerationDebugInfo debug;
+                    const GeneratedShip ship = generator.generate(settings, &debug);
+                    if (!validateLiveryMasks(ship, debug) || !validateCoverageBounds(settings, debug)) { return false; }
+                    if (settings.Dimensions.Width <= 32u && debug.LiveryMarkingCount > 1u)
+                    {
+                        std::cerr << "Tiny livery restraint regressed.\n";
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     bool checkMilitarySymmetry()
     {
         ShipGenerator generator;
@@ -279,6 +397,8 @@ int PixelShipGeneratorTests::runLiveryRegression()
     success = checkDeterminismAndPaletteIsolation() && success;
     success = checkStylesFactionsAndDimensions() && success;
     success = checkCorporateAndStyleLanguage() && success;
+    success = checkCoverageRestraintAndReferenceCases() && success;
+    success = checkCoverageAcrossStylesFactionsAndScales() && success;
     success = checkMilitarySymmetry() && success;
     if (!success) { return 1; }
     std::cout << "Ship livery regression passed.\n";

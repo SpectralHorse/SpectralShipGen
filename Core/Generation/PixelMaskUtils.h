@@ -49,6 +49,8 @@ namespace PixelShipGenerator::PixelMaskUtils
     bool masksOverlap(const PixelMask& firstMask, const PixelMask& secondMask);
     void mergeMask(PixelMask& destinationMask, const PixelMask& sourceMask);
     uint32_t getMaskPixelCount(const PixelMask& mask);
+    uint32_t getMaskOverlapPixelCount(const PixelMask& firstMask, const PixelMask& secondMask);
+    uint32_t getLargestConnectedMaskPixelCount(const PixelMask& mask);
     uint32_t getOccupiedRowWidth(const PixelMask& mask, uint32_t y);
     uint32_t getSymmetricWidth(const PixelMask& mask, uint32_t halfWidth);
     void setSymmetricRowWidth(PixelMask& mask, uint32_t y, uint32_t width);

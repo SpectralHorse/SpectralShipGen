@@ -266,7 +266,12 @@ namespace PixelShipGeneratorDiagnostics
                 << ",\"weapon_complexity_rejections\":" << s.WeaponComplexityBudgetRejectionCount << ",\"weapon_coverage_permille\":" << s.WeaponCoveragePermille
                 << ",\"weapon_anchor_opportunity\":" << (s.WeaponVisualAnchorOpportunity ? "true" : "false") << ",\"weapon_anchor_realized\":" << (s.WeaponVisualAnchorRealized ? "true" : "false")
                 << ",\"attachment_attempts\":" << s.AttachmentPlacementAttemptCount << ",\"attachment_failures\":" << s.AttachmentPlacementFailureCount
-                << ",\"material_zones\":" << s.MaterialZoneCount << ",\"livery_markings\":" << s.LiveryMarkingCount << ",\"detail_motif_occurrences\":" << s.DetailMotifOccurrenceCount
+                << ",\"material_zones\":" << s.MaterialZoneCount << ",\"livery_markings\":" << s.LiveryMarkingCount
+                << ",\"livery_primary_coverage_permille\":" << s.LiveryPrimaryCoveragePermille << ",\"livery_secondary_coverage_permille\":" << s.LiverySecondaryCoveragePermille
+                << ",\"livery_coverage_permille\":" << s.LiveryCoveragePermille << ",\"livery_largest_connected_coverage_permille\":" << s.LiveryLargestConnectedCoveragePermille
+                << ",\"livery_secondary_material_coverage_permille\":" << s.LiverySecondaryMaterialCoveragePermille << ",\"livery_mechanical_material_coverage_permille\":" << s.LiveryMechanicalMaterialCoveragePermille
+                << ",\"livery_coverage_rejections\":" << s.LiveryCoverageRejectionCount << ",\"livery_material_rejections\":" << s.LiveryMaterialPreservationRejectionCount
+                << ",\"detail_motif_occurrences\":" << s.DetailMotifOccurrenceCount
                 << ",\"major_features\":" << s.MajorFeatureCount << ",\"weapons\":" << s.WeaponCount << ",\"engines\":" << s.EngineCount
                 << ",\"complexity_utilization_percent\":" << s.ComplexityUtilizationPercent << ",\"primary_visual_anchor\":" << static_cast<uint32_t>(s.PrimaryVisualAnchor)
                 << ",\"secondary_visual_anchor\":" << static_cast<uint32_t>(s.SecondaryVisualAnchor) << ",\"visual_hierarchy_fallback\":" << (s.VisualHierarchyFallbackOccurred ? "true" : "false")
@@ -346,7 +351,16 @@ namespace PixelShipGeneratorDiagnostics
                 if (const JsonValue* value = optionalMember(j, "weapon_anchor_opportunity")) { s.WeaponVisualAnchorOpportunity = boolean(*value); }
                 if (const JsonValue* value = optionalMember(j, "weapon_anchor_realized")) { s.WeaponVisualAnchorRealized = boolean(*value); }
                 s.AttachmentPlacementAttemptCount = u32(member(j, "attachment_attempts")); s.AttachmentPlacementFailureCount = u32(member(j, "attachment_failures"));
-                s.MaterialZoneCount = u32(member(j, "material_zones")); s.LiveryMarkingCount = u32(member(j, "livery_markings")); s.DetailMotifOccurrenceCount = u32(member(j, "detail_motif_occurrences"));
+                s.MaterialZoneCount = u32(member(j, "material_zones")); s.LiveryMarkingCount = u32(member(j, "livery_markings"));
+                if (const JsonValue* value = optionalMember(j, "livery_primary_coverage_permille")) { s.LiveryPrimaryCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_secondary_coverage_permille")) { s.LiverySecondaryCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_coverage_permille")) { s.LiveryCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_largest_connected_coverage_permille")) { s.LiveryLargestConnectedCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_secondary_material_coverage_permille")) { s.LiverySecondaryMaterialCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_mechanical_material_coverage_permille")) { s.LiveryMechanicalMaterialCoveragePermille = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_coverage_rejections")) { s.LiveryCoverageRejectionCount = u32(*value); }
+                if (const JsonValue* value = optionalMember(j, "livery_material_rejections")) { s.LiveryMaterialPreservationRejectionCount = u32(*value); }
+                s.DetailMotifOccurrenceCount = u32(member(j, "detail_motif_occurrences"));
                 s.MajorFeatureCount = u32(member(j, "major_features")); s.WeaponCount = u32(member(j, "weapons")); s.EngineCount = u32(member(j, "engines")); s.ComplexityUtilizationPercent = number(member(j, "complexity_utilization_percent"));
                 const uint32_t primary = u32(member(j, "primary_visual_anchor")); const uint32_t secondary = u32(member(j, "secondary_visual_anchor"));
                 if (primary > static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END) || secondary > static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)) { throw std::runtime_error("Invalid visual anchor."); }

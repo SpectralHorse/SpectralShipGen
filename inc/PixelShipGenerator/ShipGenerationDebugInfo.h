@@ -153,6 +153,14 @@ namespace PixelShipGenerator
         uint32_t LiveryMarkingCount = 0u;
         uint32_t LiveryPrimaryPixelCount = 0u;
         uint32_t LiverySecondaryPixelCount = 0u;
+        uint32_t LiveryPrimaryCoveragePermille = 0u;
+        uint32_t LiverySecondaryCoveragePermille = 0u;
+        uint32_t LiveryCoveragePermille = 0u;
+        uint32_t LiveryLargestConnectedCoveragePermille = 0u;
+        uint32_t LiverySecondaryMaterialCoveragePermille = 0u;
+        uint32_t LiveryMechanicalMaterialCoveragePermille = 0u;
+        uint32_t LiveryCoverageRejectionCount = 0u;
+        uint32_t LiveryMaterialPreservationRejectionCount = 0u;
         std::array<uint32_t, static_cast<std::size_t>(ShipLiveryType::SHIP_LIVERY_TYPE_END)> LiveryTypeCounts = {};
         PixelMask LiveryPrimaryMask;
         PixelMask LiverySecondaryMask;

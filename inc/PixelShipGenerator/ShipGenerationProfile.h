@@ -389,6 +389,8 @@ namespace PixelShipGenerator
         uint32_t MaximumLiveryMarkings = 2u;
         uint32_t SupportingLiveryChance = 28u;
         uint32_t LiveryAsymmetricChance = 12u;
+        uint32_t MaximumLiveryCoveragePercent = 18u;
+        uint32_t MaximumLiveryConnectedCoveragePercent = 10u;
         ShipLiveryWeights LiveryWeights;
 
         // Coloring
