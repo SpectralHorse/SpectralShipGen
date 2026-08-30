@@ -7,6 +7,7 @@
 #include "PixelMask.h"
 #include "ShipAnimationTraits.h"
 #include "ShipAttachment.h"
+#include "ShipFactionProfile.h"
 #include "ShipFactionType.h"
 #include "ShipGenerationProfile.h"
 #include "ShipGenerationSeeds.h"
@@ -22,8 +23,10 @@ namespace PixelShipGenerator
         GenerationDomainSeeds DomainSeeds;
         ShipPalette Palette;
         ShipAnimationTraits AnimationTraits;
+        ShipFactionAnimationProfile FactionAnimationProfile;
+        ShipFactionPaintColorRole FactionWeaponMuzzleRole = ShipFactionPaintColorRole::ENGINE_HIGHLIGHT;
         ShipStyle Style = ShipStyle::SHIP_STYLE_END; // Built-in preset provenance; SHIP_STYLE_END means custom/no built-in origin.
-        ShipFactionType Faction = ShipFactionType::FRONTIER;
+        ShipFactionType Faction = ShipFactionType::SHIP_FACTION_TYPE_END; // Built-in preset provenance; END means custom/no built-in origin.
 
         PixelMask HullMask;
         PixelMask CockpitMask;

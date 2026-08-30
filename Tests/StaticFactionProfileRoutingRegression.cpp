@@ -19,7 +19,16 @@ namespace PixelShipGenerator
             ShipStyle styleProvenance,
             ShipGenerationDebugInfo* debugInfo)
         {
-            return generator.generateInternal(configuration, structuralProfile, factionProfile, styleProvenance, nullptr, debugInfo, nullptr);
+            ExplicitShipGenerationConfiguration explicitConfiguration;
+            explicitConfiguration.Seed = configuration.Seed;
+            explicitConfiguration.Dimensions = configuration.Dimensions;
+            explicitConfiguration.DetailDensity = configuration.DetailDensity;
+            explicitConfiguration.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+            explicitConfiguration.AttachmentsEnabled = configuration.AttachmentsEnabled;
+            explicitConfiguration.SeedOverrides = configuration.SeedOverrides;
+            explicitConfiguration.DomainSeedOverrides = configuration.DomainSeedOverrides;
+            explicitConfiguration.RandomStreamMode = configuration.RandomStreamMode;
+            return generator.generateInternal(explicitConfiguration, structuralProfile, factionProfile, styleProvenance, configuration.Faction, nullptr, debugInfo, nullptr);
         }
     };
 }

@@ -1,5 +1,6 @@
 #include "RegressionSuites.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
@@ -7,6 +8,9 @@
 #include <vector>
 
 #include "DiagnosticsRunner.h"
+#include "DiagnosticsResultSerializer.h"
+#include "ShipFactionProfile.h"
+#include "ShipGenerationProfile.h"
 #include "ShipGenerator.h"
 
 namespace
@@ -25,7 +29,7 @@ namespace
     bool finiteSummary(const PixelShipGeneratorDiagnostics::DiagnosticsDistributionSummary& summary)
     {
         return std::isfinite(summary.Mean) && std::isfinite(summary.Median) && std::isfinite(summary.Minimum) &&
-               std::isfinite(summary.Maximum) && std::isfinite(summary.P95) && std::isfinite(summary.StandardDeviation);
+            std::isfinite(summary.Maximum) && std::isfinite(summary.P95) && std::isfinite(summary.StandardDeviation);
     }
 }
 
@@ -62,17 +66,17 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     DiagnosticsProgress lastProgress;
     bool sawEta = false;
     const DiagnosticsResult result = DiagnosticsRunner().run(configuration, [&](const DiagnosticsProgress& progress)
-    {
-        lastProgress = progress;
-        if (progress.EstimatedRemainingAvailable)
         {
-            sawEta = true;
-            if (!std::isfinite(static_cast<double>(progress.EstimatedRemainingNanoseconds)) || progress.EstimatedRemainingNanoseconds > (uint64_t(1) << 62u))
+            lastProgress = progress;
+            if (progress.EstimatedRemainingAvailable)
             {
-                std::cerr << "Diagnostics runner regression failed: ETA became invalid.\n";
+                sawEta = true;
+                if (!std::isfinite(static_cast<double>(progress.EstimatedRemainingNanoseconds)) || progress.EstimatedRemainingNanoseconds > (uint64_t(1) << 62u))
+                {
+                    std::cerr << "Diagnostics runner regression failed: ETA became invalid.\n";
+                }
             }
-        }
-    });
+        });
 
     if (!result.Completed || result.Cancelled || result.CompletedWorkItems != firstSchedule.size() || lastProgress.CompletedWorkItems != firstSchedule.size() || std::abs(lastProgress.ProgressPercent - 100.0) > 0.0001 || !sawEta)
     {
@@ -98,6 +102,67 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     if (imageSignature(directShip.FinalImage) != result.Samples.front().FinalImageSignature)
     {
         std::cerr << "Diagnostics runner regression failed: reusable runner generated a different sample.\n";
+        return 1;
+    }
+
+    DiagnosticsRunConfiguration explicitConfiguration;
+    explicitConfiguration.Dimensions = { { 40u, 32u } };
+    explicitConfiguration.SamplesPerConfiguration = 1u;
+    explicitConfiguration.DiagnosticSeed = 0x85AABBCCDDEEFF11ull;
+    explicitConfiguration.DetailDensity = 47u;
+    explicitConfiguration.AsymmetricDetailChance = 13u;
+
+    PixelShipGenerator::ShipGenerationProfile customProfile =
+        PixelShipGenerator::getShipGenerationProfile(PixelShipGenerator::ShipStyle::INDUSTRIAL);
+    PixelShipGenerator::ShipFactionProfile customFaction =
+        PixelShipGenerator::getShipFactionProfile(PixelShipGenerator::ShipFactionType::CORPORATE);
+    customProfile.LargeWeaponChance = std::min<uint32_t>(100u, customProfile.LargeWeaponChance + 1u);
+    customFaction.SurfaceDetails.DetailDensityPercent += 1u;
+
+    const DiagnosticsResult explicitResult = DiagnosticsRunner().run(explicitConfiguration, customProfile, customFaction);
+    if (!explicitResult.Completed || explicitResult.CompletedWorkItems != 1u || explicitResult.Samples.size() != 1u ||
+        explicitResult.Configuration.Styles.size() != 1u ||
+        explicitResult.Configuration.Styles.front() != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
+        explicitResult.Configuration.Factions.size() != 1u ||
+        explicitResult.Configuration.Factions.front() != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END ||
+        explicitResult.Samples.front().WorkItem.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
+        explicitResult.Samples.front().WorkItem.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+    {
+        std::cerr << "Diagnostics runner regression failed: explicit profiles required fabricated built-in provenance.\n";
+        return 1;
+    }
+
+    PixelShipGenerator::ExplicitShipGenerationConfiguration explicitSettings;
+    explicitSettings.Seed = explicitResult.Samples.front().WorkItem.Seed;
+    explicitSettings.Dimensions = explicitResult.Samples.front().WorkItem.Dimensions;
+    explicitSettings.DetailDensity = explicitConfiguration.DetailDensity;
+    explicitSettings.AsymmetricDetailChance = explicitConfiguration.AsymmetricDetailChance;
+    explicitSettings.AttachmentsEnabled = explicitConfiguration.AttachmentsEnabled;
+    const PixelShipGenerator::GeneratedShip explicitShip = generator.generate(explicitSettings, customProfile, customFaction);
+    if (imageSignature(explicitShip.FinalImage) != explicitResult.Samples.front().FinalImageSignature ||
+        explicitShip.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
+        explicitShip.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+    {
+        std::cerr << "Diagnostics runner regression failed: explicit-profile diagnostics diverged from direct generation.\n";
+        return 1;
+    }
+
+    std::ostringstream explicitCsv;
+    writeDiagnosticsResultCsv(explicitCsv, explicitResult);
+    if (explicitCsv.str().find(",CUSTOM,CUSTOM,") == std::string::npos)
+    {
+        std::cerr << "Diagnostics runner regression failed: explicit profiles do not have a minimal custom diagnostics label.\n";
+        return 1;
+    }
+
+    const std::string explicitJson = serializeDiagnosticsResultJson(explicitResult);
+    const DiagnosticsResultLoadResult explicitReload = deserializeDiagnosticsResultJson(explicitJson);
+    if (!explicitReload.Success ||
+        explicitReload.Result.Samples.size() != 1u ||
+        explicitReload.Result.Samples.front().WorkItem.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
+        explicitReload.Result.Samples.front().WorkItem.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+    {
+        std::cerr << "Diagnostics runner regression failed: custom provenance did not survive result serialization.\n";
         return 1;
     }
 

@@ -32,6 +32,7 @@ namespace
         case ShipStyle::INDUSTRIAL: return "INDUSTRIAL";
         case ShipStyle::SPEARHEAD: return "SPEARHEAD";
         case ShipStyle::DELTA: return "DELTA";
+        case ShipStyle::SHIP_STYLE_END: return "CUSTOM";
         default: return "UNKNOWN";
         }
     }
@@ -47,6 +48,7 @@ namespace
         case ShipFactionType::XENO: return "XENO";
         case ShipFactionType::CORPORATE: return "CORPORATE";
         case ShipFactionType::RELIC: return "RELIC";
+        case ShipFactionType::SHIP_FACTION_TYPE_END: return "CUSTOM";
         default: return "UNKNOWN";
         }
     }

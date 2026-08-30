@@ -9,12 +9,11 @@ namespace PixelShipGenerator
 {
     namespace
     {
-        ShipGenerationConfiguration copyGenerationConfiguration(const ShipGenerationSettings& settings)
+        ExplicitShipGenerationConfiguration copyExplicitGenerationConfiguration(const ShipGenerationSettings& settings)
         {
-            ShipGenerationConfiguration configuration;
+            ExplicitShipGenerationConfiguration configuration;
             configuration.Seed = settings.Seed;
             configuration.Dimensions = settings.Dimensions;
-            configuration.Faction = settings.Faction;
             configuration.DetailDensity = settings.DetailDensity;
             configuration.AsymmetricDetailChance = settings.AsymmetricDetailChance;
             configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
@@ -25,14 +24,16 @@ namespace PixelShipGenerator
         }
     }
 
-    ShipGenerationContext::ShipGenerationContext(const ShipGenerationConfiguration& settings, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, const ShipGenerationSeeds& seeds, ShipGenerationDebugInfo* debugInfo, const GenerationCalibrationSettings* calibrationSettings, ShipStyle builtInStyleProvenance)
+    ShipGenerationContext::ShipGenerationContext(const ExplicitShipGenerationConfiguration& settings, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, const ShipGenerationSeeds& seeds, ShipGenerationDebugInfo* debugInfo, const GenerationCalibrationSettings* calibrationSettings, ShipStyle builtInStyleProvenance, ShipFactionType builtInFactionProvenance)
         : Settings(settings), Profile(profile), FactionProfile(factionProfile), ScaleTraits(GenerationScaleTraits::fromDimensions(settings.Dimensions)), ComplexityBudget(GenerationComplexityBudget::create(ScaleTraits, profile, factionProfile, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)), Seeds(seeds), DomainSeeds(resolveGenerationDomainSeeds(seeds, settings.DomainSeedOverrides, settings.RandomStreamMode)), DebugInfo(debugInfo), CalibrationSettings(calibrationSettings), m_LegacyStructureRandomGenerator(seeds.Structure), m_LegacyPaletteRandomGenerator(seeds.Palette), m_LegacyDetailRandomGenerator(seeds.Details), m_LegacyAttachmentRandomGenerator(seeds.Attachments), m_SavedCalibrationRandomGenerator(0u)
     {
         Ship.reset(settings.Dimensions.Width, settings.Dimensions.Height, seeds);
         Ship.DomainSeeds = DomainSeeds;
         Ship.AnimationTraits = profile.AnimationTraits;
+        Ship.FactionAnimationProfile = factionProfile.Animation;
+        Ship.FactionWeaponMuzzleRole = factionProfile.Finish.WeaponMuzzleRole;
         Ship.Style = builtInStyleProvenance;
-        Ship.Faction = settings.Faction;
+        Ship.Faction = builtInFactionProvenance;
         WingRegions.reset(settings.Dimensions.Width, settings.Dimensions.Height);
         StructuralNegativeSpace.reset(settings.Dimensions.Width, settings.Dimensions.Height);
         Cockpit.reset(settings.Dimensions.Width, settings.Dimensions.Height);
@@ -50,9 +51,8 @@ namespace PixelShipGenerator
     }
 
     ShipGenerationContext::ShipGenerationContext(const ShipGenerationSettings& settings, const ShipGenerationProfile& profile, const ShipGenerationSeeds& seeds, ShipGenerationDebugInfo* debugInfo, const GenerationCalibrationSettings* calibrationSettings)
-        : ShipGenerationContext(copyGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, debugInfo, calibrationSettings, settings.Style)
-    {
-    }
+        : ShipGenerationContext(copyExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, debugInfo, calibrationSettings, settings.Style, settings.Faction)
+    {}
 
     uint32_t ShipGenerationContext::getGenerationRandomUInt(GenerationDomain domain, uint32_t minimum, uint32_t maximum)
     {

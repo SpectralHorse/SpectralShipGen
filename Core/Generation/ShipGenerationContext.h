@@ -32,13 +32,14 @@ namespace PixelShipGenerator
 {
     struct ShipGenerationContext
     {
-        ShipGenerationContext(const ShipGenerationConfiguration& settings,
+        ShipGenerationContext(const ExplicitShipGenerationConfiguration& settings,
             const ShipGenerationProfile& profile,
             const ShipFactionProfile& factionProfile,
             const ShipGenerationSeeds& seeds,
             ShipGenerationDebugInfo* debugInfo = nullptr,
             const GenerationCalibrationSettings* calibrationSettings = nullptr,
-            ShipStyle builtInStyleProvenance = ShipStyle::SHIP_STYLE_END);
+            ShipStyle builtInStyleProvenance = ShipStyle::SHIP_STYLE_END,
+            ShipFactionType builtInFactionProvenance = ShipFactionType::SHIP_FACTION_TYPE_END);
 
         // Internal compatibility entry for generation-focused regressions/helpers
         // that still construct a context from the legacy preset settings.
@@ -62,7 +63,7 @@ namespace PixelShipGenerator
         void updateLiveryDebugInfo();
         void updateDetailMotifDebugInfo();
 
-        ShipGenerationConfiguration Settings;
+        ExplicitShipGenerationConfiguration Settings;
         const ShipGenerationProfile& Profile;
         const ShipFactionProfile& FactionProfile;
         GenerationScaleTraits ScaleTraits;

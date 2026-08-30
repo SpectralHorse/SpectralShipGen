@@ -11,6 +11,8 @@
 #include <tuple>
 
 #include "ShipGenerator.h"
+#include "ShipGenerationProfile.h"
+#include "ShipFactionProfile.h"
 #include "ShipGenerationSeeds.h"
 
 namespace PixelShipGeneratorDiagnostics
@@ -301,6 +303,37 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsResult DiagnosticsRunner::run(const DiagnosticsRunConfiguration& configuration, const DiagnosticsProgressCallback& progressCallback, const DiagnosticsCancellationCallback& cancellationCallback, const DiagnosticsSampleCallback& sampleCallback) const
     {
+        return runInternal(configuration, nullptr, nullptr, progressCallback, cancellationCallback, sampleCallback);
+    }
+
+    DiagnosticsResult DiagnosticsRunner::run(
+        const DiagnosticsRunConfiguration& configuration,
+        const PixelShipGenerator::ShipGenerationProfile& profile,
+        const PixelShipGenerator::ShipFactionProfile& factionProfile,
+        const DiagnosticsProgressCallback& progressCallback,
+        const DiagnosticsCancellationCallback& cancellationCallback,
+        const DiagnosticsSampleCallback& sampleCallback) const
+    {
+        DiagnosticsRunConfiguration explicitConfiguration = configuration;
+        explicitConfiguration.Styles = { PixelShipGenerator::ShipStyle::SHIP_STYLE_END };
+        explicitConfiguration.Factions = { PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END };
+        return runInternal(explicitConfiguration, &profile, &factionProfile, progressCallback, cancellationCallback, sampleCallback);
+    }
+
+    DiagnosticsResult DiagnosticsRunner::runInternal(
+        const DiagnosticsRunConfiguration& configuration,
+        const PixelShipGenerator::ShipGenerationProfile* profile,
+        const PixelShipGenerator::ShipFactionProfile* factionProfile,
+        const DiagnosticsProgressCallback& progressCallback,
+        const DiagnosticsCancellationCallback& cancellationCallback,
+        const DiagnosticsSampleCallback& sampleCallback) const
+    {
+        const bool explicitProfiles = profile != nullptr || factionProfile != nullptr;
+        if (explicitProfiles && (profile == nullptr || factionProfile == nullptr))
+        {
+            throw std::invalid_argument("Explicit diagnostics require both ShipGenerationProfile and ShipFactionProfile.");
+        }
+
         DiagnosticsResult result;
         result.Configuration = configuration;
         const std::vector<DiagnosticsWorkItem> schedule = resolveDiagnosticsWorkSchedule(configuration);
@@ -362,21 +395,37 @@ namespace PixelShipGeneratorDiagnostics
             }
             DiagnosticsRawSampleResult sample;
             sample.WorkItem = item;
-            PixelShipGenerator::ShipGenerationSettings settings;
-            settings.Seed = item.Seed;
-            settings.Dimensions = item.Dimensions;
-            settings.Style = item.Style;
-            settings.Faction = item.Faction;
-            settings.DetailDensity = configuration.DetailDensity;
-            settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
-            settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
             PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
             PixelShipGenerator::ShipGenerationPerformanceInfo performance;
             const auto sampleStart = Clock::now();
             try
             {
                 const bool detailedTiming = configuration.DetailedPerformanceInstrumentation && categoryEnabled(configuration, DiagnosticsCategory::PERFORMANCE);
-                const PixelShipGenerator::GeneratedShip ship = detailedTiming ? generator.generate(settings, &debugInfo, &performance) : generator.generate(settings, &debugInfo);
+                PixelShipGenerator::GeneratedShip ship;
+                if (explicitProfiles)
+                {
+                    PixelShipGenerator::ExplicitShipGenerationConfiguration settings;
+                    settings.Seed = item.Seed;
+                    settings.Dimensions = item.Dimensions;
+                    settings.DetailDensity = configuration.DetailDensity;
+                    settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+                    settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
+                    ship = detailedTiming
+                        ? generator.generate(settings, *profile, *factionProfile, &debugInfo, &performance)
+                        : generator.generate(settings, *profile, *factionProfile, &debugInfo);
+                }
+                else
+                {
+                    PixelShipGenerator::ShipGenerationSettings settings;
+                    settings.Seed = item.Seed;
+                    settings.Dimensions = item.Dimensions;
+                    settings.Style = item.Style;
+                    settings.Faction = item.Faction;
+                    settings.DetailDensity = configuration.DetailDensity;
+                    settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+                    settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
+                    ship = detailedTiming ? generator.generate(settings, &debugInfo, &performance) : generator.generate(settings, &debugInfo);
+                }
                 sample.Success = true;
                 sample.FinalImageSignature = imageSignature(ship.FinalImage);
                 result.OverallStatistics.recordSuccess(ship, debugInfo, makeLegacyConfiguration(configuration, item));

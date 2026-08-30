@@ -106,8 +106,7 @@ namespace PixelShipGenerator
                     }
                     else if (muzzleMask.get(x, y))
                     {
-                        image.setPixel(x, y, ship.Faction == ShipFactionType::RELIC ? palette.LightHighlight
-                            : (ship.Faction == ShipFactionType::ASCENDANT || ship.Faction == ShipFactionType::XENO ? palette.HullAccentHighlight : palette.EngineHighlight));
+                        image.setPixel(x, y, resolveFactionPaintColor(ship.FactionWeaponMuzzleRole, palette.EngineHighlight, palette));
                     }
                     else
                     {

@@ -38,7 +38,7 @@ namespace
         PixelShipGenerator::DetailGenerator detailGenerator;
         PixelShipGenerator::ShipPainter shipPainter;
 
-        context.Ship.Palette = PixelShipGenerator::ShipPaletteGenerator::generate(context.Seeds.Palette, context.Settings.Faction, context.Profile);
+        context.Ship.Palette = PixelShipGenerator::ShipPaletteGenerator::generate(context.Seeds.Palette, context.FactionProfile, context.Profile);
 
         for (uint32_t attempt = 0u; attempt < MaximumHullAttempts; ++attempt)
         {

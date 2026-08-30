@@ -12,6 +12,7 @@
 #include "GenerationScaleTraits.h"
 #include "PixelMask.h"
 #include "ShipGenerationSeeds.h"
+#include "ShipFactionAnimationUtils.h"
 
 namespace
 {
@@ -46,6 +47,7 @@ namespace
         bool Staggered = false;
         bool HeavyResponse = false;
         bool Responsive = false;
+        bool SquareTransitionInput = false;
     };
 
     struct LateralMovementPlan
@@ -103,17 +105,17 @@ namespace
         return 1.0 - inverse * inverse * inverse;
     }
 
-    double sampleProfileTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementProfile& profile, double value)
+    double sampleProfileTransitionResponse(const LateralMovementProfile& profile, double value)
     {
         double t = std::clamp(value, 0.0, 1.0);
-        if (ship.Faction == PixelShipGenerator::ShipFactionType::RELIC) { t *= t; }
+        if (profile.SquareTransitionInput) { t *= t; }
 
         if (profile.Responsive) { return easeOutCubic(t); }
         if (profile.HeavyResponse) { return smoothStep(t * t); }
         return smoothStep(t);
     }
 
-    double sampleTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementProfile& profile, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, double phaseOffset)
+    double sampleTransitionResponse(const LateralMovementProfile& profile, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, double phaseOffset)
     {
         const double time = clampNormalizedTime(normalizedTime);
         const double maximumDelay = profile.Synchronized ? 0.0 : profile.Staggered ? 0.16 : 0.08;
@@ -123,7 +125,7 @@ namespace
         {
             if (time <= delay) { return 0.0; }
             const double local = (time - delay) / std::max(0.000001, 1.0 - delay);
-            return sampleProfileTransitionResponse(ship, profile, local);
+            return sampleProfileTransitionResponse(profile, local);
         }
 
         if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT)
@@ -131,7 +133,7 @@ namespace
             if (time >= 1.0) { return 0.0; }
             const double activeDuration = std::max(0.000001, 1.0 - delay);
             const double local = std::clamp(time / activeDuration, 0.0, 1.0);
-            return 1.0 - sampleProfileTransitionResponse(ship, profile, local);
+            return 1.0 - sampleProfileTransitionResponse(profile, local);
         }
 
         return 1.0;
@@ -169,36 +171,12 @@ namespace
         profile.HeavyResponse = traits.HeavyResponse;
         profile.Responsive = traits.Responsive;
 
-        switch (ship.Faction)
-        {
-        case PixelShipGenerator::ShipFactionType::FRONTIER:
-            profile.Staggered = true;
-            profile.Synchronized = false;
-            break;
-        case PixelShipGenerator::ShipFactionType::MILITARY:
-            profile.Synchronized = true;
-            profile.Staggered = false;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 9u / 10u;
-            break;
-        case PixelShipGenerator::ShipFactionType::ASCENDANT:
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 4u / 5u;
-            break;
-        case PixelShipGenerator::ShipFactionType::XENO:
-            profile.Staggered = true;
-            profile.Synchronized = false;
-            break;
-        case PixelShipGenerator::ShipFactionType::CORPORATE:
-            profile.Synchronized = true;
-            profile.Staggered = false;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 4u / 5u;
-            break;
-        case PixelShipGenerator::ShipFactionType::RELIC:
-            profile.HeavyResponse = true;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 3u / 4u;
-            break;
-        default:
-            break;
-        }
+        const PixelShipGenerator::ShipFactionMovementAnimationProfile& factionProfile = ship.FactionAnimationProfile.LateralMovement;
+        profile.ResponseStrengthPercent = PixelShipGenerator::FactionAnimationInternal::applyValueScale(profile.ResponseStrengthPercent, factionProfile.ResponseStrengthScale);
+        profile.Synchronized = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.Synchronized, factionProfile.Synchronized);
+        profile.Staggered = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.Staggered, factionProfile.Staggered);
+        profile.HeavyResponse = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.HeavyResponse, factionProfile.HeavyResponse);
+        profile.SquareTransitionInput = factionProfile.SquareTransitionInput;
 
         profile.ResponseStrengthPercent = std::clamp(profile.ResponseStrengthPercent, 40u, 120u);
         return profile;
@@ -617,7 +595,7 @@ namespace
     double getGroupResponse(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementPlan& plan, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, double phaseOffset)
     {
         if (phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN) { return sampleSustainResponse(normalizedTime, phaseOffset, plan.Profile.HeavyResponse); }
-        return sampleTransitionResponse(ship, plan.Profile, phase, normalizedTime, phaseOffset);
+        return sampleTransitionResponse(plan.Profile, phase, normalizedTime, phaseOffset);
     }
 
     void applyMovableGroup(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const MovableGroup& group, int32_t offsetX)

@@ -411,8 +411,8 @@ namespace PixelShipGenerator
 
     struct ShipFactionAnimationProfile
     {
-        // Resolved faction response semantics for Task 85. Task 83 only declares
-        // these values; current animators continue to use their compatibility path.
+        // Resolved faction response semantics copied into GeneratedShip so animation
+        // can operate without built-in faction identity after generation.
         ShipFactionIdleAnimationProfile Idle;
         ShipFactionMovementAnimationProfile LateralMovement;
         ShipFactionMovementAnimationProfile LongitudinalMovement;

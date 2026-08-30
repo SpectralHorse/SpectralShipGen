@@ -32,13 +32,20 @@ namespace PixelShipGenerator
         GeneratedShip generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
         GeneratedShip generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
+        // Fully explicit structural + faction profile API. The configuration has
+        // no ShipStyle/ShipFactionType selector, so neither provenance identity is
+        // fabricated or given hidden precedence. Both profiles are validated.
+        GeneratedShip generate(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
+        GeneratedShip generateCalibrated(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
+
     private:
         friend struct ShipGeneratorStaticFactionRegressionAccess;
 
-        GeneratedShip generateInternal(const ShipGenerationConfiguration& configuration,
+        GeneratedShip generateInternal(const ExplicitShipGenerationConfiguration& configuration,
             const ShipGenerationProfile& profile,
             const ShipFactionProfile& factionProfile,
             ShipStyle builtInStyleProvenance,
+            ShipFactionType builtInFactionProvenance,
             const GenerationCalibrationSettings* calibrationSettings,
             ShipGenerationDebugInfo* debugInfo,
             ShipGenerationPerformanceInfo* performanceInfo);

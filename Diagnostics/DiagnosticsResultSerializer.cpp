@@ -133,7 +133,8 @@ namespace PixelShipGeneratorDiagnostics
                 case '\r': out << "\\r"; break;
                 case '\t': out << "\\t"; break;
                 default:
-                    if (c < 0x20u) { out << '?'; } else { out << static_cast<char>(c); }
+                    if (c < 0x20u) { out << '?'; }
+                    else { out << static_cast<char>(c); }
                     break;
                 }
             }
@@ -302,9 +303,9 @@ namespace PixelShipGeneratorDiagnostics
             const JsonValue& dims = member(config, "dimensions"); if (dims.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.dimensions must be an array."); }
             for (const auto& d : dims.Array) { result.Configuration.Dimensions.push_back({ u32(member(d, "width")), u32(member(d, "height")) }); }
             const JsonValue& styles = member(config, "styles"); if (styles.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.styles must be an array."); }
-            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index >= static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<PixelShipGenerator::ShipStyle>(index)); }
+            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<PixelShipGenerator::ShipStyle>(index)); }
             const JsonValue& factions = member(config, "factions"); if (factions.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.factions must be an array."); }
-            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index >= static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<PixelShipGenerator::ShipFactionType>(index)); }
+            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<PixelShipGenerator::ShipFactionType>(index)); }
             result.Configuration.SamplesPerConfiguration = u64(member(config, "samples_per_configuration"));
             result.Configuration.DiagnosticSeed = u64(member(config, "diagnostic_seed"));
             result.Configuration.DetailDensity = u32(member(config, "detail_density"));
@@ -323,7 +324,7 @@ namespace PixelShipGeneratorDiagnostics
                 s.WorkItem.WorkIndex = u64(member(j, "work_index")); s.WorkItem.ConfigurationIndex = u64(member(j, "configuration_index")); s.WorkItem.SampleIndex = u64(member(j, "sample_index")); s.WorkItem.Seed = u64(member(j, "seed"));
                 s.WorkItem.Dimensions = { u32(member(j, "width")), u32(member(j, "height")) };
                 const uint32_t style = u32(member(j, "style")); const uint32_t faction = u32(member(j, "faction"));
-                if (style >= static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END) || faction >= static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample style/faction."); }
+                if (style > static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END) || faction > static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample style/faction."); }
                 s.WorkItem.Style = static_cast<PixelShipGenerator::ShipStyle>(style); s.WorkItem.Faction = static_cast<PixelShipGenerator::ShipFactionType>(faction);
                 s.Success = boolean(member(j, "success")); s.ErrorMessage = stringValue(member(j, "error")); s.TotalGenerationNanoseconds = u64(member(j, "total_ns"));
                 const JsonValue& stages = member(j, "stage_ns"); if (stages.Type != JsonType::ARRAY || stages.Array.size() != s.Performance.StageDurationNanoseconds.size()) { throw std::runtime_error("Invalid stage timing array."); }

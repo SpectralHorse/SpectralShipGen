@@ -13,6 +13,12 @@
 #include "ShipGenerationPerformance.h"
 #include "ShipVisualAnchorType.h"
 
+namespace PixelShipGenerator
+{
+    struct ShipGenerationProfile;
+    struct ShipFactionProfile;
+}
+
 namespace PixelShipGeneratorDiagnostics
 {
     enum class DiagnosticsDetailLevel : uint32_t
@@ -233,6 +239,25 @@ namespace PixelShipGeneratorDiagnostics
             const DiagnosticsProgressCallback& progressCallback = {},
             const DiagnosticsCancellationCallback& cancellationCallback = {},
             const DiagnosticsSampleCallback& sampleCallback = {}) const;
+
+        // Runs diagnostics from explicit structural/faction behavior without
+        // fabricating built-in preset identity. Result work items use the
+        // *_END provenance sentinels; portable profile serialization remains
+        // deferred to the public recipe/configuration work.
+        DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
+            const PixelShipGenerator::ShipGenerationProfile& profile,
+            const PixelShipGenerator::ShipFactionProfile& factionProfile,
+            const DiagnosticsProgressCallback& progressCallback = {},
+            const DiagnosticsCancellationCallback& cancellationCallback = {},
+            const DiagnosticsSampleCallback& sampleCallback = {}) const;
+
+    private:
+        DiagnosticsResult runInternal(const DiagnosticsRunConfiguration& configuration,
+            const PixelShipGenerator::ShipGenerationProfile* profile,
+            const PixelShipGenerator::ShipFactionProfile* factionProfile,
+            const DiagnosticsProgressCallback& progressCallback,
+            const DiagnosticsCancellationCallback& cancellationCallback,
+            const DiagnosticsSampleCallback& sampleCallback) const;
     };
 
     void printDiagnosticsResultSummary(std::ostream& output, const DiagnosticsResult& result);

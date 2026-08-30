@@ -28,9 +28,26 @@ namespace PixelShipGenerator
         GenerationRandomStreamMode RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
     };
 
-    // Style-independent generation inputs used by the first-class explicit
-    // ShipGenerationProfile path. Structural behavior is supplied separately
-    // through the profile argument passed to ShipGenerator.
+    // Style- and faction-independent generation inputs used by the fully
+    // explicit structural + faction profile path. This is the canonical
+    // behavior configuration once built-in preset selectors have been resolved.
+    struct ExplicitShipGenerationConfiguration
+    {
+        uint64_t Seed = 0;
+        ShipDimensions Dimensions;
+
+        uint32_t DetailDensity = 50;
+        uint32_t AsymmetricDetailChance = 10;
+
+        bool AttachmentsEnabled = true;
+        ShipGenerationSeedOverrides SeedOverrides;
+        GenerationDomainSeedOverrides DomainSeedOverrides;
+        GenerationRandomStreamMode RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
+    };
+
+    // Style-independent generation inputs used by the Task-82 explicit
+    // ShipGenerationProfile + built-in-faction compatibility path. Faction is
+    // deliberately absent from ExplicitShipGenerationConfiguration above.
     struct ShipGenerationConfiguration
     {
         uint64_t Seed = 0;

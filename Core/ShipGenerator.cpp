@@ -24,6 +24,7 @@
 #include "GenerationTuningProfile.h"
 #include "ShipGenerationProfile.h"
 #include "ShipGenerationProfileValidation.h"
+#include "ShipFactionProfileValidation.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationPerformance.h"
 #include "ShipPaletteGenerator.h"
@@ -81,12 +82,11 @@ namespace PixelShipGenerator
             }
         }
 
-        ShipGenerationConfiguration copyGenerationConfiguration(const ShipGenerationSettings& settings)
+        ExplicitShipGenerationConfiguration copyExplicitGenerationConfiguration(const ShipGenerationSettings& settings)
         {
-            ShipGenerationConfiguration configuration;
+            ExplicitShipGenerationConfiguration configuration;
             configuration.Seed = settings.Seed;
             configuration.Dimensions = settings.Dimensions;
-            configuration.Faction = settings.Faction;
             configuration.DetailDensity = settings.DetailDensity;
             configuration.AsymmetricDetailChance = settings.AsymmetricDetailChance;
             configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
@@ -96,15 +96,33 @@ namespace PixelShipGenerator
             return configuration;
         }
 
-        void validateGenerationConfiguration(const ShipGenerationConfiguration& configuration)
+        ExplicitShipGenerationConfiguration copyExplicitGenerationConfiguration(const ShipGenerationConfiguration& settings)
+        {
+            ExplicitShipGenerationConfiguration configuration;
+            configuration.Seed = settings.Seed;
+            configuration.Dimensions = settings.Dimensions;
+            configuration.DetailDensity = settings.DetailDensity;
+            configuration.AsymmetricDetailChance = settings.AsymmetricDetailChance;
+            configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
+            configuration.SeedOverrides = settings.SeedOverrides;
+            configuration.DomainSeedOverrides = settings.DomainSeedOverrides;
+            configuration.RandomStreamMode = settings.RandomStreamMode;
+            return configuration;
+        }
+
+        void validateBuiltInFaction(ShipFactionType faction)
+        {
+            if (faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
+            {
+                throw std::invalid_argument("Ship generation built-in faction path requires a valid ShipFactionType.");
+            }
+        }
+
+        void validateGenerationConfiguration(const ExplicitShipGenerationConfiguration& configuration)
         {
             if (configuration.Dimensions.Width < 16u || configuration.Dimensions.Height < 16u)
             {
                 throw std::invalid_argument("Ship generation dimensions must be at least 16 pixels.");
-            }
-            if (configuration.Faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
-            {
-                throw std::invalid_argument("Ship generation requires a valid built-in ShipFactionType.");
             }
         }
 
@@ -117,6 +135,29 @@ namespace PixelShipGenerator
             }
 
             std::string message = "Invalid ShipGenerationProfile";
+            const std::size_t maximumReportedErrors = 4u;
+            const std::size_t errorCount = std::min(maximumReportedErrors, validation.Errors.size());
+            for (std::size_t index = 0u; index < errorCount; ++index)
+            {
+                message += index == 0u ? ": " : "; ";
+                message += validation.Errors[index].Field + " - " + validation.Errors[index].Message;
+            }
+            if (validation.Errors.size() > errorCount)
+            {
+                message += "; ...";
+            }
+            throw std::invalid_argument(message);
+        }
+
+        void validateResolvedFactionProfile(const ShipFactionProfile& profile)
+        {
+            const ShipFactionProfileValidationResult validation = validateShipFactionProfile(profile);
+            if (validation.isValid())
+            {
+                return;
+            }
+
+            std::string message = "Invalid ShipFactionProfile";
             const std::size_t maximumReportedErrors = 4u;
             const std::size_t errorCount = std::min(maximumReportedErrors, validation.Errors.size());
             for (std::size_t index = 0u; index < errorCount; ++index)
@@ -172,31 +213,46 @@ namespace PixelShipGenerator
     GeneratedShip ShipGenerator::generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
         validateBuiltInStyle(settings.Style);
-        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, nullptr, debugInfo, performanceInfo);
+        validateBuiltInFaction(settings.Faction);
+        return generateInternal(copyExplicitGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, settings.Faction, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationSettings& settings, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
     {
         validateBuiltInStyle(settings.Style);
-        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, &calibrationSettings, debugInfo, nullptr);
+        validateBuiltInFaction(settings.Faction);
+        return generateInternal(copyExplicitGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, settings.Faction, &calibrationSettings, debugInfo, nullptr);
     }
 
     GeneratedShip ShipGenerator::generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
-        return generateInternal(configuration, profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, nullptr, debugInfo, performanceInfo);
+        validateBuiltInFaction(configuration.Faction);
+        return generateInternal(copyExplicitGenerationConfiguration(configuration), profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, configuration.Faction, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
     {
-        return generateInternal(configuration, profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, &calibrationSettings, debugInfo, nullptr);
+        validateBuiltInFaction(configuration.Faction);
+        return generateInternal(copyExplicitGenerationConfiguration(configuration), profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, configuration.Faction, &calibrationSettings, debugInfo, nullptr);
     }
 
-    GeneratedShip ShipGenerator::generateInternal(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& sourceProfile, const ShipFactionProfile& factionProfile, ShipStyle builtInStyleProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    GeneratedShip ShipGenerator::generate(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    {
+        return generateInternal(configuration, profile, factionProfile, ShipStyle::SHIP_STYLE_END, ShipFactionType::SHIP_FACTION_TYPE_END, nullptr, debugInfo, performanceInfo);
+    }
+
+    GeneratedShip ShipGenerator::generateCalibrated(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
+    {
+        return generateInternal(configuration, profile, factionProfile, ShipStyle::SHIP_STYLE_END, ShipFactionType::SHIP_FACTION_TYPE_END, &calibrationSettings, debugInfo, nullptr);
+    }
+
+    GeneratedShip ShipGenerator::generateInternal(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& sourceProfile, const ShipFactionProfile& factionProfile, ShipStyle builtInStyleProvenance, ShipFactionType builtInFactionProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
         validateGenerationConfiguration(configuration);
 
         const ShipGenerationProfile profile = resolveCalibration(sourceProfile, builtInStyleProvenance, calibrationSettings);
         validateResolvedProfile(profile);
+        validateResolvedFactionProfile(factionProfile);
 
         const auto generationStart = performanceInfo == nullptr ? std::chrono::steady_clock::time_point() : std::chrono::steady_clock::now();
         if (performanceInfo != nullptr) { performanceInfo->reset(); }
@@ -205,7 +261,7 @@ namespace PixelShipGenerator
         ShipGenerationSeeds seeds = deriveShipGenerationSeeds(configuration.Seed);
         seeds = applyShipGenerationSeedOverrides(seeds, configuration.SeedOverrides);
 
-        ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance);
+        ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance, builtInFactionProvenance);
         context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
 
         HullGenerator hullGenerator;

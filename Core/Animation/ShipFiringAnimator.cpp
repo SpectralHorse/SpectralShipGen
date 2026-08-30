@@ -12,6 +12,7 @@
 #include "GenerationDomain.h"
 #include "GenerationScaleTraits.h"
 #include "ShipGenerationSeeds.h"
+#include "ShipFactionAnimationUtils.h"
 
 namespace
 {
@@ -123,27 +124,12 @@ namespace
         profile.HeavyResponse = profile.HeavyResponse || traits.HeavyResponse;
         profile.Responsive = profile.Responsive || traits.Responsive;
 
-        switch (ship.Faction)
-        {
-        case ShipFactionType::MILITARY:
-            profile.BaseDurationMilliseconds = profile.BaseDurationMilliseconds * 9u / 10u;
-            break;
-        case ShipFactionType::CORPORATE:
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 9u / 10u;
-            break;
-        case ShipFactionType::ASCENDANT:
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 4u / 5u;
-            profile.PreFireExtensionLimit = std::min(profile.PreFireExtensionLimit, 1u);
-            break;
-        case ShipFactionType::RELIC:
-            profile.BaseDurationMilliseconds += 65u;
-            profile.HeavyResponse = true;
-            break;
-        case ShipFactionType::FRONTIER:
-        case ShipFactionType::XENO:
-        default:
-            break;
-        }
+        const ShipFactionFiringAnimationProfile& factionProfile = ship.FactionAnimationProfile.Firing;
+        profile.BaseDurationMilliseconds = FactionAnimationInternal::applyValueScale(profile.BaseDurationMilliseconds, factionProfile.DurationScale);
+        profile.BaseDurationMilliseconds = FactionAnimationInternal::applySignedOffset(profile.BaseDurationMilliseconds, factionProfile.DurationAdditionMilliseconds);
+        profile.ResponseStrengthPercent = FactionAnimationInternal::applyValueScale(profile.ResponseStrengthPercent, factionProfile.ResponseStrengthScale);
+        profile.PreFireExtensionLimit = FactionAnimationInternal::applyOptionalMaximum(profile.PreFireExtensionLimit, factionProfile.MaximumPreFireExtensionLimit);
+        profile.HeavyResponse = FactionAnimationInternal::applyBooleanOverride(profile.HeavyResponse, factionProfile.HeavyResponse);
 
         profile.ResponseStrengthPercent = std::clamp(profile.ResponseStrengthPercent, 60u, 135u);
         profile.BaseDurationMilliseconds = std::clamp(profile.BaseDurationMilliseconds, 150u, 420u);

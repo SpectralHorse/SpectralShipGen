@@ -104,7 +104,7 @@ namespace PixelShipGenerator
     void HullGenerator::generateBaseHull(ShipGenerationContext& context) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationConfiguration& settings = context.Settings;
+        const ExplicitShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& profile = context.Profile;
         const uint32_t imageWidth = settings.Dimensions.Width;
         const uint32_t imageHeight = settings.Dimensions.Height;
@@ -595,15 +595,15 @@ namespace PixelShipGenerator
 
         std::array<HullModifierType, 3u> priorities = { HullModifierType::BROADER_SHOULDERS, HullModifierType::SIDE_LOBES, HullModifierType::STEPPED_WING_EXTENSION };
         const auto guidanceWeight = [&](HullModifierType type)
-        {
-            switch (type)
             {
-            case HullModifierType::BROADER_SHOULDERS: return context.Profile.SilhouetteGuidanceWeights.BroaderShoulders;
-            case HullModifierType::SIDE_LOBES: return context.Profile.SilhouetteGuidanceWeights.SideLobes;
-            case HullModifierType::STEPPED_WING_EXTENSION: return context.Profile.SilhouetteGuidanceWeights.SteppedWingExtension;
-            default: return 0u;
-            }
-        };
+                switch (type)
+                {
+                case HullModifierType::BROADER_SHOULDERS: return context.Profile.SilhouetteGuidanceWeights.BroaderShoulders;
+                case HullModifierType::SIDE_LOBES: return context.Profile.SilhouetteGuidanceWeights.SideLobes;
+                case HullModifierType::STEPPED_WING_EXTENSION: return context.Profile.SilhouetteGuidanceWeights.SteppedWingExtension;
+                default: return 0u;
+                }
+            };
         std::stable_sort(priorities.begin(), priorities.end(), [&](HullModifierType a, HullModifierType b) { return guidanceWeight(a) > guidanceWeight(b); });
 
         // Faction only nudges the manner of articulation. The resolved profile remains

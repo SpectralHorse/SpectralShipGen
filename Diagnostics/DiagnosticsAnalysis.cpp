@@ -27,6 +27,7 @@ namespace PixelShipGeneratorDiagnostics
             case ShipStyle::INDUSTRIAL: return "INDUSTRIAL";
             case ShipStyle::SPEARHEAD: return "SPEARHEAD";
             case ShipStyle::DELTA: return "DELTA";
+            case ShipStyle::SHIP_STYLE_END: return "CUSTOM";
             default: return "UNKNOWN";
             }
         }
@@ -42,6 +43,7 @@ namespace PixelShipGeneratorDiagnostics
             case ShipFactionType::XENO: return "XENO";
             case ShipFactionType::CORPORATE: return "CORPORATE";
             case ShipFactionType::RELIC: return "RELIC";
+            case ShipFactionType::SHIP_FACTION_TYPE_END: return "CUSTOM";
             default: return "UNKNOWN";
             }
         }
@@ -160,13 +162,13 @@ namespace PixelShipGeneratorDiagnostics
     bool isDiagnosticsPercentagePointMetric(DiagnosticsMetric metric)
     {
         return metric == DiagnosticsMetric::HULL_RETRY_RATE_PERCENT ||
-               metric == DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT ||
-               metric == DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT ||
-               metric == DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT ||
-               metric == DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT ||
-               metric == DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT ||
-               metric == DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT ||
-               metric == DiagnosticsMetric::COMPLEXITY_UTILIZATION_PERCENT;
+            metric == DiagnosticsMetric::NEGATIVE_SPACE_ATTEMPT_RATE_PERCENT ||
+            metric == DiagnosticsMetric::NEGATIVE_SPACE_SUCCESS_RATE_PERCENT ||
+            metric == DiagnosticsMetric::LIVERY_COVERAGE_AVERAGE_PERCENT ||
+            metric == DiagnosticsMetric::LIVERY_COVERAGE_MEDIAN_PERCENT ||
+            metric == DiagnosticsMetric::LIVERY_COVERAGE_P95_PERCENT ||
+            metric == DiagnosticsMetric::LIVERY_CONNECTED_P95_PERCENT ||
+            metric == DiagnosticsMetric::COMPLEXITY_UTILIZATION_PERCENT;
     }
 
     DiagnosticsChartSeries prepareResolutionSeries(const DiagnosticsResult& result, const DiagnosticsFilter& filter, DiagnosticsMetric metric)
@@ -182,13 +184,13 @@ namespace PixelShipGeneratorDiagnostics
             if (std::find(dimensions.begin(), dimensions.end(), sample.WorkItem.Dimensions) == dimensions.end()) { dimensions.push_back(sample.WorkItem.Dimensions); }
         }
         std::sort(dimensions.begin(), dimensions.end(), [](auto a, auto b)
-        {
-            const uint64_t areaA = static_cast<uint64_t>(a.Width) * a.Height;
-            const uint64_t areaB = static_cast<uint64_t>(b.Width) * b.Height;
-            if (areaA != areaB) { return areaA < areaB; }
-            if (a.Width != b.Width) { return a.Width < b.Width; }
-            return a.Height < b.Height;
-        });
+            {
+                const uint64_t areaA = static_cast<uint64_t>(a.Width) * a.Height;
+                const uint64_t areaB = static_cast<uint64_t>(b.Width) * b.Height;
+                if (areaA != areaB) { return areaA < areaB; }
+                if (a.Width != b.Width) { return a.Width < b.Width; }
+                return a.Height < b.Height;
+            });
         for (const auto dimensionsValue : dimensions)
         {
             DiagnosticsFilter selected = filter;
@@ -203,14 +205,14 @@ namespace PixelShipGeneratorDiagnostics
     DiagnosticsChartSeries prepareStyleSeries(const DiagnosticsResult& result, const DiagnosticsFilter& filter, DiagnosticsMetric metric)
     {
         DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
-        {
-            const auto style = static_cast<PixelShipGenerator::ShipStyle>(index);
-            selected.Style = style;
-            point.Label = styleLabel(style);
-            point.Style = style;
-            point.Dimensions = selected.Dimensions;
-            point.Faction = selected.Faction;
-        });
+            {
+                const auto style = static_cast<PixelShipGenerator::ShipStyle>(index);
+                selected.Style = style;
+                point.Label = styleLabel(style);
+                point.Style = style;
+                point.Dimensions = selected.Dimensions;
+                point.Faction = selected.Faction;
+            });
         series.Label = "STYLE";
         return series;
     }
@@ -218,14 +220,14 @@ namespace PixelShipGeneratorDiagnostics
     DiagnosticsChartSeries prepareFactionSeries(const DiagnosticsResult& result, const DiagnosticsFilter& filter, DiagnosticsMetric metric)
     {
         DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
-        {
-            const auto faction = static_cast<PixelShipGenerator::ShipFactionType>(index);
-            selected.Faction = faction;
-            point.Label = factionLabel(faction);
-            point.Faction = faction;
-            point.Dimensions = selected.Dimensions;
-            point.Style = selected.Style;
-        });
+            {
+                const auto faction = static_cast<PixelShipGenerator::ShipFactionType>(index);
+                selected.Faction = faction;
+                point.Label = factionLabel(faction);
+                point.Faction = faction;
+                point.Dimensions = selected.Dimensions;
+                point.Style = selected.Style;
+            });
         series.Label = "FACTION";
         return series;
     }
@@ -300,8 +302,8 @@ namespace PixelShipGeneratorDiagnostics
         result.HasComparableData = result.MatchingDimensionCount > 0u && result.MatchingStyleCount > 0u && result.MatchingFactionCount > 0u;
         if (!result.HasComparableData) { result.Message = "No overlapping dimension/style/faction data."; }
         else if (result.MatchingDimensionCount < baselineDimensions.size() || result.MatchingDimensionCount < currentDimensions.size() ||
-                 result.MatchingStyleCount < baselineStyles.size() || result.MatchingStyleCount < currentStyles.size() ||
-                 result.MatchingFactionCount < baselineFactions.size() || result.MatchingFactionCount < currentFactions.size())
+            result.MatchingStyleCount < baselineStyles.size() || result.MatchingStyleCount < currentStyles.size() ||
+            result.MatchingFactionCount < baselineFactions.size() || result.MatchingFactionCount < currentFactions.size())
         {
             result.Message = "Partial overlap; comparison uses matching filtered groups only.";
         }

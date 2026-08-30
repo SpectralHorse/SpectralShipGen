@@ -12,6 +12,7 @@
 #include "GenerationScaleTraits.h"
 #include "PixelMask.h"
 #include "ShipGenerationSeeds.h"
+#include "ShipFactionAnimationUtils.h"
 
 namespace
 {
@@ -59,6 +60,7 @@ namespace
         bool Staggered = false;
         bool HeavyResponse = false;
         bool Responsive = false;
+        bool SquareTransitionInput = false;
     };
 
     struct LongitudinalMovementPlan
@@ -132,37 +134,13 @@ namespace
         profile.HeavyResponse = traits.HeavyResponse;
         profile.Responsive = traits.Responsive;
 
-        switch (ship.Faction)
-        {
-        case PixelShipGenerator::ShipFactionType::FRONTIER:
-            profile.Staggered = true;
-            profile.Synchronized = false;
-            break;
-        case PixelShipGenerator::ShipFactionType::MILITARY:
-            profile.Synchronized = true;
-            profile.Staggered = false;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 9u / 10u;
-            break;
-        case PixelShipGenerator::ShipFactionType::ASCENDANT:
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 4u / 5u;
-            break;
-        case PixelShipGenerator::ShipFactionType::XENO:
-            profile.Staggered = true;
-            profile.Synchronized = false;
-            profile.ExhaustVariationLimit = std::max(1u, profile.ExhaustVariationLimit);
-            break;
-        case PixelShipGenerator::ShipFactionType::CORPORATE:
-            profile.Synchronized = true;
-            profile.Staggered = false;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 4u / 5u;
-            break;
-        case PixelShipGenerator::ShipFactionType::RELIC:
-            profile.HeavyResponse = true;
-            profile.ResponseStrengthPercent = profile.ResponseStrengthPercent * 3u / 4u;
-            break;
-        default:
-            break;
-        }
+        const PixelShipGenerator::ShipFactionMovementAnimationProfile& factionProfile = ship.FactionAnimationProfile.LongitudinalMovement;
+        profile.ResponseStrengthPercent = PixelShipGenerator::FactionAnimationInternal::applyValueScale(profile.ResponseStrengthPercent, factionProfile.ResponseStrengthScale);
+        profile.Synchronized = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.Synchronized, factionProfile.Synchronized);
+        profile.Staggered = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.Staggered, factionProfile.Staggered);
+        profile.HeavyResponse = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.HeavyResponse, factionProfile.HeavyResponse);
+        profile.SquareTransitionInput = factionProfile.SquareTransitionInput;
+        profile.ExhaustVariationLimit = std::max(profile.ExhaustVariationLimit, factionProfile.MinimumExhaustVariationLimit);
 
         profile.ResponseStrengthPercent = std::clamp(profile.ResponseStrengthPercent, 40u, 120u);
         return profile;
@@ -175,16 +153,16 @@ namespace
         return (hash & 1ull) == 0ull ? 0.0 : 0.125;
     }
 
-    double sampleProfileTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LongitudinalMovementProfile& profile, double value)
+    double sampleProfileTransitionResponse(const LongitudinalMovementProfile& profile, double value)
     {
         double t = std::clamp(value, 0.0, 1.0);
-        if (ship.Faction == PixelShipGenerator::ShipFactionType::RELIC) { t *= t; }
+        if (profile.SquareTransitionInput) { t *= t; }
         if (profile.Responsive) { return easeOutCubic(t); }
         if (profile.HeavyResponse) { return smoothStep(t * t); }
         return smoothStep(t);
     }
 
-    double sampleTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LongitudinalMovementProfile& profile, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, double phaseOffset)
+    double sampleTransitionResponse(const LongitudinalMovementProfile& profile, PixelShipGenerator::ShipMovementAnimationPhase phase, double normalizedTime, double phaseOffset)
     {
         const double time = clampNormalizedTime(normalizedTime);
         const double maximumDelay = profile.Synchronized ? 0.0 : profile.Staggered ? 0.14 : 0.07;
@@ -194,7 +172,7 @@ namespace
         {
             if (time <= delay) { return 0.0; }
             const double local = (time - delay) / std::max(0.000001, 1.0 - delay);
-            return sampleProfileTransitionResponse(ship, profile, local);
+            return sampleProfileTransitionResponse(profile, local);
         }
 
         if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT)
@@ -202,7 +180,7 @@ namespace
             if (time >= 1.0) { return 0.0; }
             const double activeDuration = std::max(0.000001, 1.0 - delay);
             const double local = std::clamp(time / activeDuration, 0.0, 1.0);
-            return 1.0 - sampleProfileTransitionResponse(ship, profile, local);
+            return 1.0 - sampleProfileTransitionResponse(profile, local);
         }
 
         return 1.0;
@@ -680,7 +658,7 @@ namespace
             const double minimum = plan.Profile.HeavyResponse ? 0.76 : 0.64;
             return 1.0 - (1.0 - minimum) * activity;
         }
-        return sampleTransitionResponse(ship, plan.Profile, phase, normalizedTime, phaseOffset);
+        return sampleTransitionResponse(plan.Profile, phase, normalizedTime, phaseOffset);
     }
 
     void applyMovableGroup(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const MovableGroup& group, int32_t offsetX, int32_t offsetY)
@@ -706,7 +684,7 @@ namespace
         {
             if (parameters.EngineIndex >= ship.IdleAnimationMetadata.EngineComponents.size()) { continue; }
             const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[parameters.EngineIndex];
-            const double response = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? 1.0 : sampleTransitionResponse(ship, plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
+            const double response = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? 1.0 : sampleTransitionResponse(plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
             if (response < 0.35) { continue; }
             const uint32_t startY = component.NozzleY > 0u ? component.NozzleY - 1u : component.NozzleY;
             for (uint32_t y = startY; y <= component.NozzleY && y < ship.EngineMask.getHeight(); ++y)
@@ -737,7 +715,7 @@ namespace
             else { length = length > component.MinimumExhaustLength + variation ? length - variation : component.MinimumExhaustLength; }
             return length;
         }
-        const double response = sampleTransitionResponse(ship, plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
+        const double response = sampleTransitionResponse(plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
         return interpolateLength(component.ExhaustLength, parameters.EnteredExhaustLength, response);
     }
 
@@ -749,7 +727,7 @@ namespace
             if (parameters.EngineIndex >= ship.IdleAnimationMetadata.EngineComponents.size()) { continue; }
             const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[parameters.EngineIndex];
             const uint32_t targetLength = getEngineTargetLength(ship, component, parameters, plan, phase, normalizedTime);
-            const double response = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? 1.0 : sampleTransitionResponse(ship, plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
+            const double response = phase == PixelShipGenerator::ShipMovementAnimationPhase::SUSTAIN ? 1.0 : sampleTransitionResponse(plan.Profile, phase, normalizedTime, parameters.SustainPhaseOffset);
             redrawEngineExhaust(frame, ship, component, targetLength, plan.Type == PixelShipGenerator::ShipAnimationType::MOVE_UP, response);
         }
     }
