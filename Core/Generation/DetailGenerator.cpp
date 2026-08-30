@@ -171,7 +171,7 @@ namespace PixelShipGenerator
 
         plan.MirroredChance = 100u - std::min(100u, profile.AsymmetricDetailChance);
         if (context.MacroAsymmetry.Fulfilled) { plan.MirroredChance = plan.MirroredChance > 24u ? plan.MirroredChance - 24u : 0u; }
-        if (context.Settings.Style == ShipStyle::SPEARHEAD || context.Settings.Style == ShipStyle::DELTA) { plan.MirroredChance = std::min(100u, plan.MirroredChance + 8u); }
+        plan.MirroredChance = std::min(100u, plan.MirroredChance + context.Profile.DetailMotifMirroringBonusPercent);
 
         if (context.ScaleTraits.Tier == GenerationScaleTier::TINY) { return; }
         uint32_t secondaryChance = context.Profile.SecondaryDetailMotifChance;
@@ -227,12 +227,12 @@ namespace PixelShipGenerator
 
     GenerationSpatialRegion DetailGenerator::getPreferredMotifRegion(const ShipGenerationContext& context, ShipDetailMotifType type, bool secondary, std::mt19937_64& randomGenerator) const
     {
-        if (context.Settings.Style == ShipStyle::SPEARHEAD)
+        if (context.Profile.DetailMotifPlacementBias == ShipDetailMotifPlacementBias::AXIAL)
         {
             if (type == ShipDetailMotifType::PAIRED_VENTS || type == ShipDetailMotifType::TRIPLE_VENT_BANK || type == ShipDetailMotifType::RECESSED_SLOT) { return GenerationSpatialRegion::REAR_FUSELAGE; }
             return secondary ? GenerationSpatialRegion::FRONT_FUSELAGE : GenerationSpatialRegion::MID_FUSELAGE;
         }
-        if (context.Settings.Style == ShipStyle::DELTA && context.WingRegions.hasWings())
+        if (context.Profile.DetailMotifPlacementBias == ShipDetailMotifPlacementBias::WING_SURFACE && context.WingRegions.hasWings())
         {
             if (type == ShipDetailMotifType::PAIRED_VENTS || type == ShipDetailMotifType::TRIPLE_VENT_BANK || type == ShipDetailMotifType::RECESSED_SLOT) { return GenerationSpatialRegion::LEFT_WING_ROOT; }
             return randomUInt(randomGenerator, 0u, 99u) < 58u ? GenerationSpatialRegion::LEFT_OUTER_WING : GenerationSpatialRegion::LEFT_WING_ROOT;
@@ -326,11 +326,13 @@ namespace PixelShipGenerator
 
     bool DetailGenerator::buildMotifPixels(ShipGenerationContext& context, ShipDetailMotifType type, uint32_t x, uint32_t y, bool mirrored, std::mt19937_64& randomGenerator, std::vector<std::pair<uint32_t, uint32_t>>& pixels) const
     {
-        const bool spearhead = context.Settings.Style == ShipStyle::SPEARHEAD;
-        const bool delta = context.Settings.Style == ShipStyle::DELTA;
         bool horizontal = randomUInt(randomGenerator, 0u, 99u) < 68u;
-        if (spearhead && (type == ShipDetailMotifType::PARALLEL_SEAMS || type == ShipDetailMotifType::REPEATED_DASHES || type == ShipDetailMotifType::PAIRED_LIGHTS || type == ShipDetailMotifType::THREE_NODE_LIGHTS)) { horizontal = false; }
-        if (delta) { horizontal = true; }
+        if (context.Profile.DetailMotifOrientationBias == ShipDetailMotifOrientationBias::LONGITUDINAL &&
+            (type == ShipDetailMotifType::PARALLEL_SEAMS || type == ShipDetailMotifType::REPEATED_DASHES || type == ShipDetailMotifType::PAIRED_LIGHTS || type == ShipDetailMotifType::THREE_NODE_LIGHTS))
+        {
+            horizontal = false;
+        }
+        if (context.Profile.DetailMotifOrientationBias == ShipDetailMotifOrientationBias::LATERAL) { horizontal = true; }
 
         const auto add = [&](int32_t px, int32_t py) { return addSurfaceDetailCandidatePixel(context, pixels, px, py, mirrored); };
         if (type == ShipDetailMotifType::PAIRED_VENTS || type == ShipDetailMotifType::TRIPLE_VENT_BANK || type == ShipDetailMotifType::PARALLEL_SEAMS)
@@ -380,7 +382,7 @@ namespace PixelShipGenerator
         {
             uint32_t slotWidth = std::max(3u, GenerationMath::scalePixelsFrom64(4u, context.Ship.HullMask.getWidth()));
             uint32_t slotHeight = std::max(2u, GenerationMath::scalePixelsFrom64(2u, context.Ship.HullMask.getHeight()));
-            if (spearhead) { std::swap(slotWidth, slotHeight); }
+            if (context.Profile.DetailMotifOrientationBias == ShipDetailMotifOrientationBias::LONGITUDINAL) { std::swap(slotWidth, slotHeight); }
             for (uint32_t oy = 0u; oy < slotHeight; ++oy)
             {
                 for (uint32_t ox = 0u; ox < slotWidth; ++ox)

@@ -110,7 +110,7 @@ namespace PixelShipGenerator
         }
 
         ShipGenerationContext context(settings, profile, seeds, debugInfo, calibrationSettings);
-        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Style, settings.Faction, profile, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Faction, profile, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
 
         HullGenerator hullGenerator;
         HullLayerGenerator hullLayerGenerator;

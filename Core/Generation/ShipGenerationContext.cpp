@@ -8,7 +8,7 @@
 namespace PixelShipGenerator
 {
     ShipGenerationContext::ShipGenerationContext(const ShipGenerationSettings& settings, const ShipGenerationProfile& profile, const ShipGenerationSeeds& seeds, ShipGenerationDebugInfo* debugInfo, const GenerationCalibrationSettings* calibrationSettings)
-        : Settings(settings), Profile(profile), ScaleTraits(GenerationScaleTraits::fromDimensions(settings.Dimensions)), ComplexityBudget(GenerationComplexityBudget::create(ScaleTraits, settings.Style, settings.Faction, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)), Seeds(seeds), DomainSeeds(resolveGenerationDomainSeeds(seeds, settings.DomainSeedOverrides, settings.RandomStreamMode)), DebugInfo(debugInfo), CalibrationSettings(calibrationSettings), m_LegacyStructureRandomGenerator(seeds.Structure), m_LegacyPaletteRandomGenerator(seeds.Palette), m_LegacyDetailRandomGenerator(seeds.Details), m_LegacyAttachmentRandomGenerator(seeds.Attachments), m_SavedCalibrationRandomGenerator(0u)
+        : Settings(settings), Profile(profile), ScaleTraits(GenerationScaleTraits::fromDimensions(settings.Dimensions)), ComplexityBudget(GenerationComplexityBudget::create(ScaleTraits, profile, settings.Faction, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)), Seeds(seeds), DomainSeeds(resolveGenerationDomainSeeds(seeds, settings.DomainSeedOverrides, settings.RandomStreamMode)), DebugInfo(debugInfo), CalibrationSettings(calibrationSettings), m_LegacyStructureRandomGenerator(seeds.Structure), m_LegacyPaletteRandomGenerator(seeds.Palette), m_LegacyDetailRandomGenerator(seeds.Details), m_LegacyAttachmentRandomGenerator(seeds.Attachments), m_SavedCalibrationRandomGenerator(0u)
     {
         Ship.reset(settings.Dimensions.Width, settings.Dimensions.Height, seeds);
         Ship.DomainSeeds = DomainSeeds;
@@ -87,7 +87,7 @@ namespace PixelShipGenerator
 
     void ShipGenerationContext::resetComplexityBudget()
     {
-        ComplexityBudget = GenerationComplexityBudget::create(ScaleTraits, Settings.Style, Settings.Faction, Settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        ComplexityBudget = GenerationComplexityBudget::create(ScaleTraits, Profile, Settings.Faction, Settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
         updateComplexityBudgetDebugInfo();
     }
 
@@ -107,7 +107,7 @@ namespace PixelShipGenerator
 
     void ShipGenerationContext::resetSpatialBudget()
     {
-        SpatialBudget.initialize(Ship.HullMask, WingRegions.WingMask, WingRegions.WingRootMask, WingRegions.OuterWingMask, ScaleTraits, Settings.Style);
+        SpatialBudget.initialize(Ship.HullMask, WingRegions.WingMask, WingRegions.WingRootMask, WingRegions.OuterWingMask, ScaleTraits, Profile);
         updateSpatialBudgetDebugInfo();
     }
 

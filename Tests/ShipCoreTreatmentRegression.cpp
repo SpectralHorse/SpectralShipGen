@@ -108,7 +108,7 @@ namespace
         const ShipGenerationProfile& profile = getShipGenerationProfile(settings.Style);
         ShipGenerationDebugInfo debug;
         ShipGenerationContext context(settings, profile, seeds, &debug);
-        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Style, settings.Faction, profile);
+        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Faction, profile);
         HullGenerator hullGenerator;
         CockpitGenerator cockpitGenerator;
         EngineGenerator engineGenerator;

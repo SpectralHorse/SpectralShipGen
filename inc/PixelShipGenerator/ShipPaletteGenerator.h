@@ -11,6 +11,6 @@ namespace PixelShipGenerator
     class ShipPaletteGenerator
     {
     public:
-        static ShipPalette generate(uint64_t paletteSeed, ShipStyle style, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast = true);
+        static ShipPalette generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast = true);
     };
 }

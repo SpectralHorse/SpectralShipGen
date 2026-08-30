@@ -14,38 +14,15 @@ namespace PixelShipGenerator
     {
         constexpr uint32_t MaximumPlacementAttempts = 8u;
 
-        uint32_t getStyleChance(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SLEEK: return 58u;
-            case ShipStyle::FIGHTER: return 70u;
-            case ShipStyle::HEAVY: return 82u;
-            case ShipStyle::INDUSTRIAL: return 84u;
-            case ShipStyle::SPEARHEAD: return 90u;
-            case ShipStyle::DELTA: return 90u;
-            default: return 68u;
-            }
-        }
-
         uint32_t getCoreRegionWidthPercent(const ShipGenerationContext& context)
         {
-            switch (context.Settings.Style)
+            const uint32_t divisor = std::max(1u, context.Profile.CoreRegionWidthHorizontalCapacityDivisor);
+            uint32_t value = context.Profile.CoreRegionWidthBasePercent + context.ScaleTraits.HorizontalCapacity / divisor;
+            if (context.Profile.CoreRegionWidthMaximumPercent != 0u)
             {
-            case ShipStyle::SPEARHEAD: return std::min(68u, 46u + context.ScaleTraits.HorizontalCapacity / 7u);
-            case ShipStyle::DELTA: return std::min(92u, 72u + context.ScaleTraits.HorizontalCapacity / 5u);
-            default: return 58u + context.ScaleTraits.HorizontalCapacity / 5u;
+                value = std::min(value, context.Profile.CoreRegionWidthMaximumPercent);
             }
-        }
-
-        uint32_t getRaisedCorePlateWidthPercent(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SPEARHEAD: return 72u;
-            case ShipStyle::DELTA: return 150u;
-            default: return 100u;
-            }
+            return value;
         }
 
         uint32_t getFactionChancePercent(ShipFactionType faction)
@@ -106,7 +83,7 @@ namespace PixelShipGenerator
         }
 
         const uint32_t scaleChance = 35u + context.ScaleTraits.ShadingComplexity * 65u / 100u;
-        uint32_t chance = getStyleChance(context.Settings.Style) * scaleChance / 100u;
+        uint32_t chance = context.Profile.CoreTreatmentChance * scaleChance / 100u;
         chance = std::min(94u, chance * getFactionChancePercent(context.Settings.Faction) / 100u);
         if (context.VisualHierarchy.InfluenceEnabled)
         {
@@ -127,7 +104,7 @@ namespace PixelShipGenerator
         uint32_t targetCount = 1u;
         if (context.ScaleTraits.ShadingComplexity >= 55u && context.ScaleTraits.MinimumDimension >= 44u && context.getGenerationRandomUInt(GenerationDomain::HULL_LAYERS, 0u, 99u) < 42u) { targetCount = 2u; }
         if (context.ScaleTraits.ShadingComplexity >= 88u && context.ScaleTraits.MinimumDimension >= 96u && context.getGenerationRandomUInt(GenerationDomain::HULL_LAYERS, 0u, 99u) < 24u) { targetCount = 3u; }
-        if (context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD) { targetCount = std::min(targetCount, 2u); }
+        targetCount = std::min(targetCount, context.Profile.MaximumCoreTreatments);
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.isPrimary(ShipVisualAnchorType::CENTRAL_CORE) && context.ScaleTraits.Tier >= GenerationScaleTier::MEDIUM)
         {
             targetCount = std::min(3u, std::max(2u, targetCount));
@@ -239,14 +216,14 @@ namespace PixelShipGenerator
         uint64_t totalWeight = 0u;
         for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
         {
-            if (!used[index]) { totalWeight += getTreatmentWeight(context.Settings.Style, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index)); }
+            if (!used[index]) { totalWeight += getTreatmentWeight(context.Profile, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index)); }
         }
         if (totalWeight == 0u) { return ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END; }
         uint64_t roll = context.getGenerationRandomUInt64(GenerationDomain::HULL_LAYERS, 0u, totalWeight - 1u);
         for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
         {
             if (used[index]) { continue; }
-            const uint32_t weight = getTreatmentWeight(context.Settings.Style, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index));
+            const uint32_t weight = getTreatmentWeight(context.Profile, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index));
             if (roll < weight) { return static_cast<ShipCoreTreatmentType>(index); }
             roll -= weight;
         }
@@ -315,7 +292,7 @@ namespace PixelShipGenerator
         const uint32_t width = context.Ship.HullMask.getWidth();
         const uint32_t leftCenter = (width - 1u) / 2u;
         const uint32_t baseHalf = std::max(1u, GenerationMath::scaleHorizontalPixelsFrom64(4u + context.ScaleTraits.HorizontalCapacity / 30u, context.Settings.Dimensions));
-        const uint32_t half = GenerationMath::scaleByPercent(baseHalf, getRaisedCorePlateWidthPercent(context.Settings.Style));
+        const uint32_t half = GenerationMath::scaleByPercent(baseHalf, context.Profile.RaisedCorePlateWidthPercent);
         for (uint32_t y = startY; y <= endY; ++y)
         {
             const uint32_t taper = std::min((y - startY) / std::max(1u, GenerationMath::scaleVerticalPixelsFrom64(5u, context.Settings.Dimensions)), half - 1u);
@@ -450,19 +427,16 @@ namespace PixelShipGenerator
         return type == ShipCoreTreatmentType::RAISED_CORE_PLATE || type == ShipCoreTreatmentType::CENTRAL_SPINE;
     }
 
-    uint32_t CoreTreatmentGenerator::getTreatmentWeight(ShipStyle style, ShipFactionType faction, ShipCoreTreatmentType type) const
+    uint32_t CoreTreatmentGenerator::getTreatmentWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipCoreTreatmentType type) const
     {
-        std::array<uint32_t, 6u> weights = { 20u, 18u, 18u, 14u, 16u, 14u };
-        switch (style)
-        {
-        case ShipStyle::SLEEK: weights = { 28u, 22u, 12u, 8u, 20u, 10u }; break;
-        case ShipStyle::FIGHTER: weights = { 22u, 22u, 18u, 12u, 16u, 10u }; break;
-        case ShipStyle::HEAVY: weights = { 18u, 16u, 30u, 14u, 16u, 6u }; break;
-        case ShipStyle::INDUSTRIAL: weights = { 14u, 14u, 18u, 22u, 16u, 16u }; break;
-        case ShipStyle::SPEARHEAD: weights = { 58u, 22u, 14u, 6u, 46u, 22u }; break;
-        case ShipStyle::DELTA: weights = { 12u, 32u, 58u, 34u, 12u, 8u }; break;
-        default: break;
-        }
+        std::array<uint32_t, 6u> weights = {
+            profile.CoreTreatmentWeights.CentralSpine,
+            profile.CoreTreatmentWeights.CockpitSurround,
+            profile.CoreTreatmentWeights.RaisedCorePlate,
+            profile.CoreTreatmentWeights.LateralRecesses,
+            profile.CoreTreatmentWeights.LongitudinalArmorBand,
+            profile.CoreTreatmentWeights.CoreChannel
+        };
         if (faction == ShipFactionType::ASCENDANT) { weights[0] += 6u; weights[5] += 8u; weights[3] = std::max(1u, weights[3] - 5u); }
         else if (faction == ShipFactionType::FRONTIER) { weights[2] += 4u; weights[3] += 4u; }
         else if (faction == ShipFactionType::MILITARY) { weights[1] += 5u; weights[4] += 5u; }

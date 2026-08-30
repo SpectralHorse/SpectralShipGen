@@ -138,7 +138,7 @@ namespace PixelShipGenerator
         }
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipStyle style, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
     {
         const ShipFactionPaletteProfile& factionProfile = getShipFactionPaletteProfile(faction);
         std::mt19937_64 randomGenerator(paletteSeed);

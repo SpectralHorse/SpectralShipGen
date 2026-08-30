@@ -12,6 +12,7 @@
 namespace PixelShipGenerator
 {
     enum class ShipStyle : uint32_t;
+    struct ShipGenerationProfile;
 
     enum class GenerationSpatialRegion : uint32_t
     {
@@ -42,6 +43,8 @@ namespace PixelShipGenerator
 
         void reset();
         void initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits);
+        void initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile);
+        // Compatibility/preset convenience. Static generation should pass an already-resolved profile.
         void initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits, ShipStyle style);
 
         GenerationSpatialRegion getRegionAt(uint32_t x, uint32_t y) const;

@@ -31,6 +31,7 @@ namespace PixelShipGeneratorTests
     int runCockpitGeometryRegression();
     int runCoreTreatmentRegression();
     int runStyleExpansionRegression();
+    int runStaticProfileRoutingRegression();
     int runFactionExpansionRegression();
     int runStructuralNegativeSpaceRegression();
     int runSilhouetteArticulationRegression();

@@ -13,20 +13,6 @@ namespace PixelShipGenerator
             return static_cast<std::size_t>(category);
         }
 
-        uint32_t getStyleBudgetPercent(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SLEEK: return 82u;
-            case ShipStyle::FIGHTER: return 100u;
-            case ShipStyle::HEAVY: return 108u;
-            case ShipStyle::INDUSTRIAL: return 112u;
-            case ShipStyle::SPEARHEAD: return 98u;
-            case ShipStyle::DELTA: return 106u;
-            default: return 100u;
-            }
-        }
-
         uint32_t getFactionBudgetPercent(ShipFactionType faction)
         {
             switch (faction)
@@ -41,21 +27,11 @@ namespace PixelShipGenerator
             }
         }
 
-        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(ShipStyle style, ShipFactionType faction, bool reserveCockpitStructure)
+        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure)
         {
             if (!reserveCockpitStructure)
             {
-                std::array<int32_t, GenerationComplexityBudget::CategoryCount> legacyWeights = { 16, 0, 16, 20, 21, 12, 15 };
-                switch (style)
-                {
-                case ShipStyle::SLEEK: legacyWeights = { 15, 0, 14, 20, 22, 10, 19 }; break;
-                case ShipStyle::FIGHTER: legacyWeights = { 14, 0, 15, 18, 30, 10, 13 }; break;
-                case ShipStyle::HEAVY: legacyWeights = { 15, 0, 22, 26, 22, 7, 8 }; break;
-                case ShipStyle::INDUSTRIAL: legacyWeights = { 14, 0, 19, 18, 16, 19, 14 }; break;
-                case ShipStyle::SPEARHEAD: legacyWeights = { 16, 0, 18, 24, 27, 5, 10 }; break;
-                case ShipStyle::DELTA: legacyWeights = { 16, 0, 27, 22, 23, 5, 7 }; break;
-                default: break;
-                }
+                std::array<int32_t, GenerationComplexityBudget::CategoryCount> legacyWeights = profile.LegacyComplexityCategoryWeights.toArray();
 
                 switch (faction)
                 {
@@ -104,18 +80,7 @@ namespace PixelShipGenerator
                 return legacyWeights;
             }
 
-            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = { 15, 10, 15, 19, 20, 10, 11 };
-
-            switch (style)
-            {
-            case ShipStyle::SLEEK: weights = { 14, 10, 13, 18, 22, 8, 15 }; break;
-            case ShipStyle::FIGHTER: weights = { 13, 10, 14, 17, 28, 8, 10 }; break;
-            case ShipStyle::HEAVY: weights = { 13, 15, 20, 24, 19, 5, 4 }; break;
-            case ShipStyle::INDUSTRIAL: weights = { 12, 14, 17, 17, 14, 16, 10 }; break;
-            case ShipStyle::SPEARHEAD: weights = { 15, 14, 18, 22, 24, 3, 4 }; break;
-            case ShipStyle::DELTA: weights = { 15, 14, 25, 18, 22, 3, 3 }; break;
-            default: break;
-            }
+            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = profile.ComplexityCategoryWeights.toArray();
 
             switch (faction)
             {
@@ -173,16 +138,16 @@ namespace PixelShipGenerator
         }
     }
 
-    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, ShipStyle style, ShipFactionType faction, bool reserveCockpitStructure)
+    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure)
     {
         GenerationComplexityBudget budget;
         const uint32_t scaleCapacity = (scaleTraits.MajorFeatureCapacity * 2u + scaleTraits.DetailComplexity + scaleTraits.AttachmentComplexity + scaleTraits.SmallFeatureCapacity + 2u) / 5u;
         uint64_t totalBudget = 38u + (static_cast<uint64_t>(scaleCapacity) * 82u + 50u) / 100u;
-        totalBudget = (totalBudget * getStyleBudgetPercent(style) + 50u) / 100u;
+        totalBudget = (totalBudget * profile.ComplexityBudgetPercent + 50u) / 100u;
         totalBudget = (totalBudget * getFactionBudgetPercent(faction) + 50u) / 100u;
         budget.m_InitialBudget = static_cast<uint32_t>(std::clamp<uint64_t>(totalBudget, 28u, 132u));
 
-        const auto weights = getCategoryWeights(style, faction, reserveCockpitStructure);
+        const auto weights = getCategoryWeights(profile, faction, reserveCockpitStructure);
         uint32_t totalWeight = 0u;
         for (int32_t weight : weights) { totalWeight += static_cast<uint32_t>(weight); }
 
@@ -200,6 +165,11 @@ namespace PixelShipGenerator
         }
 
         return budget;
+    }
+
+    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, ShipStyle style, ShipFactionType faction, bool reserveCockpitStructure)
+    {
+        return create(scaleTraits, getShipGenerationProfile(style), faction, reserveCockpitStructure);
     }
 
     bool GenerationComplexityBudget::canAfford(GenerationComplexityCategory category, uint32_t cost) const

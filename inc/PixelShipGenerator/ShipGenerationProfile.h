@@ -2,6 +2,8 @@
 
 #include "ShipAttachmentProfile.h"
 #include "ShipCockpitType.h"
+#include "ShipCoreTreatmentType.h"
+#include "ShipHullLayerType.h"
 #include "ShipSurfaceDetailProfile.h"
 #include "ShipMajorFeatureType.h"
 #include "ShipStructuralNegativeSpaceType.h"
@@ -10,6 +12,7 @@
 #include "ShipLiveryType.h"
 #include "ShipWeaponType.h"
 
+#include <array>
 #include <cstdint>
 
 namespace PixelShipGenerator
@@ -225,6 +228,115 @@ namespace PixelShipGenerator
         }
     };
 
+    struct ShipComplexityCategoryWeights
+    {
+        int32_t Silhouette = 13;
+        int32_t CockpitStructure = 10;
+        int32_t HullLayer = 14;
+        int32_t MajorFeature = 17;
+        int32_t LargeWeapon = 28;
+        int32_t Attachment = 8;
+        int32_t Detail = 10;
+
+        std::array<int32_t, 7u> toArray() const
+        {
+            return { Silhouette, CockpitStructure, HullLayer, MajorFeature, LargeWeapon, Attachment, Detail };
+        }
+    };
+
+    struct ShipSpatialCapacityBias
+    {
+        int32_t Nose = 0;
+        int32_t FrontFuselage = 0;
+        int32_t MidFuselage = 0;
+        int32_t RearFuselage = 0;
+        int32_t WingRoot = 0;
+        int32_t OuterWing = 0;
+    };
+
+    struct ShipCoreTreatmentWeights
+    {
+        uint32_t CentralSpine = 22u;
+        uint32_t CockpitSurround = 22u;
+        uint32_t RaisedCorePlate = 18u;
+        uint32_t LateralRecesses = 12u;
+        uint32_t LongitudinalArmorBand = 16u;
+        uint32_t CoreChannel = 10u;
+
+        uint32_t getWeight(ShipCoreTreatmentType type) const
+        {
+            switch (type)
+            {
+            case ShipCoreTreatmentType::CENTRAL_SPINE: return CentralSpine;
+            case ShipCoreTreatmentType::COCKPIT_SURROUND: return CockpitSurround;
+            case ShipCoreTreatmentType::RAISED_CORE_PLATE: return RaisedCorePlate;
+            case ShipCoreTreatmentType::LATERAL_RECESSES: return LateralRecesses;
+            case ShipCoreTreatmentType::LONGITUDINAL_ARMOR_BAND: return LongitudinalArmorBand;
+            case ShipCoreTreatmentType::CORE_CHANNEL: return CoreChannel;
+            default: return 0u;
+            }
+        }
+    };
+
+    struct ShipHullLayerWeights
+    {
+        uint32_t CentralDorsalPlate = 75u;
+        uint32_t ForwardArmor = 85u;
+        uint32_t WingArmor = 90u;
+        uint32_t ShoulderArmor = 90u;
+        uint32_t RearEngineCover = 55u;
+
+        uint32_t getWeight(ShipHullLayerType type) const
+        {
+            switch (type)
+            {
+            case ShipHullLayerType::CENTRAL_DORSAL_PLATE: return CentralDorsalPlate;
+            case ShipHullLayerType::FORWARD_ARMOR: return ForwardArmor;
+            case ShipHullLayerType::WING_ARMOR: return WingArmor;
+            case ShipHullLayerType::SHOULDER_ARMOR: return ShoulderArmor;
+            case ShipHullLayerType::REAR_ENGINE_COVER: return RearEngineCover;
+            default: return 0u;
+            }
+        }
+    };
+
+    struct ShipSilhouetteGuidanceWeights
+    {
+        uint32_t BroaderShoulders = 3u;
+        uint32_t SideLobes = 1u;
+        uint32_t SteppedWingExtension = 2u;
+    };
+
+    struct ShipMacroAsymmetryCategoryWeights
+    {
+        uint32_t HullLayer = 25u;
+        uint32_t LargeWeapon = 50u;
+        uint32_t Attachment = 25u;
+
+        std::array<uint32_t, 3u> toArray() const { return { HullLayer, LargeWeapon, Attachment }; }
+    };
+
+    enum class ShipDetailMotifPlacementBias : uint32_t
+    {
+        DEFAULT = 0u,
+        AXIAL,
+        WING_SURFACE
+    };
+
+    enum class ShipDetailMotifOrientationBias : uint32_t
+    {
+        DEFAULT = 0u,
+        LONGITUDINAL,
+        LATERAL
+    };
+
+    enum class ShipHullSurfaceTone : uint32_t
+    {
+        BASE = 0u,
+        SECONDARY,
+        HIGHLIGHT
+    };
+
     struct ShipVisualAnchorWeights
     {
         uint32_t Silhouette = 70u;
@@ -261,6 +373,17 @@ namespace PixelShipGenerator
     {
         ShipVisualAnchorWeights VisualAnchorWeights;
         uint32_t VisualSecondaryAnchorChance = 32u;
+        bool VisualHierarchyEnabled = true;
+        bool HullLayerHierarchyUsesWingRoot = false;
+        bool WeaponHierarchyUsesWingRoot = true;
+
+        // Global complexity/spatial capacity policy. Built-in styles resolve
+        // these once as preset data; downstream static stages consume them
+        // without consulting ShipStyle identity.
+        uint32_t ComplexityBudgetPercent = 100u;
+        ShipComplexityCategoryWeights ComplexityCategoryWeights;
+        ShipComplexityCategoryWeights LegacyComplexityCategoryWeights = { 14, 0, 15, 18, 30, 10, 13 };
+        ShipSpatialCapacityBias SpatialCapacityBias;
 
         // Canvas-relative longitudinal occupancy. Existing styles keep the
         // original 8-13% padding range; styles can bias toward longer/shorter
@@ -312,6 +435,14 @@ namespace PixelShipGenerator
         uint32_t SilhouetteArticulationTarget = 3u;
         uint32_t SilhouetteMaximumStableRunPercent = 50u;
         uint32_t SilhouetteConvexFillTriggerPercent = 65u;
+        bool SilhouetteGuidanceEnabled = true;
+        bool SilhouetteWeakArticulationGuidanceEnabled = true;
+        ShipSilhouetteGuidanceWeights SilhouetteGuidanceWeights;
+        bool SilhouetteProfileValidationEnabled = true;
+        bool AllowTinyBroadSilhouetteLegacyValidationException = false;
+        uint32_t TinySilhouetteExtraWidthRelaxationPercent = 0u;
+        bool CleanAxialTaperArticulationExemption = false;
+        bool WingWedgeArticulationExemption = false;
 
         // Deliberate structural voids cut during Hull generation. These use
         // the existing SILHOUETTE complexity budget and are preserved for
@@ -320,6 +451,20 @@ namespace PixelShipGenerator
         uint32_t MaximumStructuralNegativeSpaceStructures = 1u;
         uint32_t StructuralNegativeSpaceScalePercent = 100u;
         ShipStructuralNegativeSpaceWeights StructuralNegativeSpaceWeights;
+        UIntRange RearForkStartPercent = { 68u, 80u };
+
+        // Core-treatment and hull-layer vocabulary/geometry.
+        uint32_t CoreTreatmentChance = 70u;
+        uint32_t CoreRegionWidthBasePercent = 58u;
+        uint32_t CoreRegionWidthHorizontalCapacityDivisor = 5u;
+        uint32_t CoreRegionWidthMaximumPercent = 0u; // 0 = no additional cap
+        uint32_t RaisedCorePlateWidthPercent = 100u;
+        uint32_t MaximumCoreTreatments = 3u;
+        ShipCoreTreatmentWeights CoreTreatmentWeights;
+
+        uint32_t HullLayerChance = 62u;
+        uint32_t MaximumHullLayers = 3u;
+        ShipHullLayerWeights HullLayerWeights;
 
         UIntRange CockpitStartPercent = { 14u, 38u };
         uint32_t CockpitHeightPercent = 100u;
@@ -362,6 +507,9 @@ namespace PixelShipGenerator
         uint32_t SecondaryDetailMotifChance = 30u;
         uint32_t DetailMotifRepeatPercent = 100u;
         ShipDetailMotifWeights DetailMotifWeights;
+        uint32_t DetailMotifMirroringBonusPercent = 0u;
+        ShipDetailMotifPlacementBias DetailMotifPlacementBias = ShipDetailMotifPlacementBias::DEFAULT;
+        ShipDetailMotifOrientationBias DetailMotifOrientationBias = ShipDetailMotifOrientationBias::DEFAULT;
 
         uint32_t AccentPanelWeight = 40u;
         uint32_t AccentStripeWeight = 30u;
@@ -382,6 +530,8 @@ namespace PixelShipGenerator
         uint32_t MaximumMaterialZones = 3u;
         uint32_t MaterialSecondaryContrastPercent = 100u;
         ShipMaterialZoneWeights MaterialZoneWeights;
+        bool MaterialWingSurfaceUsesFullWing = true;
+        uint32_t MaterialAxialBandWidthPercent = 30u;
 
         // Large procedural graphic markings. Geometry is owned by the DETAILS
         // domain, while Palette rerolls only recolor the generated masks.
@@ -400,9 +550,16 @@ namespace PixelShipGenerator
         uint32_t PaletteAccentSaturationPercent = 100u;
         uint32_t PaletteEmissiveValuePercent = 100u;
         uint32_t SecondaryHullToneCoveragePercent = 8u;
+        ShipHullSurfaceTone CoreRaisedSurfaceTone = ShipHullSurfaceTone::SECONDARY;
+        ShipHullSurfaceTone CentralDorsalPlateTone = ShipHullSurfaceTone::SECONDARY;
+        bool AxialRidgeUsesEdgeHighlight = false;
 
         // Occasional deliberate component-level macro asymmetry.
         uint32_t MacroAsymmetryChance = 10u;
+        ShipMacroAsymmetryCategoryWeights MacroAsymmetryCategoryWeights;
+        uint32_t MacroAsymmetryOuterRegionChance = 62u;
+        uint32_t MacroAsymmetryWingRootRegionChance = 60u;
+        uint32_t MacroAsymmetryVisualWeightPercent = 100u;
 
         // Detailing
         SupplementalSurfaceDetailWeights SupplementalDetailWeights;

@@ -15,20 +15,6 @@ namespace PixelShipGenerator
     {
         constexpr uint32_t MaximumHullLayerPlacementAttempts = 8u;
 
-        uint32_t getStyleLayerChance(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SLEEK: return 48u;
-            case ShipStyle::FIGHTER: return 62u;
-            case ShipStyle::HEAVY: return 78u;
-            case ShipStyle::INDUSTRIAL: return 72u;
-            case ShipStyle::SPEARHEAD: return 68u;
-            case ShipStyle::DELTA: return 84u;
-            default: return 60u;
-            }
-        }
-
         uint32_t getFactionLayerChancePercent(ShipFactionType faction)
         {
             switch (faction)
@@ -76,7 +62,7 @@ namespace PixelShipGenerator
         }
 
         const uint32_t scaleChance = 22u + (context.ScaleTraits.MajorFeatureCapacity * 78u + 50u) / 100u;
-        uint32_t generationChance = static_cast<uint32_t>((static_cast<uint64_t>(getStyleLayerChance(context.Settings.Style)) * scaleChance + 50u) / 100u);
+        uint32_t generationChance = static_cast<uint32_t>((static_cast<uint64_t>(context.Profile.HullLayerChance) * scaleChance + 50u) / 100u);
         generationChance = static_cast<uint32_t>((static_cast<uint64_t>(generationChance) * getFactionLayerChancePercent(context.Settings.Faction) + 50u) / 100u);
         if (context.VisualHierarchy.InfluenceEnabled)
         {
@@ -104,7 +90,7 @@ namespace PixelShipGenerator
         uint32_t maximumLayers = 1u;
         if (context.ScaleTraits.MajorFeatureCapacity >= 42u) { maximumLayers = 2u; }
         if (context.ScaleTraits.MajorFeatureCapacity >= 82u) { maximumLayers = 3u; }
-        if (context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD) { maximumLayers = std::min(maximumLayers, 2u); }
+        maximumLayers = std::min(maximumLayers, context.Profile.MaximumHullLayers);
         if (context.Settings.Faction == ShipFactionType::RELIC) { maximumLayers = std::min(maximumLayers, 2u); }
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.isPrimary(ShipVisualAnchorType::HULL_LAYERS) && context.ScaleTraits.Tier >= GenerationScaleTier::MEDIUM)
         {
@@ -202,7 +188,7 @@ namespace PixelShipGenerator
             if (type == ShipHullLayerType::SHOULDER_ARMOR && !context.WingRegions.hasWings() && context.ScaleTraits.HorizontalCapacity < 35u) { continue; }
             const uint32_t cost = getLayerComplexityCost(type);
             if (!context.ComplexityBudget.canAfford(GenerationComplexityCategory::HULL_LAYER, cost)) { continue; }
-            const uint64_t weight = getLayerWeight(context.Settings.Style, context.Settings.Faction, type);
+            const uint64_t weight = getLayerWeight(context.Profile, context.Settings.Faction, type);
             weights[index] = weight;
             totalWeight += weight;
         }
@@ -529,19 +515,15 @@ namespace PixelShipGenerator
         }
     }
 
-    uint32_t HullLayerGenerator::getLayerWeight(ShipStyle style, ShipFactionType faction, ShipHullLayerType type) const
+    uint32_t HullLayerGenerator::getLayerWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipHullLayerType type) const
     {
-        std::array<uint32_t, static_cast<std::size_t>(ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END)> weights = { 70u, 70u, 65u, 60u, 55u };
-        switch (style)
-        {
-        case ShipStyle::SLEEK: weights = { 105u, 90u, 45u, 35u, 45u }; break;
-        case ShipStyle::FIGHTER: weights = { 75u, 85u, 90u, 90u, 55u }; break;
-        case ShipStyle::HEAVY: weights = { 85u, 110u, 90u, 105u, 90u }; break;
-        case ShipStyle::INDUSTRIAL: weights = { 55u, 75u, 85u, 95u, 110u }; break;
-        case ShipStyle::SPEARHEAD: weights = { 165u, 105u, 35u, 45u, 55u }; break;
-        case ShipStyle::DELTA: weights = { 65u, 80u, 185u, 190u, 70u }; break;
-        default: break;
-        }
+        std::array<uint32_t, static_cast<std::size_t>(ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END)> weights = {
+            profile.HullLayerWeights.CentralDorsalPlate,
+            profile.HullLayerWeights.ForwardArmor,
+            profile.HullLayerWeights.WingArmor,
+            profile.HullLayerWeights.ShoulderArmor,
+            profile.HullLayerWeights.RearEngineCover
+        };
 
         switch (faction)
         {

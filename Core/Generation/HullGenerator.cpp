@@ -647,11 +647,9 @@ namespace PixelShipGenerator
 
     void HullGenerator::applySilhouetteGuidance(ShipGenerationContext& context, const std::array<bool, static_cast<std::size_t>(HullModifierType::HULL_MODIFIER_TYPE_END)>& selectedModifiers) const
     {
-        // SLEEK intentionally permits very clean profiles, while SPEARHEAD is
-        // regression-protected because its current axial language is already
-        // successful. Other styles can receive one extra existing additive
-        // modifier when their generated macro-form is clearly under-articulated.
-        if (context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD)
+        // Profiles may deliberately opt out of additive silhouette guidance
+        // when their authored grammar already relies on a clean macro-form.
+        if (!context.Profile.SilhouetteGuidanceEnabled)
         {
             return;
         }
@@ -661,31 +659,28 @@ namespace PixelShipGenerator
         const bool underusesLateralCanvas = metrics.NormalizedWidthPercent < context.Profile.MinimumSilhouetteWidthPercent;
         const bool selectedSubtractiveArticulation = selectedModifiers[static_cast<std::size_t>(HullModifierType::NARROW_WAIST)] || selectedModifiers[static_cast<std::size_t>(HullModifierType::WING_CUTOUT)] || selectedModifiers[static_cast<std::size_t>(HullModifierType::SPLIT_NOSE)];
         const bool genericFormRisk = metrics.BoundingFillPercent + 8u >= context.Profile.SilhouetteConvexFillTriggerPercent || metrics.LongestStableWidthRunPercent > context.Profile.SilhouetteMaximumStableRunPercent;
-        const bool weakArticulation = context.Settings.Style != ShipStyle::DELTA && !selectedSubtractiveArticulation && metrics.ArticulationCount <= targetArticulation && metrics.InteriorContractionPercent < 8u && metrics.ShoulderProminencePercent < 8u && genericFormRisk;
+        const bool weakArticulation = context.Profile.SilhouetteWeakArticulationGuidanceEnabled && !selectedSubtractiveArticulation && metrics.ArticulationCount <= targetArticulation && metrics.InteriorContractionPercent < 8u && metrics.ShoulderProminencePercent < 8u && genericFormRisk;
 
         if (!underusesLateralCanvas && !weakArticulation)
         {
             return;
         }
 
-        std::array<HullModifierType, 3u> priorities = { HullModifierType::BROADER_SHOULDERS, HullModifierType::STEPPED_WING_EXTENSION, HullModifierType::SIDE_LOBES };
-        switch (context.Settings.Style)
+        std::array<HullModifierType, 3u> priorities = { HullModifierType::BROADER_SHOULDERS, HullModifierType::SIDE_LOBES, HullModifierType::STEPPED_WING_EXTENSION };
+        const auto guidanceWeight = [&](HullModifierType type)
         {
-        case ShipStyle::HEAVY:
-            priorities = { HullModifierType::BROADER_SHOULDERS, HullModifierType::SIDE_LOBES, HullModifierType::STEPPED_WING_EXTENSION };
-            break;
-        case ShipStyle::INDUSTRIAL:
-            priorities = { HullModifierType::STEPPED_WING_EXTENSION, HullModifierType::SIDE_LOBES, HullModifierType::BROADER_SHOULDERS };
-            break;
-        case ShipStyle::DELTA:
-            priorities = { HullModifierType::BROADER_SHOULDERS, HullModifierType::STEPPED_WING_EXTENSION, HullModifierType::SIDE_LOBES };
-            break;
-        default:
-            break;
-        }
+            switch (type)
+            {
+            case HullModifierType::BROADER_SHOULDERS: return context.Profile.SilhouetteGuidanceWeights.BroaderShoulders;
+            case HullModifierType::SIDE_LOBES: return context.Profile.SilhouetteGuidanceWeights.SideLobes;
+            case HullModifierType::STEPPED_WING_EXTENSION: return context.Profile.SilhouetteGuidanceWeights.SteppedWingExtension;
+            default: return 0u;
+            }
+        };
+        std::stable_sort(priorities.begin(), priorities.end(), [&](HullModifierType a, HullModifierType b) { return guidanceWeight(a) > guidanceWeight(b); });
 
-        // Faction only nudges the manner of articulation. Style remains the
-        // primary structural language and no style x faction matrix is used.
+        // Faction only nudges the manner of articulation. The resolved profile remains
+        // the primary structural language and no profile x faction matrix is used.
         if (context.Settings.Faction == ShipFactionType::FRONTIER || context.Settings.Faction == ShipFactionType::XENO || context.Settings.Faction == ShipFactionType::RELIC)
         {
             std::swap(priorities[1u], priorities[2u]);
@@ -930,7 +925,7 @@ namespace PixelShipGenerator
         const PixelMaskUtils::MaskBounds bounds = PixelMaskUtils::calculateMaskBounds(hullMask);
         if (!bounds.Valid || bounds.MaxY <= bounds.MinY + 5u) { return false; }
         const uint32_t hullHeight = bounds.MaxY - bounds.MinY + 1u;
-        const uint32_t startPercent = context.Settings.Style == ShipStyle::SPEARHEAD ? 70u : context.getGenerationRandomUInt(GenerationDomain::HULL, 68u, 80u);
+        const uint32_t startPercent = context.getGenerationRandomUInt(GenerationDomain::HULL, context.Profile.RearForkStartPercent);
         const uint32_t startY = bounds.MinY + GenerationMath::getPercentage(hullHeight - 1u, startPercent);
         const uint32_t gapHalfWidth = std::max(1u, GenerationMath::scalePixelsFrom64(context.ScaleTraits.MinimumDimension >= 64u ? 2u : 1u, hullMask.getWidth()));
         const uint32_t gapWidth = hullMask.getWidth() % 2u == 0u ? gapHalfWidth * 2u : gapHalfWidth * 2u - 1u;
@@ -1518,7 +1513,7 @@ namespace PixelShipGenerator
     {
         if (!validate(context.Ship.HullMask))
         {
-            const bool tinyDeltaException = context.Settings.Style == ShipStyle::DELTA && context.ScaleTraits.MinimumDimension <= 24u &&
+            const bool tinyBroadSilhouetteException = context.Profile.AllowTinyBroadSilhouetteLegacyValidationException && context.ScaleTraits.MinimumDimension <= 24u &&
                 metrics.PixelCount != 0u && isHullConnected(context.Ship.HullMask) && metrics.CanvasFillPercent >= 7u && metrics.CanvasFillPercent <= 68u &&
                 metrics.NormalizedHeightPercent >= 50u && metrics.NormalizedWidthPercent >= 50u && metrics.WidthVariationPercent >= 20u &&
                 metrics.MaximumRowWidthDelta <= std::max(GenerationMath::scalePixelsFrom64(8u, context.Settings.Dimensions.Width), context.Settings.Dimensions.Width / 3u) && metrics.NearMaximumRowPercent < 90u;
@@ -1527,7 +1522,7 @@ namespace PixelShipGenerator
                 metrics.NormalizedHeightPercent >= 50u && metrics.NormalizedWidthPercent >= 20u && metrics.WidthVariationPercent >= 15u &&
                 metrics.MaximumRowWidthDelta <= std::max(GenerationMath::scalePixelsFrom64(9u, context.Settings.Dimensions.Width), context.Settings.Dimensions.Width / 3u) &&
                 metrics.NearMaximumRowPercent < 92u;
-            if (!tinyDeltaException && !intentionalNegativeSpaceException)
+            if (!tinyBroadSilhouetteException && !intentionalNegativeSpaceException)
             {
                 return SilhouetteValidationFailureReason::LEGACY_GEOMETRY_VALIDATION;
             }
@@ -1542,9 +1537,9 @@ namespace PixelShipGenerator
 
     SilhouetteValidationFailureReason HullGenerator::evaluateSilhouetteProfileAcceptance(const ShipGenerationContext& context, const SilhouetteQualityMetrics& metrics) const
     {
-        // Task 54's SPEARHEAD output is deliberately protected from new
-        // acceptance pressure. Metrics are still recorded for diagnostics.
-        if (context.Settings.Style == ShipStyle::SPEARHEAD)
+        // Some authored profiles deliberately opt out of Task-56 acceptance
+        // pressure while still recording the same diagnostics metrics.
+        if (!context.Profile.SilhouetteProfileValidationEnabled)
         {
             return SilhouetteValidationFailureReason::NONE;
         }
@@ -1563,9 +1558,10 @@ namespace PixelShipGenerator
         {
             minimumWidthPercent = minimumWidthPercent > 2u ? minimumWidthPercent - 2u : 0u;
         }
-        if (context.Settings.Style == ShipStyle::DELTA && context.ScaleTraits.MinimumDimension <= 24u)
+        if (context.ScaleTraits.MinimumDimension <= 24u && context.Profile.TinySilhouetteExtraWidthRelaxationPercent != 0u)
         {
-            minimumWidthPercent = minimumWidthPercent > 4u ? minimumWidthPercent - 4u : 0u;
+            const uint32_t relaxation = context.Profile.TinySilhouetteExtraWidthRelaxationPercent;
+            minimumWidthPercent = minimumWidthPercent > relaxation ? minimumWidthPercent - relaxation : 0u;
         }
 
         if (context.Settings.Dimensions.Height * 4u > context.Settings.Dimensions.Width * 5u)
@@ -1589,17 +1585,17 @@ namespace PixelShipGenerator
         const uint32_t targetArticulation = getScaleAdjustedArticulationTarget(context);
         const uint32_t strongWingExtension = std::max(1u, context.Settings.Dimensions.Width / 16u);
         const bool strongLateralStructure = context.WingRegions.Shape != WingShapeType::NONE && context.WingRegions.MaximumExtension >= strongWingExtension;
-        const bool cleanAxialTaper = (context.Settings.Style == ShipStyle::SLEEK) && metrics.NoseTaperPercent >= 45u && metrics.RearTaperPercent >= 18u;
-        const bool validDeltaWedge = context.Settings.Style == ShipStyle::DELTA && context.WingRegions.Shape != WingShapeType::NONE && metrics.NormalizedWidthPercent >= minimumWidthPercent;
+        const bool cleanAxialTaper = context.Profile.CleanAxialTaperArticulationExemption && metrics.NoseTaperPercent >= 45u && metrics.RearTaperPercent >= 18u;
+        const bool validWingWedge = context.Profile.WingWedgeArticulationExemption && context.WingRegions.Shape != WingShapeType::NONE && metrics.NormalizedWidthPercent >= minimumWidthPercent;
         const bool meaningfulInteriorShape = metrics.InteriorContractionPercent >= 8u || metrics.ShoulderProminencePercent >= 8u;
 
-        if (metrics.BoundingFillPercent >= context.Profile.SilhouetteConvexFillTriggerPercent && metrics.LongestStableWidthRunPercent > context.Profile.SilhouetteMaximumStableRunPercent && metrics.NearMaximumRowPercent >= 40u && metrics.ArticulationCount <= targetArticulation && !meaningfulInteriorShape && !validDeltaWedge)
+        if (metrics.BoundingFillPercent >= context.Profile.SilhouetteConvexFillTriggerPercent && metrics.LongestStableWidthRunPercent > context.Profile.SilhouetteMaximumStableRunPercent && metrics.NearMaximumRowPercent >= 40u && metrics.ArticulationCount <= targetArticulation && !meaningfulInteriorShape && !validWingWedge)
         {
             return SilhouetteValidationFailureReason::EXCESSIVE_SOLID_MASS;
         }
 
         const bool genericFormRisk = metrics.BoundingFillPercent + 8u >= context.Profile.SilhouetteConvexFillTriggerPercent || metrics.LongestStableWidthRunPercent > context.Profile.SilhouetteMaximumStableRunPercent || metrics.NearMaximumRowPercent >= 32u;
-        if (metrics.ArticulationCount < targetArticulation && !meaningfulInteriorShape && !strongLateralStructure && !cleanAxialTaper && !validDeltaWedge && genericFormRisk)
+        if (metrics.ArticulationCount < targetArticulation && !meaningfulInteriorShape && !strongLateralStructure && !cleanAxialTaper && !validWingWedge && genericFormRisk)
         {
             return SilhouetteValidationFailureReason::LOW_ARTICULATION;
         }

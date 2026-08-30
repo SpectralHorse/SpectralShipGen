@@ -32,6 +32,7 @@ namespace PixelShipGeneratorTests
             { "cockpit", "Cockpit Geometry", RegressionCategory::GEOMETRY, runCockpitGeometryRegression, true },
             { "core-treatment", "Core Treatment", RegressionCategory::VISUAL_SEMANTICS, runCoreTreatmentRegression, true },
             { "style-expansion", "Style Expansion", RegressionCategory::VISUAL_SEMANTICS, runStyleExpansionRegression, true },
+            { "static-profile-routing", "Static Profile Routing", RegressionCategory::DETERMINISM, runStaticProfileRoutingRegression, false },
             { "faction-expansion", "Faction Expansion", RegressionCategory::VISUAL_SEMANTICS, runFactionExpansionRegression, true },
             { "structural-negative-space", "Structural Negative Space", RegressionCategory::GEOMETRY, runStructuralNegativeSpaceRegression, true },
             { "silhouette-articulation", "Silhouette Articulation", RegressionCategory::GEOMETRY, runSilhouetteArticulationRegression, true },

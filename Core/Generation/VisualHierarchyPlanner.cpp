@@ -88,7 +88,7 @@ namespace PixelShipGenerator
             return;
         }
 
-        if (context.Settings.Style == ShipStyle::SPEARHEAD)
+        if (!context.Profile.VisualHierarchyEnabled)
         {
             plan.PrimaryAnchor = ShipVisualAnchorType::SILHOUETTE;
             plan.ReservedCategory = GenerationComplexityCategory::SILHOUETTE;
@@ -176,10 +176,10 @@ namespace PixelShipGenerator
         case ShipVisualAnchorType::WINGS:
         case ShipVisualAnchorType::NEGATIVE_SPACE: return GenerationSpatialRegion::LEFT_WING_ROOT;
         case ShipVisualAnchorType::HULL_LAYERS:
-            return context.Settings.Style == ShipStyle::DELTA || context.Settings.Style == ShipStyle::HEAVY
+            return context.Profile.HullLayerHierarchyUsesWingRoot
                 ? GenerationSpatialRegion::LEFT_WING_ROOT : GenerationSpatialRegion::MID_FUSELAGE;
         case ShipVisualAnchorType::WEAPONS:
-            return context.Settings.Style == ShipStyle::FIGHTER || context.Settings.Style == ShipStyle::DELTA
+            return context.Profile.WeaponHierarchyUsesWingRoot
                 ? GenerationSpatialRegion::LEFT_WING_ROOT : GenerationSpatialRegion::FRONT_FUSELAGE;
         default: return GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END;
         }

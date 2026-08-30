@@ -28,40 +28,6 @@ namespace PixelShipGenerator
             }
         }
 
-        std::array<uint32_t, 3u> getCategoryWeights(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SLEEK: return { 32u, 28u, 40u };
-            case ShipStyle::FIGHTER: return { 25u, 50u, 25u };
-            case ShipStyle::HEAVY: return { 50u, 35u, 15u };
-            case ShipStyle::INDUSTRIAL: return { 30u, 20u, 50u };
-            case ShipStyle::SPEARHEAD: return { 30u, 55u, 15u };
-            case ShipStyle::DELTA: return { 45u, 40u, 15u };
-            default: return { 34u, 33u, 33u };
-            }
-        }
-
-        uint32_t getOuterRegionChance(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SPEARHEAD: return 30u;
-            case ShipStyle::DELTA: return 78u;
-            default: return 62u;
-            }
-        }
-
-        uint32_t getWingRootRegionChance(ShipStyle style)
-        {
-            switch (style)
-            {
-            case ShipStyle::SPEARHEAD: return 35u;
-            case ShipStyle::DELTA: return 76u;
-            default: return 60u;
-            }
-        }
-
         uint32_t nextRoll(uint64_t& state, uint32_t maximumExclusive)
         {
             state = mixGenerationSeed64(state + 0x9E3779B97F4A7C15ull);
@@ -128,7 +94,7 @@ namespace PixelShipGenerator
             };
         if (roll(100u) >= chance) { return; }
 
-        const auto weights = getCategoryWeights(context.Settings.Style);
+        const auto weights = context.Profile.MacroAsymmetryCategoryWeights.toArray();
         uint32_t total = 0u;
         std::array<uint32_t, 3u> adjusted = weights;
         if (!context.ComplexityBudget.canAfford(GenerationComplexityCategory::HULL_LAYER, 10u)) { adjusted[0u] = 0u; }
@@ -151,15 +117,14 @@ namespace PixelShipGenerator
         context.MacroAsymmetry.Category = static_cast<MacroAsymmetryCategory>(categoryIndex);
         context.MacroAsymmetry.BalanceStrategy = roll(100u) < 70u ? MacroAsymmetryBalanceStrategy::OPPOSITE_SUBTLE_DETAIL : MacroAsymmetryBalanceStrategy::DISTRIBUTED_COUNTERWEIGHT;
         context.MacroAsymmetry.DesiredVisualWeight = 24u + context.ScaleTraits.MajorFeatureCapacity / 5u;
-        if (context.Settings.Style == ShipStyle::SPEARHEAD) { context.MacroAsymmetry.DesiredVisualWeight = context.MacroAsymmetry.DesiredVisualWeight * 4u / 5u; }
-        else if (context.Settings.Style == ShipStyle::DELTA) { context.MacroAsymmetry.DesiredVisualWeight = context.MacroAsymmetry.DesiredVisualWeight * 9u / 10u; }
+        context.MacroAsymmetry.DesiredVisualWeight = context.MacroAsymmetry.DesiredVisualWeight * context.Profile.MacroAsymmetryVisualWeightPercent / 100u;
 
-        const bool preferOuter = context.WingRegions.hasWings() && context.ScaleTraits.HorizontalCapacity >= 30u && roll(100u) < getOuterRegionChance(context.Settings.Style);
+        const bool preferOuter = context.WingRegions.hasWings() && context.ScaleTraits.HorizontalCapacity >= 30u && roll(100u) < context.Profile.MacroAsymmetryOuterRegionChance;
         if (preferOuter)
         {
             context.MacroAsymmetry.TargetRegion = context.MacroAsymmetry.isLeftSide() ? GenerationSpatialRegion::LEFT_OUTER_WING : GenerationSpatialRegion::RIGHT_OUTER_WING;
         }
-        else if (context.WingRegions.hasWings() && roll(100u) < getWingRootRegionChance(context.Settings.Style))
+        else if (context.WingRegions.hasWings() && roll(100u) < context.Profile.MacroAsymmetryWingRootRegionChance)
         {
             context.MacroAsymmetry.TargetRegion = context.MacroAsymmetry.isLeftSide() ? GenerationSpatialRegion::LEFT_WING_ROOT : GenerationSpatialRegion::RIGHT_WING_ROOT;
         }

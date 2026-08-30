@@ -29,6 +29,17 @@ namespace
         span.Width = span.EndX - span.StartX + 1u;
         return span;
     }
+
+    PixelShipGenerator::Color getHullSurfaceToneColor(PixelShipGenerator::ShipHullSurfaceTone tone, const PixelShipGenerator::ShipPalette& palette)
+    {
+        switch (tone)
+        {
+        case PixelShipGenerator::ShipHullSurfaceTone::BASE: return palette.HullBase;
+        case PixelShipGenerator::ShipHullSurfaceTone::HIGHLIGHT: return palette.HullHighlight;
+        case PixelShipGenerator::ShipHullSurfaceTone::SECONDARY:
+        default: return palette.HullSecondary;
+        }
+    }
 }
 
 namespace PixelShipGenerator
@@ -192,9 +203,9 @@ namespace PixelShipGenerator
             for (uint32_t x = 0u; x < ship.HullMask.getWidth(); ++x)
             {
                 if (!core.RaisedMask.get(x, y)) { continue; }
-                Color interior = palette.HullSecondary;
-                if (context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD || context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE) { interior = palette.HullHighlight; }
-                else if (context.Settings.Style == ShipStyle::HEAVY || context.Settings.Faction == ShipFactionType::RELIC) { interior = palette.HullBase; }
+                Color interior = getHullSurfaceToneColor(context.Profile.CoreRaisedSurfaceTone, palette);
+                if (context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE) { interior = palette.HullHighlight; }
+                else if (context.Settings.Faction == ShipFactionType::RELIC) { interior = palette.HullBase; }
                 ship.FinalImage.setPixel(x, y, getRaisedMaskColor(core.RaisedMask, x, y, interior, palette, strongBevel));
             }
         }
@@ -236,8 +247,9 @@ namespace PixelShipGenerator
                 Color interiorColor = order == 0u ? palette.HullSecondary : palette.HullBase;
                 if (placement.Type == ShipHullLayerType::CENTRAL_DORSAL_PLATE)
                 {
-                    interiorColor = context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD || context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE
-                        ? palette.HullHighlight : (context.Settings.Faction == ShipFactionType::RELIC ? palette.HullBase : palette.HullSecondary);
+                    interiorColor = getHullSurfaceToneColor(context.Profile.CentralDorsalPlateTone, palette);
+                    if (context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE) { interiorColor = palette.HullHighlight; }
+                    else if (context.Settings.Faction == ShipFactionType::RELIC) { interiorColor = palette.HullBase; }
                 }
                 else if (placement.Type == ShipHullLayerType::REAR_ENGINE_COVER)
                 {
@@ -1111,7 +1123,7 @@ namespace PixelShipGenerator
 
             if (isCentralRidgePixel(context, x, y, ridgeBandWidth) && PixelMaskUtils::getMaskDepth(ship.HullMask, x, y, ridgeMaximumDepth) >= ridgeMaximumDepth)
             {
-                if (context.Settings.Style == ShipStyle::SLEEK || context.Settings.Style == ShipStyle::SPEARHEAD || context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE)
+                if (context.Profile.AxialRidgeUsesEdgeHighlight || context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE)
                 {
                     return shadingComplexity >= 60u ? palette.HullEdgeHighlight : palette.HullHighlight;
                 }

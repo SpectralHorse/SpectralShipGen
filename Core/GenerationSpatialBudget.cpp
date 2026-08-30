@@ -37,38 +37,19 @@ namespace PixelShipGenerator
             }
         }
 
-        int32_t getStyleCapacityBias(ShipStyle style, GenerationSpatialRegion region)
+        int32_t getProfileCapacityBias(const ShipSpatialCapacityBias& bias, GenerationSpatialRegion region)
         {
-            switch (style)
+            switch (region)
             {
-            case ShipStyle::SPEARHEAD:
-                switch (region)
-                {
-                case GenerationSpatialRegion::NOSE: return 3;
-                case GenerationSpatialRegion::FRONT_FUSELAGE: return 4;
-                case GenerationSpatialRegion::MID_FUSELAGE: return 4;
-                case GenerationSpatialRegion::REAR_FUSELAGE: return 2;
-                case GenerationSpatialRegion::LEFT_WING_ROOT:
-                case GenerationSpatialRegion::RIGHT_WING_ROOT: return -2;
-                case GenerationSpatialRegion::LEFT_OUTER_WING:
-                case GenerationSpatialRegion::RIGHT_OUTER_WING: return -4;
-                default: return 0;
-                }
-            case ShipStyle::DELTA:
-                switch (region)
-                {
-                case GenerationSpatialRegion::NOSE: return -2;
-                case GenerationSpatialRegion::FRONT_FUSELAGE: return 1;
-                case GenerationSpatialRegion::MID_FUSELAGE: return 2;
-                case GenerationSpatialRegion::REAR_FUSELAGE: return 1;
-                case GenerationSpatialRegion::LEFT_WING_ROOT:
-                case GenerationSpatialRegion::RIGHT_WING_ROOT: return 5;
-                case GenerationSpatialRegion::LEFT_OUTER_WING:
-                case GenerationSpatialRegion::RIGHT_OUTER_WING: return 5;
-                default: return 0;
-                }
-            default:
-                return 0;
+            case GenerationSpatialRegion::NOSE: return bias.Nose;
+            case GenerationSpatialRegion::FRONT_FUSELAGE: return bias.FrontFuselage;
+            case GenerationSpatialRegion::MID_FUSELAGE: return bias.MidFuselage;
+            case GenerationSpatialRegion::REAR_FUSELAGE: return bias.RearFuselage;
+            case GenerationSpatialRegion::LEFT_WING_ROOT:
+            case GenerationSpatialRegion::RIGHT_WING_ROOT: return bias.WingRoot;
+            case GenerationSpatialRegion::LEFT_OUTER_WING:
+            case GenerationSpatialRegion::RIGHT_OUTER_WING: return bias.OuterWing;
+            default: return 0;
             }
         }
     }
@@ -84,10 +65,10 @@ namespace PixelShipGenerator
 
     void GenerationSpatialBudget::initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits)
     {
-        initialize(hullMask, wingMask, wingRootMask, outerWingMask, scaleTraits, ShipStyle::FIGHTER);
+        initialize(hullMask, wingMask, wingRootMask, outerWingMask, scaleTraits, ShipGenerationProfile());
     }
 
-    void GenerationSpatialBudget::initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits, ShipStyle style)
+    void GenerationSpatialBudget::initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile)
     {
         reset();
         m_Width = hullMask.getWidth();
@@ -147,9 +128,14 @@ namespace PixelShipGenerator
             auto& state = m_Regions[index];
             if (state.AreaPixels == 0u) { continue; }
             const GenerationSpatialRegion region = static_cast<GenerationSpatialRegion>(index);
-            const int32_t capacity = static_cast<int32_t>(7u + integerSqrt(state.AreaPixels) + scaleBoost) + getCapacityBias(region) + getStyleCapacityBias(style, region);
+            const int32_t capacity = static_cast<int32_t>(7u + integerSqrt(state.AreaPixels) + scaleBoost) + getCapacityBias(region) + getProfileCapacityBias(profile.SpatialCapacityBias, region);
             state.Capacity = static_cast<uint32_t>(std::clamp(capacity, 10, 44));
         }
+    }
+
+    void GenerationSpatialBudget::initialize(const PixelMask& hullMask, const PixelMask& wingMask, const PixelMask& wingRootMask, const PixelMask& outerWingMask, const GenerationScaleTraits& scaleTraits, ShipStyle style)
+    {
+        initialize(hullMask, wingMask, wingRootMask, outerWingMask, scaleTraits, getShipGenerationProfile(style));
     }
 
     GenerationSpatialRegion GenerationSpatialBudget::getRegionAt(uint32_t x, uint32_t y) const

@@ -312,6 +312,25 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 30u;
             profile.LiveryWeights.GeometricInsignia = 35u;
 
+
+            // Task 79: static behavior formerly hidden behind ShipStyle.
+            profile.ComplexityBudgetPercent = 82u;
+            profile.ComplexityCategoryWeights = { 14, 10, 13, 18, 22, 8, 15 };
+            profile.LegacyComplexityCategoryWeights = { 15, 0, 14, 20, 22, 10, 19 };
+            profile.SilhouetteGuidanceEnabled = false;
+            profile.CleanAxialTaperArticulationExemption = true;
+            profile.CoreTreatmentChance = 58u;
+            profile.MaximumCoreTreatments = 2u;
+            profile.CoreTreatmentWeights = { 28u, 22u, 12u, 8u, 20u, 10u };
+            profile.HullLayerChance = 48u;
+            profile.MaximumHullLayers = 2u;
+            profile.HullLayerWeights = { 105u, 90u, 45u, 35u, 45u };
+            profile.WeaponHierarchyUsesWingRoot = false;
+            profile.MaterialWingSurfaceUsesFullWing = false;
+            profile.CoreRaisedSurfaceTone = ShipHullSurfaceTone::HIGHLIGHT;
+            profile.CentralDorsalPlateTone = ShipHullSurfaceTone::HIGHLIGHT;
+            profile.AxialRidgeUsesEdgeHighlight = true;
+            profile.MacroAsymmetryCategoryWeights = { 32u, 28u, 40u };
             return profile;
         }
 
@@ -488,6 +507,20 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 65u;
             profile.LiveryWeights.GeometricInsignia = 40u;
 
+
+            // Task 79: static behavior formerly hidden behind ShipStyle.
+            profile.ComplexityBudgetPercent = 108u;
+            profile.ComplexityCategoryWeights = { 13, 15, 20, 24, 19, 5, 4 };
+            profile.LegacyComplexityCategoryWeights = { 15, 0, 22, 26, 22, 7, 8 };
+            profile.SilhouetteGuidanceWeights = { 3u, 2u, 1u };
+            profile.CoreTreatmentChance = 82u;
+            profile.CoreTreatmentWeights = { 18u, 16u, 30u, 14u, 16u, 6u };
+            profile.HullLayerChance = 78u;
+            profile.HullLayerWeights = { 85u, 110u, 90u, 105u, 90u };
+            profile.HullLayerHierarchyUsesWingRoot = true;
+            profile.WeaponHierarchyUsesWingRoot = false;
+            profile.CoreRaisedSurfaceTone = ShipHullSurfaceTone::BASE;
+            profile.MacroAsymmetryCategoryWeights = { 50u, 35u, 15u };
             return profile;
         }
 
@@ -664,6 +697,19 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 135u;
             profile.LiveryWeights.GeometricInsignia = 55u;
 
+
+            // Task 79: static behavior formerly hidden behind ShipStyle.
+            profile.ComplexityBudgetPercent = 112u;
+            profile.ComplexityCategoryWeights = { 12, 14, 17, 17, 14, 16, 10 };
+            profile.LegacyComplexityCategoryWeights = { 14, 0, 19, 18, 16, 19, 14 };
+            profile.SilhouetteGuidanceWeights = { 1u, 2u, 3u };
+            profile.CoreTreatmentChance = 84u;
+            profile.CoreTreatmentWeights = { 14u, 14u, 18u, 22u, 16u, 16u };
+            profile.HullLayerChance = 72u;
+            profile.HullLayerWeights = { 55u, 75u, 85u, 95u, 110u };
+            profile.WeaponHierarchyUsesWingRoot = false;
+            profile.MaterialWingSurfaceUsesFullWing = false;
+            profile.MacroAsymmetryCategoryWeights = { 30u, 20u, 50u };
             return profile;
         }
 
@@ -850,6 +896,39 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 25u;
             profile.LiveryWeights.GeometricInsignia = 25u;
 
+
+            // Task 79: static behavior formerly hidden behind ShipStyle.
+            profile.VisualHierarchyEnabled = false;
+            profile.ComplexityBudgetPercent = 98u;
+            profile.ComplexityCategoryWeights = { 15, 14, 18, 22, 24, 3, 4 };
+            profile.LegacyComplexityCategoryWeights = { 16, 0, 18, 24, 27, 5, 10 };
+            profile.SpatialCapacityBias = { 3, 4, 4, 2, -2, -4 };
+            profile.SilhouetteGuidanceEnabled = false;
+            profile.SilhouetteProfileValidationEnabled = false;
+            profile.RearForkStartPercent = { 70u, 70u };
+            profile.CoreTreatmentChance = 90u;
+            profile.CoreRegionWidthBasePercent = 46u;
+            profile.CoreRegionWidthHorizontalCapacityDivisor = 7u;
+            profile.CoreRegionWidthMaximumPercent = 68u;
+            profile.RaisedCorePlateWidthPercent = 72u;
+            profile.MaximumCoreTreatments = 2u;
+            profile.CoreTreatmentWeights = { 58u, 22u, 14u, 6u, 46u, 22u };
+            profile.HullLayerChance = 68u;
+            profile.MaximumHullLayers = 2u;
+            profile.HullLayerWeights = { 165u, 105u, 35u, 45u, 55u };
+            profile.WeaponHierarchyUsesWingRoot = false;
+            profile.DetailMotifMirroringBonusPercent = 8u;
+            profile.DetailMotifPlacementBias = ShipDetailMotifPlacementBias::AXIAL;
+            profile.DetailMotifOrientationBias = ShipDetailMotifOrientationBias::LONGITUDINAL;
+            profile.MaterialWingSurfaceUsesFullWing = false;
+            profile.MaterialAxialBandWidthPercent = 42u;
+            profile.CoreRaisedSurfaceTone = ShipHullSurfaceTone::HIGHLIGHT;
+            profile.CentralDorsalPlateTone = ShipHullSurfaceTone::HIGHLIGHT;
+            profile.AxialRidgeUsesEdgeHighlight = true;
+            profile.MacroAsymmetryCategoryWeights = { 30u, 55u, 15u };
+            profile.MacroAsymmetryOuterRegionChance = 30u;
+            profile.MacroAsymmetryWingRootRegionChance = 35u;
+            profile.MacroAsymmetryVisualWeightPercent = 80u;
             return profile;
         }
 
@@ -1036,6 +1115,32 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 95u;
             profile.LiveryWeights.GeometricInsignia = 50u;
 
+
+            // Task 79: static behavior formerly hidden behind ShipStyle.
+            profile.ComplexityBudgetPercent = 106u;
+            profile.ComplexityCategoryWeights = { 15, 14, 25, 18, 22, 3, 3 };
+            profile.LegacyComplexityCategoryWeights = { 16, 0, 27, 22, 23, 5, 7 };
+            profile.SpatialCapacityBias = { -2, 1, 2, 1, 5, 5 };
+            profile.SilhouetteWeakArticulationGuidanceEnabled = false;
+            profile.AllowTinyBroadSilhouetteLegacyValidationException = true;
+            profile.TinySilhouetteExtraWidthRelaxationPercent = 4u;
+            profile.WingWedgeArticulationExemption = true;
+            profile.CoreTreatmentChance = 90u;
+            profile.CoreRegionWidthBasePercent = 72u;
+            profile.CoreRegionWidthHorizontalCapacityDivisor = 5u;
+            profile.CoreRegionWidthMaximumPercent = 92u;
+            profile.RaisedCorePlateWidthPercent = 150u;
+            profile.CoreTreatmentWeights = { 12u, 32u, 58u, 34u, 12u, 8u };
+            profile.HullLayerChance = 84u;
+            profile.HullLayerWeights = { 65u, 80u, 185u, 190u, 70u };
+            profile.HullLayerHierarchyUsesWingRoot = true;
+            profile.DetailMotifMirroringBonusPercent = 8u;
+            profile.DetailMotifPlacementBias = ShipDetailMotifPlacementBias::WING_SURFACE;
+            profile.DetailMotifOrientationBias = ShipDetailMotifOrientationBias::LATERAL;
+            profile.MacroAsymmetryCategoryWeights = { 45u, 40u, 15u };
+            profile.MacroAsymmetryOuterRegionChance = 78u;
+            profile.MacroAsymmetryWingRootRegionChance = 76u;
+            profile.MacroAsymmetryVisualWeightPercent = 90u;
             return profile;
         }
     }

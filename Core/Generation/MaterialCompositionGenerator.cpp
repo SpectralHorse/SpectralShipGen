@@ -200,7 +200,7 @@ namespace PixelShipGenerator
     {
         PixelMask mask(context.Ship.HullMask.getWidth(), context.Ship.HullMask.getHeight(), false);
         if (!context.WingRegions.hasWings()) { return mask; }
-        const bool broadZone = context.Settings.Style == ShipStyle::DELTA || context.Settings.Style == ShipStyle::HEAVY || context.Settings.Style == ShipStyle::FIGHTER;
+        const bool broadZone = context.Profile.MaterialWingSurfaceUsesFullWing;
         for (uint32_t y = 0u; y < mask.getHeight(); ++y)
             for (uint32_t x = 0u; x < mask.getWidth(); ++x)
                 if (broadZone ? context.WingRegions.WingMask.get(x, y) : context.WingRegions.OuterWingMask.get(x, y)) { mask.set(x, y); }
@@ -248,7 +248,7 @@ namespace PixelShipGenerator
         {
             const uint32_t fuselageHalfWidth = y < context.WingRegions.FuselageHalfWidths.size() ? context.WingRegions.FuselageHalfWidths[y] : 0u;
             if (fuselageHalfWidth == 0u) { continue; }
-            const uint32_t bandHalfWidth = std::max(1u, (fuselageHalfWidth * (context.Settings.Style == ShipStyle::SPEARHEAD ? 42u : 30u) + 99u) / 100u);
+            const uint32_t bandHalfWidth = std::max(1u, (fuselageHalfWidth * context.Profile.MaterialAxialBandWidthPercent + 99u) / 100u);
             for (uint32_t x = 0u; x < width; ++x)
             {
                 if (!context.Ship.HullMask.get(x, y) || context.WingRegions.WingMask.get(x, y)) { continue; }
