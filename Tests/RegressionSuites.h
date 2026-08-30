@@ -53,6 +53,7 @@ namespace PixelShipGeneratorTests
 
     int runPreviewPreferencesRegression();
     int runPreviewFavoritesPersistenceRegression();
+    int runPreviewUserPresetPersistenceRegression();
     int runPreviewSessionRegression();
     int runGenerationCalibrationRegression();
     int runAttributeRerollStudioRegression();
