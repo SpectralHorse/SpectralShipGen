@@ -1356,7 +1356,10 @@ namespace PixelShipGenerator
         const uint32_t mirroredX = std::min(x, width - 1u - x);
         const uint32_t cellX = mirroredX / cellWidth;
         const uint32_t cellY = y / cellHeight;
-        const uint64_t hash = getDeterministicPaintHash(ship.DomainSeeds.get(GenerationDomain::PALETTE), cellX, cellY, 0x48E5A31D77C4B991ull);
+        const uint64_t paintSeed = ship.PaletteSourceMode == ShipPaletteSourceMode::FIXED
+            ? ship.Seeds.Master
+            : ship.DomainSeeds.get(GenerationDomain::PALETTE);
+        const uint64_t hash = getDeterministicPaintHash(paintSeed, cellX, cellY, 0x48E5A31D77C4B991ull);
 
         return hash % 100u < profile.SecondaryHullToneCoveragePercent;
     }

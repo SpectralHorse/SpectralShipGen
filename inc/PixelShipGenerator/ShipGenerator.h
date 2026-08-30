@@ -34,7 +34,9 @@ namespace PixelShipGenerator
 
         // Fully explicit structural + faction profile API. The configuration has
         // no ShipStyle/ShipFactionType selector, so neither provenance identity is
-        // fabricated or given hidden precedence. Both profiles are validated.
+        // fabricated or given hidden precedence. PaletteConfiguration independently
+        // selects faction-profile generated, explicit generated, or fixed colors.
+        // Structural/faction/generated-palette profiles are validated as applicable.
         GeneratedShip generate(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
         GeneratedShip generateCalibrated(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 

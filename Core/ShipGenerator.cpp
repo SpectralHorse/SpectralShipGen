@@ -28,6 +28,7 @@
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationPerformance.h"
 #include "ShipPaletteGenerator.h"
+#include "ShipPaletteGenerationProfileValidation.h"
 
 namespace PixelShipGenerator
 {
@@ -107,6 +108,7 @@ namespace PixelShipGenerator
             configuration.SeedOverrides = settings.SeedOverrides;
             configuration.DomainSeedOverrides = settings.DomainSeedOverrides;
             configuration.RandomStreamMode = settings.RandomStreamMode;
+            configuration.PaletteConfiguration = settings.PaletteConfiguration;
             return configuration;
         }
 
@@ -118,12 +120,48 @@ namespace PixelShipGenerator
             }
         }
 
+        void validateResolvedPaletteGenerationProfile(const ShipPaletteGenerationProfile& profile)
+        {
+            const ShipPaletteGenerationProfileValidationResult validation = validateShipPaletteGenerationProfile(profile);
+            if (validation.isValid())
+            {
+                return;
+            }
+
+            std::string message = "Invalid ShipPaletteGenerationProfile";
+            const std::size_t maximumReportedErrors = 4u;
+            const std::size_t errorCount = std::min(maximumReportedErrors, validation.Errors.size());
+            for (std::size_t index = 0u; index < errorCount; ++index)
+            {
+                message += index == 0u ? ": " : "; ";
+                message += validation.Errors[index].Field + " - " + validation.Errors[index].Message;
+            }
+            if (validation.Errors.size() > errorCount)
+            {
+                message += "; ...";
+            }
+            throw std::invalid_argument(message);
+        }
+
+        void validatePaletteConfiguration(const ShipPaletteConfiguration& paletteConfiguration)
+        {
+            if (static_cast<uint32_t>(paletteConfiguration.Mode) >= static_cast<uint32_t>(ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END))
+            {
+                throw std::invalid_argument("ShipPaletteConfiguration.Mode is outside the supported range.");
+            }
+            if (paletteConfiguration.Mode == ShipPaletteSourceMode::EXPLICIT_GENERATED)
+            {
+                validateResolvedPaletteGenerationProfile(paletteConfiguration.Generated);
+            }
+        }
+
         void validateGenerationConfiguration(const ExplicitShipGenerationConfiguration& configuration)
         {
             if (configuration.Dimensions.Width < 16u || configuration.Dimensions.Height < 16u)
             {
                 throw std::invalid_argument("Ship generation dimensions must be at least 16 pixels.");
             }
+            validatePaletteConfiguration(configuration.PaletteConfiguration);
         }
 
         void validateResolvedProfile(const ShipGenerationProfile& profile)
@@ -170,6 +208,25 @@ namespace PixelShipGenerator
                 message += "; ...";
             }
             throw std::invalid_argument(message);
+        }
+
+        ShipPalette resolvePalette(const ShipPaletteConfiguration& paletteConfiguration,
+            uint64_t paletteSeed,
+            const ShipFactionProfile& factionProfile,
+            const ShipGenerationProfile& structuralProfile,
+            bool enhancedMaterialContrast)
+        {
+            switch (paletteConfiguration.Mode)
+            {
+            case ShipPaletteSourceMode::FACTION_PROFILE_GENERATED:
+                return ShipPaletteGenerator::generate(paletteSeed, factionProfile, structuralProfile, enhancedMaterialContrast);
+            case ShipPaletteSourceMode::EXPLICIT_GENERATED:
+                return ShipPaletteGenerator::generate(paletteSeed, paletteConfiguration.Generated, structuralProfile, enhancedMaterialContrast);
+            case ShipPaletteSourceMode::FIXED:
+                return paletteConfiguration.Fixed;
+            default:
+                throw std::invalid_argument("ShipPaletteConfiguration.Mode is outside the supported range.");
+            }
         }
 
         ShipGenerationProfile resolveCalibration(const ShipGenerationProfile& profile,
@@ -262,7 +319,8 @@ namespace PixelShipGenerator
         seeds = applyShipGenerationSeedOverrides(seeds, configuration.SeedOverrides);
 
         ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance, builtInFactionProvenance);
-        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        context.Ship.PaletteSourceMode = configuration.PaletteConfiguration.Mode;
+        context.Ship.Palette = resolvePalette(configuration.PaletteConfiguration, context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
 
         HullGenerator hullGenerator;
         HullLayerGenerator hullLayerGenerator;

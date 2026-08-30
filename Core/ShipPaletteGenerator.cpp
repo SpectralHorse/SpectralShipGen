@@ -2,6 +2,7 @@
 
 #include "Color.h"
 #include "ShipFactionPaletteProfile.h"
+#include "ShipPaletteGenerationProfile.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -138,9 +139,10 @@ namespace PixelShipGenerator
         }
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipFactionProfile& factionProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipPaletteGenerationProfile& paletteGenerationProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
     {
-        const ShipFactionPaletteProfile& paletteProfile = factionProfile.Palette;
+        const ShipPaletteGenerationRanges& paletteProfile = paletteGenerationProfile.Ranges;
+        const ShipPaletteGenerationBehaviorProfile& paletteBehavior = paletteGenerationProfile.Behavior;
         std::mt19937_64 randomGenerator(paletteSeed);
 
         HSVColor hullColor;
@@ -148,12 +150,12 @@ namespace PixelShipGenerator
         hullColor.Saturation = getRandomUInt(randomGenerator, paletteProfile.HullSaturation);
         hullColor.Value = getRandomUInt(randomGenerator, paletteProfile.HullValue);
 
-        if (factionProfile.PaletteBehavior.HullValueMode == ShipFactionHullValueMode::ALTERNATING_BRIGHT_DARK_RANGES)
+        if (paletteBehavior.HullValueMode == ShipFactionHullValueMode::ALTERNATING_BRIGHT_DARK_RANGES)
         {
             const uint64_t finishVariant = mixSeed(paletteSeed ^ 0xC08B3A7E5D1F249Bull);
             const PaletteUIntRange& valueRange = (finishVariant & 1ull) != 0ull
-                ? factionProfile.PaletteBehavior.BrightHullValue
-                : factionProfile.PaletteBehavior.DarkHullValue;
+                ? paletteBehavior.BrightHullValue
+                : paletteBehavior.DarkHullValue;
             const uint32_t span = valueRange.Max - valueRange.Min + 1u;
             hullColor.Value = valueRange.Min + static_cast<uint32_t>((finishVariant >> 8u) % span);
         }
@@ -173,7 +175,7 @@ namespace PixelShipGenerator
         {
             const int32_t secondaryMagnitude = std::max(4, static_cast<int32_t>((8u * styleProfile.MaterialSecondaryContrastPercent + 50u) / 100u));
             int32_t secondaryDirection = (mixSeed(paletteSeed ^ 0xA3C59AC3E17B5D6Full) & 1ull) != 0ull ? 1 : -1;
-            switch (factionProfile.PaletteBehavior.SecondaryToneDirection)
+            switch (paletteBehavior.SecondaryToneDirection)
             {
             case ShipFactionSecondaryToneDirection::DARKER: secondaryDirection = -1; break;
             case ShipFactionSecondaryToneDirection::LIGHTER: secondaryDirection = 1; break;
@@ -194,12 +196,12 @@ namespace PixelShipGenerator
         const ShadedColors hullColors = createShadedColors(hullColor, contrast);
 
         HSVColor accentColor = generateRoleColor(randomGenerator, hullColor.Hue, paletteProfile.Accent);
-        if (factionProfile.PaletteBehavior.MinimumAccentHueDistance > 0u
-            && hueDistance(accentColor.Hue, hullColor.Hue) < factionProfile.PaletteBehavior.MinimumAccentHueDistance)
+        if (paletteBehavior.MinimumAccentHueDistance > 0u
+            && hueDistance(accentColor.Hue, hullColor.Hue) < paletteBehavior.MinimumAccentHueDistance)
         {
             accentColor.Hue = wrapHue(accentColor.Hue + ((mixSeed(paletteSeed) & 1ull) != 0ull
-                ? factionProfile.PaletteBehavior.AccentHueSeparationShiftA
-                : factionProfile.PaletteBehavior.AccentHueSeparationShiftB));
+                ? paletteBehavior.AccentHueSeparationShiftA
+                : paletteBehavior.AccentHueSeparationShiftB));
         }
         accentColor.Saturation = scalePercentage(accentColor.Saturation, styleProfile.PaletteAccentSaturationPercent);
         const ShadedColors accentColors = createShadedColors(accentColor, std::max(3u, contrast - 2u));
@@ -285,6 +287,12 @@ namespace PixelShipGenerator
 
         return palette;
     }
+
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipFactionProfile& factionProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    {
+        return generate(paletteSeed, getShipPaletteGenerationProfile(factionProfile), styleProfile, enhancedMaterialContrast);
+    }
+
     ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
     {
         return generate(paletteSeed, getShipFactionProfile(faction), styleProfile, enhancedMaterialContrast);

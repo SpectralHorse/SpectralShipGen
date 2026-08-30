@@ -3,6 +3,7 @@
 
 #include "ShipFactionProfileValidation.h"
 #include "ShipGenerationProfileValidation.h"
+#include "ShipPaletteGenerationProfileValidation.h"
 #include "ShipGenerator.h"
 
 using namespace PixelShipGenerator;
@@ -79,3 +80,53 @@ GeneratedShip generateCustomStructuralAndFactionProfiles()
     return ShipGenerator{}.generate(configuration, structuralProfile, factionProfile);
 }
 
+
+
+GeneratedShip generateWithCustomGeneratedPalette()
+{
+    ExplicitShipGenerationConfiguration configuration;
+    configuration.Seed = 0x86A55A1234567890ull;
+    configuration.Dimensions = { 96u, 64u };
+    configuration.PaletteConfiguration.Mode = ShipPaletteSourceMode::EXPLICIT_GENERATED;
+
+    ShipGenerationProfile structuralProfile = getShipGenerationProfile(ShipStyle::INDUSTRIAL);
+    ShipFactionProfile factionProfile = getShipFactionProfile(ShipFactionType::CORPORATE);
+
+    // Copy a familiar palette language, then customize it independently of the
+    // structural/faction profiles used by the generation call.
+    ShipPaletteGenerationProfile paletteProfile = getShipPaletteGenerationProfile(ShipFactionType::ASCENDANT);
+    paletteProfile.Ranges.HullHue = { 165u, 220u };
+    paletteProfile.Ranges.HullSaturation = { 35u, 65u };
+    paletteProfile.Ranges.Accent.Saturation = { 75u, 100u };
+    configuration.PaletteConfiguration.Generated = paletteProfile;
+
+    if (!validateShipPaletteGenerationProfile(paletteProfile).isValid())
+    {
+        throw std::invalid_argument("Custom ShipPaletteGenerationProfile is invalid.");
+    }
+
+    return ShipGenerator{}.generate(configuration, structuralProfile, factionProfile);
+}
+
+GeneratedShip generateWithFixedPalette()
+{
+    ExplicitShipGenerationConfiguration configuration;
+    configuration.Seed = 0x86F1E0D2C3B4A596ull;
+    configuration.Dimensions = { 64u, 96u };
+    configuration.PaletteConfiguration.Mode = ShipPaletteSourceMode::FIXED;
+
+    ShipPalette& palette = configuration.PaletteConfiguration.Fixed;
+    palette.HullBase = Color(46u, 58u, 78u, 255u);
+    palette.HullShadow = Color(28u, 36u, 52u, 255u);
+    palette.HullHighlight = Color(82u, 98u, 124u, 255u);
+    palette.HullAccent = Color(232u, 92u, 62u, 255u);
+    palette.LightBase = Color(68u, 218u, 198u, 255u);
+    palette.LightHighlight = Color(176u, 255u, 236u, 255u);
+
+    ShipGenerationProfile structuralProfile = getShipGenerationProfile(ShipStyle::DELTA);
+    ShipFactionProfile factionProfile = getShipFactionProfile(ShipFactionType::XENO);
+
+    // The exact semantic colors above are used directly. Palette-domain rerolls
+    // intentionally leave a FIXED palette unchanged.
+    return ShipGenerator{}.generate(configuration, structuralProfile, factionProfile);
+}

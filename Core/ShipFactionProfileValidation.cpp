@@ -1,4 +1,5 @@
 #include "ShipFactionProfileValidation.h"
+#include "ShipPaletteGenerationProfileValidation.h"
 
 #include <array>
 #include <cstdint>
@@ -15,25 +16,6 @@ namespace PixelShipGenerator
         void addError(Result& result, const char* field, const char* message)
         {
             result.Errors.push_back({ field, message });
-        }
-
-        void validateRange(Result& result, const char* field, const PaletteUIntRange& range, uint32_t maximum)
-        {
-            if (range.Min > range.Max) { addError(result, field, "range minimum must not exceed maximum"); }
-            if (range.Max > maximum) { addError(result, field, "range exceeds its semantic maximum"); }
-        }
-
-        void validateRange(Result& result, const char* field, const PaletteIntRange& range, int32_t minimum, int32_t maximum)
-        {
-            if (range.Min > range.Max) { addError(result, field, "range minimum must not exceed maximum"); }
-            if (range.Min < minimum || range.Max > maximum) { addError(result, field, "range exceeds its safe semantic bounds"); }
-        }
-
-        void validateRole(Result& result, const char* prefix, const PaletteRoleProfile& role)
-        {
-            validateRange(result, (std::string(prefix) + ".HueOffset").c_str(), role.HueOffset, -360, 360);
-            validateRange(result, (std::string(prefix) + ".Saturation").c_str(), role.Saturation, 100u);
-            validateRange(result, (std::string(prefix) + ".Value").c_str(), role.Value, 100u);
         }
 
         void validateProbability(Result& result, const char* field, uint32_t value)
@@ -75,35 +57,14 @@ namespace PixelShipGenerator
     {
         Result result;
 
-        validateRange(result, "Palette.HullHue", profile.Palette.HullHue, 359u);
-        validateRange(result, "Palette.HullSaturation", profile.Palette.HullSaturation, 100u);
-        validateRange(result, "Palette.HullValue", profile.Palette.HullValue, 100u);
-        validateRole(result, "Palette.Accent", profile.Palette.Accent);
-        validateRole(result, "Palette.Cockpit", profile.Palette.Cockpit);
-        validateRole(result, "Palette.Light", profile.Palette.Light);
-        validateRole(result, "Palette.Exhaust", profile.Palette.Exhaust);
-        validateRange(result, "Palette.MechanicalSaturation", profile.Palette.MechanicalSaturation, 100u);
-        validateRange(result, "Palette.MechanicalValue", profile.Palette.MechanicalValue, 100u);
-
-        if (static_cast<uint32_t>(profile.PaletteBehavior.HullValueMode) >= static_cast<uint32_t>(ShipFactionHullValueMode::SHIP_FACTION_HULL_VALUE_MODE_END))
+        const ShipPaletteGenerationProfileValidationResult paletteValidation = validateShipPaletteGenerationProfile(getShipPaletteGenerationProfile(profile));
+        for (const ShipPaletteGenerationProfileValidationIssue& issue : paletteValidation.Errors)
         {
-            addError(result, "PaletteBehavior.HullValueMode", "enum value is outside the supported range");
+            std::string field = issue.Field;
+            if (field.rfind("Ranges.", 0u) == 0u) { field = "Palette." + field.substr(7u); }
+            else if (field.rfind("Behavior.", 0u) == 0u) { field = "PaletteBehavior." + field.substr(9u); }
+            result.Errors.push_back({ field, issue.Message });
         }
-        if (static_cast<uint32_t>(profile.PaletteBehavior.SecondaryToneDirection) >= static_cast<uint32_t>(ShipFactionSecondaryToneDirection::SHIP_FACTION_SECONDARY_TONE_DIRECTION_END))
-        {
-            addError(result, "PaletteBehavior.SecondaryToneDirection", "enum value is outside the supported range");
-        }
-        if (profile.PaletteBehavior.HullValueMode == ShipFactionHullValueMode::ALTERNATING_BRIGHT_DARK_RANGES)
-        {
-            validateRange(result, "PaletteBehavior.BrightHullValue", profile.PaletteBehavior.BrightHullValue, 100u);
-            validateRange(result, "PaletteBehavior.DarkHullValue", profile.PaletteBehavior.DarkHullValue, 100u);
-        }
-        if (profile.PaletteBehavior.MinimumAccentHueDistance > 180u)
-        {
-            addError(result, "PaletteBehavior.MinimumAccentHueDistance", "hue distance cannot exceed 180 degrees");
-        }
-        validateSafeOffset(result, "PaletteBehavior.AccentHueSeparationShiftA", profile.PaletteBehavior.AccentHueSeparationShiftA);
-        validateSafeOffset(result, "PaletteBehavior.AccentHueSeparationShiftB", profile.PaletteBehavior.AccentHueSeparationShiftB);
 
         validateProbability(result, "SurfaceDetails.LuminousChannelCoreRegionBiasChance", profile.SurfaceDetails.LuminousChannelCoreRegionBiasChance);
         validateSafeOffset(result, "SurfaceDetails.AsymmetricDetailChanceOffset", profile.SurfaceDetails.AsymmetricDetailChanceOffset);

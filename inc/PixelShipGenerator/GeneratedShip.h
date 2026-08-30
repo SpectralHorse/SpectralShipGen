@@ -13,6 +13,7 @@
 #include "ShipGenerationSeeds.h"
 #include "ShipIdleAnimationMetadata.h"
 #include "ShipPalette.h"
+#include "ShipPaletteConfiguration.h"
 
 namespace PixelShipGenerator
 {
@@ -22,6 +23,7 @@ namespace PixelShipGenerator
         ShipGenerationSeeds Seeds;
         GenerationDomainSeeds DomainSeeds;
         ShipPalette Palette;
+        ShipPaletteSourceMode PaletteSourceMode = ShipPaletteSourceMode::FACTION_PROFILE_GENERATED;
         ShipAnimationTraits AnimationTraits;
         ShipFactionAnimationProfile FactionAnimationProfile;
         ShipFactionPaintColorRole FactionWeaponMuzzleRole = ShipFactionPaintColorRole::ENGINE_HIGHLIGHT;

@@ -5,6 +5,7 @@
 #include "ShipGenerationProfile.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipPalette.h"
+#include "ShipPaletteConfiguration.h"
 
 #include <cstdint>
 
@@ -43,6 +44,10 @@ namespace PixelShipGenerator
         ShipGenerationSeedOverrides SeedOverrides;
         GenerationDomainSeedOverrides DomainSeedOverrides;
         GenerationRandomStreamMode RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
+
+        // Palette source is independent from structural/faction configuration.
+        // The default preserves faction-profile generated palette behavior.
+        ShipPaletteConfiguration PaletteConfiguration;
     };
 
     // Style-independent generation inputs used by the Task-82 explicit
@@ -61,5 +66,7 @@ namespace PixelShipGenerator
         ShipGenerationSeedOverrides SeedOverrides;
         GenerationDomainSeedOverrides DomainSeedOverrides;
         GenerationRandomStreamMode RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
+
+        ShipPaletteConfiguration PaletteConfiguration;
     };
 } // namespace PixelShipGenerator
