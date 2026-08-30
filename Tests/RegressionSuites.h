@@ -21,6 +21,7 @@ namespace PixelShipGeneratorTests
     int runMajorFeatureRegression();
     int runWeaponGeometryRegression();
     int runPainterShadingRegression();
+    int runComponentDepthReadabilityRegression();
     int runArbitraryResolutionRegression();
     int runRectangularResolutionRegression();
     int runGenerationScaleTraitsRegression();

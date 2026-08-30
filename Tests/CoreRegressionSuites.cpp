@@ -22,6 +22,7 @@ namespace PixelShipGeneratorTests
             { "major-features", "Major Features", RegressionCategory::GEOMETRY, runMajorFeatureRegression, true },
             { "weapons", "Weapon Geometry", RegressionCategory::GEOMETRY, runWeaponGeometryRegression, true },
             { "shading", "Pixel-art Shading", RegressionCategory::VISUAL_SEMANTICS, runPainterShadingRegression, true },
+            { "component-depth-readability", "Component Depth Readability", RegressionCategory::VISUAL_SEMANTICS, runComponentDepthReadabilityRegression, false },
             { "arbitrary-resolution", "Arbitrary Resolution", RegressionCategory::GEOMETRY, runArbitraryResolutionRegression, false },
             { "rectangular-resolution", "Rectangular Resolution", RegressionCategory::GEOMETRY, runRectangularResolutionRegression, false },
             { "scale-traits", "Scale Traits", RegressionCategory::GEOMETRY, runGenerationScaleTraitsRegression, true },

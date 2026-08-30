@@ -26,18 +26,18 @@ namespace
 
     constexpr std::array<RegressionRecipe, 12u> Recipes =
     { {
-        { "fighter_frontier_64", 0x0123456789ABCDEFull, 64u, 64u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x4D111F4E7018B22Cull },
-        { "fighter_xeno_96", 0xBF58476D1CE4E5B9ull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::XENO, true, 0x3AE228FD6CA0E937ull },
-        { "sleek_ascendant_64", 0x8C3C010CB4754C91ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0xF7A0D53BF0001BAEull },
-        { "sleek_military_96_no_attachments", 0x243F6A8885A308D3ull, 96u, 96u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::MILITARY, false, 0x74BDB8D9223D65D8ull },
-        { "heavy_military_64", 0xD1B54A32D192ED03ull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::MILITARY, true, 0x59F1600FBB86A6EEull },
-        { "heavy_ascendant_96", 0x13198A2E03707344ull, 96u, 96u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0xB810857B111B0393ull },
-        { "industrial_xeno_64_no_attachments", 0x94D049BB133111EBull, 64u, 64u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::XENO, false, 0xA7D842A2DBB40AE1ull },
-        { "industrial_frontier_96", 0xA4093822299F31D0ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x2D887A69CD8DF0B1ull },
-        { "sleek_frontier_64", 0x6A09E667F3BCC909ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x38FB92401D2F7784ull },
-        { "fighter_military_96", 0xBB67AE8584CAA73Bull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::MILITARY, false, 0xAA064B287EAC1FCAull },
-        { "heavy_xeno_64", 0x3C6EF372FE94F82Bull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::XENO, true, 0xE7B591604EB2097Eull },
-        { "industrial_ascendant_96", 0xA54FF53A5F1D36F1ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0x3579B48694389F2Cull }
+        { "fighter_frontier_64", 0x0123456789ABCDEFull, 64u, 64u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x611F433BB0CF43DEull },
+        { "fighter_xeno_96", 0xBF58476D1CE4E5B9ull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::XENO, true, 0xEC3C76CE529D590Bull },
+        { "sleek_ascendant_64", 0x8C3C010CB4754C91ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0x3DCE4B3D3A63BF1Dull },
+        { "sleek_military_96_no_attachments", 0x243F6A8885A308D3ull, 96u, 96u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::MILITARY, false, 0x21E2649F7C57285Eull },
+        { "heavy_military_64", 0xD1B54A32D192ED03ull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::MILITARY, true, 0x086E950A968C74D8ull },
+        { "heavy_ascendant_96", 0x13198A2E03707344ull, 96u, 96u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0x94552840158A1577ull },
+        { "industrial_xeno_64_no_attachments", 0x94D049BB133111EBull, 64u, 64u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::XENO, false, 0x894FAC3499A5CF86ull },
+        { "industrial_frontier_96", 0xA4093822299F31D0ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x2F994D584DBAEAFEull },
+        { "sleek_frontier_64", 0x6A09E667F3BCC909ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x947405784E98B68Dull },
+        { "fighter_military_96", 0xBB67AE8584CAA73Bull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::MILITARY, false, 0xA9696F29981B73D8ull },
+        { "heavy_xeno_64", 0x3C6EF372FE94F82Bull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::XENO, true, 0x317232E9FC78BE22ull },
+        { "industrial_ascendant_96", 0xA54FF53A5F1D36F1ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0xCD43A39ABA890A98ull }
     } };
 
     void hashByte(uint64_t& hash, uint8_t value)

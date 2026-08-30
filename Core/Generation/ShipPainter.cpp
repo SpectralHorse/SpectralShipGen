@@ -61,6 +61,7 @@ namespace PixelShipGenerator
         paintDetails(ship, palette);
         paintCockpit(context, ship, palette, context.ScaleTraits);
         paintEngines(ship, palette, context.ScaleTraits);
+        paintComponentDepthReadability(context, ship, palette);
     }
 
 
@@ -676,6 +677,300 @@ namespace PixelShipGenerator
         }
     }
 
+
+    void ShipPainter::paintComponentDepthReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        const uint32_t shadingComplexity = context.ScaleTraits.ShadingComplexity;
+        if (shadingComplexity < 20u)
+        {
+            return;
+        }
+
+        // Reassert semantic mounting after livery/details have been painted.  This
+        // intentionally derives only from existing component geometry and does
+        // not change any structural mask or consume RNG.
+        paintWeaponMountReadability(context, ship, palette);
+        paintAttachmentMountReadability(context, ship, palette);
+        paintCockpitReadability(context, ship, palette);
+        paintEngineMountReadability(context, ship, palette);
+
+        if (shadingComplexity >= 40u)
+        {
+            const bool strongShadow = shadingComplexity >= 75u;
+            paintSemanticContactShadow(context, ship, context.CoreTreatment.RaisedMask, strongShadow);
+            for (const HullLayerPlacement& placement : context.HullLayers.Placements)
+            {
+                paintSemanticContactShadow(context, ship, placement.Mask, strongShadow && placement.Order > 0u);
+            }
+            paintSemanticContactShadow(context, ship, context.MajorFeatures.RaisedMask, strongShadow);
+            paintSemanticContactShadow(context, ship, ship.EngineMask, false);
+            paintWingRootReadability(context, ship, palette);
+        }
+    }
+
+    void ShipPainter::paintSemanticContactShadow(const ShipGenerationContext& context, GeneratedShip& ship, const PixelMask& elevatedMask, bool strongShadow) const
+    {
+        if (PixelMaskUtils::getMaskPixelCount(elevatedMask) == 0u)
+        {
+            return;
+        }
+
+        for (uint32_t y = 0u; y < elevatedMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < elevatedMask.getWidth(); ++x)
+            {
+                if (!elevatedMask.get(x, y))
+                {
+                    continue;
+                }
+
+                const int32_t targets[3][2] =
+                {
+                    { static_cast<int32_t>(x) + 1, static_cast<int32_t>(y) },
+                    { static_cast<int32_t>(x), static_cast<int32_t>(y) + 1 },
+                    { static_cast<int32_t>(x) + 1, static_cast<int32_t>(y) + 1 }
+                };
+
+                for (const auto& target : targets)
+                {
+                    if (target[0] < 0 || target[1] < 0 || target[0] >= static_cast<int32_t>(ship.FinalImage.getWidth()) || target[1] >= static_cast<int32_t>(ship.FinalImage.getHeight()))
+                    {
+                        continue;
+                    }
+
+                    const uint32_t targetX = static_cast<uint32_t>(target[0]);
+                    const uint32_t targetY = static_cast<uint32_t>(target[1]);
+                    if (elevatedMask.get(targetX, targetY) || !isDepthSupportHullPixel(context, targetX, targetY))
+                    {
+                        continue;
+                    }
+
+                    const Color currentColor = ship.FinalImage.getPixel(targetX, targetY);
+                    ship.FinalImage.setPixel(targetX, targetY, getDepthShadowColor(currentColor, ship.Palette, strongShadow));
+                }
+            }
+        }
+    }
+
+    void ShipPainter::paintWeaponMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        const WeaponData& weapons = context.Weapons;
+        if (weapons.empty())
+        {
+            return;
+        }
+
+        // Root masks are explicit hull-supported weapon sockets.  Painting them
+        // again after livery prevents a marking from flattening the mount back
+        // into the hull plane.
+        for (uint32_t y = 0u; y < weapons.RootMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < weapons.RootMask.getWidth(); ++x)
+            {
+                if (!weapons.RootMask.get(x, y))
+                {
+                    continue;
+                }
+
+                const PixelMaskUtils::DirectionalMaskExposure exposure = PixelMaskUtils::getDirectionalMaskExposure(weapons.RootMask, x, y);
+                if (context.ScaleTraits.ShadingComplexity >= 40u)
+                {
+                    const uint32_t highlightExposure = exposure.getHighlightExposure();
+                    const uint32_t shadowExposure = exposure.getShadowExposure();
+                    ship.FinalImage.setPixel(x, y, highlightExposure > shadowExposure ? palette.MechanicalBase
+                        : (shadowExposure > highlightExposure ? palette.MechanicalDark : palette.EngineDark));
+                }
+                else
+                {
+                    ship.FinalImage.setPixel(x, y, exposure.getShadowExposure() > exposure.getHighlightExposure() ? palette.MechanicalBase : palette.MechanicalDark);
+                }
+            }
+        }
+
+        if (context.ScaleTraits.ShadingComplexity < 40u)
+        {
+            return;
+        }
+
+        // Large enough weapon housings receive a one-pixel support shadow and a
+        // raised lip where the body itself overlaps hull pixels.  Interiors are
+        // deliberately left untouched so livery can still read through broad
+        // structural surfaces rather than being erased wholesale.
+        paintSemanticContactShadow(context, ship, weapons.BodyMask, context.ScaleTraits.ShadingComplexity >= 75u);
+        const bool strongBevel = context.ScaleTraits.ShadingComplexity >= 65u;
+        for (uint32_t y = 0u; y < weapons.BodyMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < weapons.BodyMask.getWidth(); ++x)
+            {
+                if (!weapons.BodyMask.get(x, y) || !ship.HullMask.get(x, y))
+                {
+                    continue;
+                }
+
+                const PixelMaskUtils::DirectionalMaskExposure exposure = PixelMaskUtils::getDirectionalMaskExposure(weapons.BodyMask, x, y);
+                if (!exposure.isBoundary())
+                {
+                    continue;
+                }
+
+                const Color currentColor = ship.FinalImage.getPixel(x, y);
+                Color bodyInterior = currentColor;
+                if (currentColor == palette.HullAccent || currentColor == palette.HullAccentHighlight || currentColor == palette.HullAccentDark)
+                {
+                    bodyInterior = palette.HullAccent;
+                }
+                ship.FinalImage.setPixel(x, y, getRaisedMaskColor(weapons.BodyMask, x, y, bodyInterior, palette, strongBevel));
+            }
+        }
+    }
+
+    void ShipPainter::paintAttachmentMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        const uint32_t shadingComplexity = context.ScaleTraits.ShadingComplexity;
+        for (const ShipAttachmentPlacement& placement : ship.AttachmentPlacements)
+        {
+            const uint32_t maximumOutwardDistance = getAttachmentMaximumOutwardDistance(placement);
+            if (maximumOutwardDistance < 2u)
+            {
+                continue;
+            }
+
+            const bool fullRootSocket = shadingComplexity >= 40u;
+            for (uint32_t y = placement.MinimumY; y <= placement.MaximumY && y < ship.AttachmentMask.getHeight(); ++y)
+            {
+                for (uint32_t x = placement.MinimumX; x <= placement.MaximumX && x < ship.AttachmentMask.getWidth(); ++x)
+                {
+                    if (!ship.AttachmentMask.get(x, y) || getAttachmentOutwardDistance(placement, x, y) != 1u)
+                    {
+                        continue;
+                    }
+
+                    if (!fullRootSocket && getAttachmentTangentCoordinate(placement, x, y) != 0)
+                    {
+                        continue;
+                    }
+
+                    int32_t supportX = static_cast<int32_t>(x);
+                    int32_t supportY = static_cast<int32_t>(y);
+                    switch (placement.Direction)
+                    {
+                    case ShipAttachmentDirection::LEFT: ++supportX; break;
+                    case ShipAttachmentDirection::RIGHT: --supportX; break;
+                    case ShipAttachmentDirection::UP: ++supportY; break;
+                    case ShipAttachmentDirection::DOWN: --supportY; break;
+                    default: break;
+                    }
+
+                    if (supportX < 0 || supportY < 0 || supportX >= static_cast<int32_t>(ship.FinalImage.getWidth()) || supportY >= static_cast<int32_t>(ship.FinalImage.getHeight()))
+                    {
+                        continue;
+                    }
+
+                    const uint32_t targetX = static_cast<uint32_t>(supportX);
+                    const uint32_t targetY = static_cast<uint32_t>(supportY);
+                    if (!isDepthSupportHullPixel(context, targetX, targetY))
+                    {
+                        continue;
+                    }
+
+                    const Color currentColor = ship.FinalImage.getPixel(targetX, targetY);
+                    if (currentColor == palette.HullAccent || currentColor == palette.HullAccentHighlight || currentColor == palette.HullAccentDark)
+                    {
+                        ship.FinalImage.setPixel(targetX, targetY, palette.HullAccentDark);
+                    }
+                    else
+                    {
+                        ship.FinalImage.setPixel(targetX, targetY, fullRootSocket ? palette.MechanicalDark : palette.HullDeepShadow);
+                    }
+                }
+            }
+        }
+    }
+
+    void ShipPainter::paintCockpitReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS || context.ScaleTraits.ShadingComplexity < 60u)
+        {
+            return;
+        }
+
+        // A dark inner edge on the lower/right side of a structural frame reads
+        // as a recess without brightening or enlarging the canopy.
+        for (uint32_t y = 0u; y < context.Cockpit.FrameMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < context.Cockpit.FrameMask.getWidth(); ++x)
+            {
+                if (!context.Cockpit.FrameMask.get(x, y))
+                {
+                    continue;
+                }
+
+                const int32_t pixelX = static_cast<int32_t>(x);
+                const int32_t pixelY = static_cast<int32_t>(y);
+                const bool glassLeft = PixelMaskUtils::isMaskPixel(context.Cockpit.GlassMask, pixelX - 1, pixelY);
+                const bool glassAbove = PixelMaskUtils::isMaskPixel(context.Cockpit.GlassMask, pixelX, pixelY - 1);
+                if (glassLeft || glassAbove)
+                {
+                    ship.FinalImage.setPixel(x, y, palette.HullDeepShadow);
+                }
+            }
+        }
+    }
+
+    void ShipPainter::paintEngineMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        if (context.ScaleTraits.ShadingComplexity < 40u)
+        {
+            return;
+        }
+
+        // Engines are rear-mounted assemblies.  A one-pixel seam immediately
+        // inboard of the housing gives the rear hull a clear join without
+        // changing nozzle/exhaust geometry or adding static effects.
+        for (uint32_t y = 0u; y < ship.EngineMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < ship.EngineMask.getWidth(); ++x)
+            {
+                if (!ship.EngineMask.get(x, y) || y == 0u || PixelMaskUtils::isMaskPixel(ship.EngineMask, static_cast<int32_t>(x), static_cast<int32_t>(y) - 1))
+                {
+                    continue;
+                }
+
+                const uint32_t supportY = y - 1u;
+                if (!isDepthSupportHullPixel(context, x, supportY))
+                {
+                    continue;
+                }
+
+                const Color currentColor = ship.FinalImage.getPixel(x, supportY);
+                ship.FinalImage.setPixel(x, supportY, currentColor == palette.HullAccent || currentColor == palette.HullAccentHighlight || currentColor == palette.HullAccentDark
+                    ? palette.HullAccentDark : palette.HullDeepShadow);
+            }
+        }
+    }
+
+    void ShipPainter::paintWingRootReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
+    {
+        if (!context.WingRegions.hasWings())
+        {
+            return;
+        }
+
+        for (uint32_t y = 0u; y < ship.HullMask.getHeight(); ++y)
+        {
+            for (uint32_t x = 0u; x < ship.HullMask.getWidth(); ++x)
+            {
+                if (!isWingInnerBoundaryPixel(context, x, y) || !isDepthSupportHullPixel(context, x, y))
+                {
+                    continue;
+                }
+
+                const Color currentColor = ship.FinalImage.getPixel(x, y);
+                ship.FinalImage.setPixel(x, y, getDepthShadowColor(currentColor, palette, context.ScaleTraits.ShadingComplexity >= 75u));
+            }
+        }
+    }
+
     void ShipPainter::paintLowerRightContactShadow(GeneratedShip& ship, const PixelMask& elevatedMask, const PixelMask& supportMask, const Color& shadowColor, uint32_t shadowDistance) const
     {
         if (shadowDistance == 0u)
@@ -1080,6 +1375,62 @@ namespace PixelShipGenerator
     uint32_t ShipPainter::getColorLuma(const Color& color) const
     {
         return (static_cast<uint32_t>(color.R) * 54u + static_cast<uint32_t>(color.G) * 183u + static_cast<uint32_t>(color.B) * 19u) >> 8u;
+    }
+
+
+    bool ShipPainter::isDepthSupportHullPixel(const ShipGenerationContext& context, uint32_t x, uint32_t y) const
+    {
+        const GeneratedShip& ship = context.Ship;
+        if (!ship.HullMask.get(x, y) || context.StructuralNegativeSpace.ReservedMask.get(x, y))
+        {
+            return false;
+        }
+
+        // Do not replace another semantic component or Task-61 detail motif with
+        // a generic depth cue.  Livery/material color is intentionally allowed
+        // and is darkened through its own palette family below.
+        return !ship.CockpitMask.get(x, y)
+            && !ship.EngineMask.get(x, y)
+            && !ship.EngineExhaustMask.get(x, y)
+            && !ship.AttachmentMask.get(x, y)
+            && !context.Weapons.OccupiedMask.get(x, y)
+            && !context.CoreTreatment.RaisedMask.get(x, y)
+            && !context.CoreTreatment.RecessedMask.get(x, y)
+            && !context.HullLayers.OccupiedMask.get(x, y)
+            && !context.MajorFeatures.OccupiedMask.get(x, y)
+            && !ship.AccentMask.get(x, y)
+            && !ship.MechanicalDetailMask.get(x, y)
+            && !ship.LightMask.get(x, y);
+    }
+
+    Color ShipPainter::getDepthShadowColor(const Color& currentColor, const ShipPalette& palette, bool strongShadow) const
+    {
+        if (currentColor == palette.HullAccentHighlight || currentColor == palette.HullAccent || currentColor == palette.HullAccentDark)
+        {
+            return palette.HullAccentDark;
+        }
+
+        if (currentColor == palette.MechanicalBase || currentColor == palette.MechanicalDark)
+        {
+            return palette.MechanicalDark;
+        }
+
+        if (currentColor == palette.EngineHighlight || currentColor == palette.EngineBase || currentColor == palette.EngineDark)
+        {
+            return palette.EngineDark;
+        }
+
+        if (currentColor == palette.Outline || currentColor.A == 0u)
+        {
+            return currentColor;
+        }
+
+        if (currentColor == palette.HullEdgeHighlight || currentColor == palette.HullHighlight || currentColor == palette.HullBase || currentColor == palette.HullSecondary || currentColor == palette.HullShadow || currentColor == palette.HullDeepShadow)
+        {
+            return strongShadow ? palette.HullDeepShadow : palette.HullShadow;
+        }
+
+        return currentColor;
     }
 
     Color ShipPainter::getHullPixelColor(const ShipGenerationContext& context, const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, const ShipGenerationProfile& profile) const

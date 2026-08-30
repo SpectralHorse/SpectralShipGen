@@ -29,6 +29,13 @@ namespace PixelShipGenerator
         void paintCockpit(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
         void paintEngines(GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
         void paintDetails(GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintComponentDepthReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintSemanticContactShadow(const ShipGenerationContext& context, GeneratedShip& ship, const PixelMask& elevatedMask, bool strongShadow) const;
+        void paintWeaponMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintAttachmentMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintCockpitReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintEngineMountReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
+        void paintWingRootReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
         void paintLowerRightContactShadow(GeneratedShip& ship, const PixelMask& elevatedMask, const PixelMask& supportMask, const Color& shadowColor, uint32_t shadowDistance) const;
 
         bool isShipStructurePixel(const GeneratedShip& ship, int32_t x, int32_t y) const;
@@ -52,6 +59,8 @@ namespace PixelShipGenerator
         bool isSecondaryHullTonePixel(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipGenerationProfile& profile) const;
         uint64_t getDeterministicPaintHash(uint64_t seed, uint32_t x, uint32_t y, uint64_t salt) const;
         uint32_t getColorLuma(const Color& color) const;
+        bool isDepthSupportHullPixel(const ShipGenerationContext& context, uint32_t x, uint32_t y) const;
+        Color getDepthShadowColor(const Color& currentColor, const ShipPalette& palette, bool strongShadow) const;
 
         Color getHullPixelColor(const ShipGenerationContext& context, const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, const ShipGenerationProfile& profile) const;
         Color getAttachmentPixelColor(const GeneratedShip& ship, const ShipAttachmentPlacement& placement, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
