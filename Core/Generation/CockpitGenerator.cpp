@@ -102,7 +102,7 @@ namespace PixelShipGenerator
         }
 
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& profile = context.Profile;
         ship.CockpitMask.clear(false);
         context.Cockpit.reset(settings.Dimensions.Width, settings.Dimensions.Height);
@@ -226,7 +226,7 @@ namespace PixelShipGenerator
     void CockpitGenerator::generateLegacyCockpit(ShipGenerationContext& context) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& profile = context.Profile;
         ship.CockpitMask.clear(false);
         context.Cockpit.reset(settings.Dimensions.Width, settings.Dimensions.Height);

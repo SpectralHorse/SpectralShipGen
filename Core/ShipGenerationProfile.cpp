@@ -1,5 +1,7 @@
 #include <PixelShipGenerator/ShipGenerationProfile.h>
 
+#include <stdexcept>
+
 namespace PixelShipGenerator
 {
     namespace
@@ -1283,7 +1285,7 @@ namespace PixelShipGenerator
         case ShipStyle::FIGHTER: return FighterProfile;
         case ShipStyle::SPEARHEAD: return SpearheadProfile;
         case ShipStyle::DELTA: return DeltaProfile;
-        default: return FighterProfile;
+        default: throw std::invalid_argument("getShipGenerationProfile requires a valid built-in ShipStyle.");
         }
     }
 }

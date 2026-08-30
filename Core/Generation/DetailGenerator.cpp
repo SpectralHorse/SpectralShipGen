@@ -116,7 +116,7 @@ namespace PixelShipGenerator
     void DetailGenerator::generate(ShipGenerationContext& context) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& profile = context.Profile;
         ship.AccentMask.clear(false);
         ship.MechanicalDetailMask.clear(false);
@@ -455,7 +455,7 @@ namespace PixelShipGenerator
     void DetailGenerator::generateAccentDetails(ShipGenerationContext& context, const ResolvedSurfaceDetailProfile& profile) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const uint32_t width = ship.HullMask.getWidth();
         const uint32_t height = ship.HullMask.getHeight();
 
@@ -611,7 +611,7 @@ namespace PixelShipGenerator
     void DetailGenerator::generateMechanicalDetails(ShipGenerationContext& context, const ResolvedSurfaceDetailProfile& profile) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const uint32_t width = ship.HullMask.getWidth();
         const uint32_t height = ship.HullMask.getHeight();
 
@@ -709,7 +709,7 @@ namespace PixelShipGenerator
     void DetailGenerator::generateLightDetails(ShipGenerationContext& context, const ResolvedSurfaceDetailProfile& profile) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const uint32_t width = ship.HullMask.getWidth();
         const uint32_t height = ship.HullMask.getHeight();
 
@@ -774,7 +774,7 @@ namespace PixelShipGenerator
     void DetailGenerator::generateSupplementalSurfaceDetails(ShipGenerationContext& context, const ResolvedSurfaceDetailProfile& profile) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const uint32_t width = ship.HullMask.getWidth();
         const uint32_t height = ship.HullMask.getHeight();
 
@@ -1224,7 +1224,7 @@ namespace PixelShipGenerator
         return true;
     }
 
-    ResolvedSurfaceDetailProfile DetailGenerator::resolveSurfaceDetailProfile(const ShipGenerationSettings& settings, const ShipGenerationProfile& styleProfile) const
+    ResolvedSurfaceDetailProfile DetailGenerator::resolveSurfaceDetailProfile(const ShipGenerationConfiguration& settings, const ShipGenerationProfile& styleProfile) const
     {
         const ShipFactionSurfaceDetailProfile& factionProfile = getShipFactionSurfaceDetailProfile(settings.Faction);
         ResolvedSurfaceDetailProfile result;

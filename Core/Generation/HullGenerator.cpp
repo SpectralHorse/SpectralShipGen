@@ -177,7 +177,7 @@ namespace PixelShipGenerator
     void HullGenerator::generateBaseHull(ShipGenerationContext& context) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& profile = context.Profile;
         const uint32_t imageWidth = settings.Dimensions.Width;
         const uint32_t imageHeight = settings.Dimensions.Height;

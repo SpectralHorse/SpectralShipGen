@@ -57,7 +57,7 @@ namespace PixelShipGenerator
     void AttachmentGenerator::generate(ShipGenerationContext& context) const
     {
         GeneratedShip& ship = context.Ship;
-        const ShipGenerationSettings& settings = context.Settings;
+        const ShipGenerationConfiguration& settings = context.Settings;
         const ShipGenerationProfile& styleProfile = context.Profile;
         ship.AttachmentMask.clear(false);
         ship.AttachmentPlacements.clear();

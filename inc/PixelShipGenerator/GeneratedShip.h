@@ -22,7 +22,7 @@ namespace PixelShipGenerator
         GenerationDomainSeeds DomainSeeds;
         ShipPalette Palette;
         ShipAnimationTraits AnimationTraits;
-        ShipStyle Style = ShipStyle::FIGHTER; // Built-in preset provenance / compatibility metadata.
+        ShipStyle Style = ShipStyle::SHIP_STYLE_END; // Built-in preset provenance; SHIP_STYLE_END means custom/no built-in origin.
         ShipFactionType Faction = ShipFactionType::FRONTIER;
 
         PixelMask HullMask;

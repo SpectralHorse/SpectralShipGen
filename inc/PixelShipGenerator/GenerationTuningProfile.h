@@ -69,13 +69,18 @@ namespace PixelShipGenerator
 
     struct GenerationCalibrationSettings
     {
+        // Built-in-preset tuning catalog used by the legacy Style path.
         const GenerationTuningProfile* TuningProfile = nullptr;
+        // Style-independent tuning for explicit-profile generation. Supplying
+        // both tuning pointers is invalid/ambiguous.
+        const GenerationTuningStyleProfile* ExplicitTuningProfile = nullptr;
         GenerationCalibrationOverrides Overrides;
         std::optional<GenerationWeightGroup> IsolatedGroup;
         uint64_t IsolationSalt = 0u;
     };
 
     GenerationTuningProfile createDefaultGenerationTuningProfile();
+    ShipGenerationProfile applyGenerationTuningProfile(const ShipGenerationProfile& baseProfile, const GenerationTuningStyleProfile& tuningProfile);
     ShipGenerationProfile applyGenerationTuningProfile(const ShipGenerationProfile& baseProfile, ShipStyle style, const GenerationTuningProfile& tuningProfile);
 
     GenerationWeightGroupKind getGenerationWeightGroupKind(GenerationWeightGroup group);

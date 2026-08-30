@@ -45,7 +45,7 @@ namespace PixelShipGenerator
         bool tryAddSymmetricDetailRectangle(ShipGenerationContext& context, PixelMask& targetMask, uint32_t startX, uint32_t startY, uint32_t width, uint32_t height, uint32_t spatialCost = 2u, bool allowHullLayerBoundary = false) const;
         bool tryAddDetailRectangle(ShipGenerationContext& context, PixelMask& targetMask, uint32_t startX, uint32_t startY, uint32_t width, uint32_t height, uint32_t spatialCost = 2u, bool allowHullLayerBoundary = false) const;
         bool isDetailRectangleAvailable(const ShipGenerationContext& context, uint32_t startX, uint32_t startY, uint32_t width, uint32_t height, bool allowHullLayerBoundary = false) const;
-        ResolvedSurfaceDetailProfile resolveSurfaceDetailProfile(const ShipGenerationSettings& settings, const ShipGenerationProfile& styleProfile) const;
+        ResolvedSurfaceDetailProfile resolveSurfaceDetailProfile(const ShipGenerationConfiguration& settings, const ShipGenerationProfile& styleProfile) const;
         uint32_t composeSurfaceDetailPercent(uint32_t baseValue, uint32_t multiplierPercent) const;
         uint32_t composeSurfaceDetailChance(uint32_t baseChance, uint32_t multiplierPercent) const;
         bool isSurfaceDetailPixelAvailable(const ShipGenerationContext& context, uint32_t x, uint32_t y, bool allowHullLayerBoundary = false) const;

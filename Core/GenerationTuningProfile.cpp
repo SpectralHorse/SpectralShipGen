@@ -53,10 +53,9 @@ namespace PixelShipGenerator
         return result;
     }
 
-    ShipGenerationProfile applyGenerationTuningProfile(const ShipGenerationProfile& baseProfile, ShipStyle style, const GenerationTuningProfile& tuningProfile)
+    ShipGenerationProfile applyGenerationTuningProfile(const ShipGenerationProfile& baseProfile, const GenerationTuningStyleProfile& tuned)
     {
         ShipGenerationProfile result = baseProfile;
-        const GenerationTuningStyleProfile& tuned = tuningProfile.Styles[styleIndex(style)];
 
         result.CentralEngineWeight = tuned.EngineLayoutWeights[0u];
         result.TwinEngineWeight = tuned.EngineLayoutWeights[1u];
@@ -94,6 +93,15 @@ namespace PixelShipGenerator
         result.AttachmentChance = tuned.AttachmentChance;
         result.LargeWeaponChance = tuned.LargeWeaponChance;
         return result;
+    }
+
+    ShipGenerationProfile applyGenerationTuningProfile(const ShipGenerationProfile& baseProfile, ShipStyle style, const GenerationTuningProfile& tuningProfile)
+    {
+        if (style >= ShipStyle::SHIP_STYLE_END)
+        {
+            throw std::invalid_argument("Generation tuning requires a valid built-in ShipStyle.");
+        }
+        return applyGenerationTuningProfile(baseProfile, tuningProfile.Styles[styleIndex(style)]);
     }
 
     GenerationWeightGroupKind getGenerationWeightGroupKind(GenerationWeightGroup group)

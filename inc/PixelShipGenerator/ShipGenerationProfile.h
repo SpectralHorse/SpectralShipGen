@@ -372,6 +372,17 @@ namespace PixelShipGenerator
 
     struct ShipGenerationProfile
     {
+        // Public field semantics:
+        // - *Chance values are probabilities and use 0..100.
+        // - *Weight values are non-negative relative selection weights; their
+        //   absolute magnitude is not a probability.
+        // - scale/size/strength *Percent values are multipliers where 100 is
+        //   baseline and values above 100 may be valid.
+        // - UIntRange values are inclusive and must satisfy Min <= Max.
+        // - count/maximum fields are discrete limits; signed offsets/biases may
+        //   intentionally be negative or positive.
+        // validateShipGenerationProfile() defines the complete safety contract.
+
         // Post-generation behavior resolved with the structural preset.
         // Animation consumes these semantics rather than built-in ShipStyle identity.
         ShipAnimationTraits AnimationTraits;

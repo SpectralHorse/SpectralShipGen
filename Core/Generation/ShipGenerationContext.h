@@ -31,7 +31,20 @@ namespace PixelShipGenerator
 {
     struct ShipGenerationContext
     {
-        ShipGenerationContext(const ShipGenerationSettings& settings, const ShipGenerationProfile& profile, const ShipGenerationSeeds& seeds, ShipGenerationDebugInfo* debugInfo = nullptr, const GenerationCalibrationSettings* calibrationSettings = nullptr);
+        ShipGenerationContext(const ShipGenerationConfiguration& settings,
+            const ShipGenerationProfile& profile,
+            const ShipGenerationSeeds& seeds,
+            ShipGenerationDebugInfo* debugInfo = nullptr,
+            const GenerationCalibrationSettings* calibrationSettings = nullptr,
+            ShipStyle builtInStyleProvenance = ShipStyle::SHIP_STYLE_END);
+
+        // Internal compatibility entry for generation-focused regressions/helpers
+        // that still construct a context from the legacy preset settings.
+        ShipGenerationContext(const ShipGenerationSettings& settings,
+            const ShipGenerationProfile& profile,
+            const ShipGenerationSeeds& seeds,
+            ShipGenerationDebugInfo* debugInfo = nullptr,
+            const GenerationCalibrationSettings* calibrationSettings = nullptr);
 
         uint32_t getGenerationRandomUInt(GenerationDomain domain, uint32_t minimum, uint32_t maximum);
         uint32_t getGenerationRandomUInt(GenerationDomain domain, const UIntRange& range);
@@ -47,7 +60,7 @@ namespace PixelShipGenerator
         void updateLiveryDebugInfo();
         void updateDetailMotifDebugInfo();
 
-        const ShipGenerationSettings& Settings;
+        ShipGenerationConfiguration Settings;
         const ShipGenerationProfile& Profile;
         GenerationScaleTraits ScaleTraits;
         GenerationComplexityBudget ComplexityBudget;

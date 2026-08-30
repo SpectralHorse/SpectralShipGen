@@ -1,5 +1,6 @@
 #include "ShipGenerator.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <stdexcept>
@@ -22,6 +23,7 @@
 #include "Generation/VisualHierarchyPlanner.h"
 #include "GenerationTuningProfile.h"
 #include "ShipGenerationProfile.h"
+#include "ShipGenerationProfileValidation.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationPerformance.h"
 #include "ShipPaletteGenerator.h"
@@ -69,48 +71,142 @@ namespace PixelShipGenerator
 
     ShipGenerator::ShipGenerator() = default;
 
+    namespace
+    {
+        void validateBuiltInStyle(ShipStyle style)
+        {
+            if (style >= ShipStyle::SHIP_STYLE_END)
+            {
+                throw std::invalid_argument("ShipGenerationSettings.Style must select a valid built-in preset.");
+            }
+        }
+
+        ShipGenerationConfiguration copyGenerationConfiguration(const ShipGenerationSettings& settings)
+        {
+            ShipGenerationConfiguration configuration;
+            configuration.Seed = settings.Seed;
+            configuration.Dimensions = settings.Dimensions;
+            configuration.Faction = settings.Faction;
+            configuration.DetailDensity = settings.DetailDensity;
+            configuration.AsymmetricDetailChance = settings.AsymmetricDetailChance;
+            configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
+            configuration.SeedOverrides = settings.SeedOverrides;
+            configuration.DomainSeedOverrides = settings.DomainSeedOverrides;
+            configuration.RandomStreamMode = settings.RandomStreamMode;
+            return configuration;
+        }
+
+        void validateGenerationConfiguration(const ShipGenerationConfiguration& configuration)
+        {
+            if (configuration.Dimensions.Width < 16u || configuration.Dimensions.Height < 16u)
+            {
+                throw std::invalid_argument("Ship generation dimensions must be at least 16 pixels.");
+            }
+            if (configuration.Faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
+            {
+                throw std::invalid_argument("Ship generation requires a valid built-in ShipFactionType.");
+            }
+        }
+
+        void validateResolvedProfile(const ShipGenerationProfile& profile)
+        {
+            const ShipGenerationProfileValidationResult validation = validateShipGenerationProfile(profile);
+            if (validation.isValid())
+            {
+                return;
+            }
+
+            std::string message = "Invalid ShipGenerationProfile";
+            const std::size_t maximumReportedErrors = 4u;
+            const std::size_t errorCount = std::min(maximumReportedErrors, validation.Errors.size());
+            for (std::size_t index = 0u; index < errorCount; ++index)
+            {
+                message += index == 0u ? ": " : "; ";
+                message += validation.Errors[index].Field + " - " + validation.Errors[index].Message;
+            }
+            if (validation.Errors.size() > errorCount)
+            {
+                message += "; ...";
+            }
+            throw std::invalid_argument(message);
+        }
+
+        ShipGenerationProfile resolveCalibration(const ShipGenerationProfile& profile,
+            ShipStyle builtInStyleProvenance,
+            const GenerationCalibrationSettings* calibrationSettings)
+        {
+            if (calibrationSettings == nullptr)
+            {
+                return profile;
+            }
+            if (calibrationSettings->TuningProfile != nullptr && calibrationSettings->ExplicitTuningProfile != nullptr)
+            {
+                throw std::invalid_argument("GenerationCalibrationSettings cannot specify both TuningProfile and ExplicitTuningProfile.");
+            }
+            if (calibrationSettings->ExplicitTuningProfile != nullptr)
+            {
+                return applyGenerationTuningProfile(profile, *calibrationSettings->ExplicitTuningProfile);
+            }
+            if (calibrationSettings->TuningProfile != nullptr)
+            {
+                if (builtInStyleProvenance >= ShipStyle::SHIP_STYLE_END)
+                {
+                    throw std::invalid_argument("Explicit-profile calibration cannot use a style-indexed TuningProfile; supply ExplicitTuningProfile instead.");
+                }
+                return applyGenerationTuningProfile(profile, builtInStyleProvenance, *calibrationSettings->TuningProfile);
+            }
+            return profile;
+        }
+    }
+
     GeneratedShip ShipGenerator::generate(const ShipGenerationSettings& settings)
     {
-        return generateInternal(settings, nullptr, nullptr, nullptr);
+        return generate(settings, nullptr, nullptr);
     }
 
     GeneratedShip ShipGenerator::generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo)
     {
-        return generateInternal(settings, nullptr, debugInfo, nullptr);
+        return generate(settings, debugInfo, nullptr);
     }
 
     GeneratedShip ShipGenerator::generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
-        return generateInternal(settings, nullptr, debugInfo, performanceInfo);
+        validateBuiltInStyle(settings.Style);
+        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), settings.Style, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationSettings& settings, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
     {
-        return generateInternal(settings, &calibrationSettings, debugInfo, nullptr);
+        validateBuiltInStyle(settings.Style);
+        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), settings.Style, &calibrationSettings, debugInfo, nullptr);
     }
 
-    GeneratedShip ShipGenerator::generateInternal(const ShipGenerationSettings& settings, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    GeneratedShip ShipGenerator::generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
-        if (settings.Dimensions.Width < 16u || settings.Dimensions.Height < 16u)
-        {
-            throw std::invalid_argument("ShipGenerationSettings dimensions must be at least 16 pixels.");
-        }
+        return generateInternal(configuration, profile, ShipStyle::SHIP_STYLE_END, nullptr, debugInfo, performanceInfo);
+    }
+
+    GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
+    {
+        return generateInternal(configuration, profile, ShipStyle::SHIP_STYLE_END, &calibrationSettings, debugInfo, nullptr);
+    }
+
+    GeneratedShip ShipGenerator::generateInternal(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& sourceProfile, ShipStyle builtInStyleProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    {
+        validateGenerationConfiguration(configuration);
+
+        const ShipGenerationProfile profile = resolveCalibration(sourceProfile, builtInStyleProvenance, calibrationSettings);
+        validateResolvedProfile(profile);
 
         const auto generationStart = performanceInfo == nullptr ? std::chrono::steady_clock::time_point() : std::chrono::steady_clock::now();
         if (performanceInfo != nullptr) { performanceInfo->reset(); }
 
         const auto setupStart = performanceInfo == nullptr ? std::chrono::steady_clock::time_point() : std::chrono::steady_clock::now();
-        ShipGenerationSeeds seeds = deriveShipGenerationSeeds(settings.Seed);
-        seeds = applyShipGenerationSeedOverrides(seeds, settings.SeedOverrides);
+        ShipGenerationSeeds seeds = deriveShipGenerationSeeds(configuration.Seed);
+        seeds = applyShipGenerationSeedOverrides(seeds, configuration.SeedOverrides);
 
-        ShipGenerationProfile profile = getShipGenerationProfile(settings.Style);
-        if (calibrationSettings != nullptr && calibrationSettings->TuningProfile != nullptr)
-        {
-            profile = applyGenerationTuningProfile(profile, settings.Style, *calibrationSettings->TuningProfile);
-        }
-
-        ShipGenerationContext context(settings, profile, seeds, debugInfo, calibrationSettings);
-        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Faction, profile, settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        ShipGenerationContext context(configuration, profile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance);
+        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), configuration.Faction, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
 
         HullGenerator hullGenerator;
         HullLayerGenerator hullLayerGenerator;
@@ -210,7 +306,7 @@ namespace PixelShipGenerator
                 if (isolateWeapon) { context.endGenerationDomainCalibrationSubstream(); }
                 context.ComplexityBudget.finalizeCategory(GenerationComplexityCategory::LARGE_WEAPON);
 
-                if (settings.AttachmentsEnabled)
+                if (configuration.AttachmentsEnabled)
                 {
                     const bool isolateAttachment = calibrationSettings != nullptr && calibrationSettings->IsolatedGroup.has_value() && groupUsesAttachmentStage(*calibrationSettings->IsolatedGroup);
                     if (isolateAttachment) { context.beginGenerationDomainCalibrationSubstream(GenerationDomain::ATTACHMENTS, calibrationSalt(*calibrationSettings, AttachmentCalibrationSalt)); }
@@ -237,6 +333,6 @@ namespace PixelShipGenerator
         }
 
         if (performanceInfo != nullptr) { performanceInfo->TotalDurationNanoseconds = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - generationStart).count()); }
-        throw std::runtime_error("Failed to generate a valid hull within the maximum number of attempts for seed = " + std::to_string(settings.Seed));
+        throw std::runtime_error("Failed to generate a valid hull within the maximum number of attempts for seed = " + std::to_string(configuration.Seed));
     }
 }
