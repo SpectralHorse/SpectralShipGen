@@ -60,6 +60,7 @@ namespace PixelShipGeneratorTests
     int runPreviewWorkspaceRegression();
     int runPreviewInspectionRegression();
     int runPreviewAnimationLabRegression();
+    int runPreviewUiQolRegression();
     int runGenerationCalibrationRegression();
     int runAttributeRerollStudioRegression();
     int runDiagnosticsAppRegression();
