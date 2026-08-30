@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ShipAnimationTraits.h"
 #include "ShipAttachmentProfile.h"
 #include "ShipCockpitType.h"
 #include "ShipCoreTreatmentType.h"
@@ -371,6 +372,10 @@ namespace PixelShipGenerator
 
     struct ShipGenerationProfile
     {
+        // Post-generation behavior resolved with the structural preset.
+        // Animation consumes these semantics rather than built-in ShipStyle identity.
+        ShipAnimationTraits AnimationTraits;
+
         ShipVisualAnchorWeights VisualAnchorWeights;
         uint32_t VisualSecondaryAnchorChance = 32u;
         bool VisualHierarchyEnabled = true;

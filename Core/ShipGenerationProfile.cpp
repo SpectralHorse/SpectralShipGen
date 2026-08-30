@@ -136,6 +136,25 @@ namespace PixelShipGenerator
             profile.LiveryWeights.IdPanel = 70u;
             profile.LiveryWeights.GeometricInsignia = 45u;
 
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 2u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 100u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 3u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 65u;
+            profile.AnimationTraits.Idle.VentActivityChance = 45u;
+            profile.AnimationTraits.Idle.AsynchronousEngines = true;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 100u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 2u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.Responsive = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 100u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 100u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 80u;
+            profile.AnimationTraits.LongitudinalMovement.Responsive = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 105u;
+            profile.AnimationTraits.Firing.Responsive = true;
+
             return profile;
         }
 
@@ -331,6 +350,25 @@ namespace PixelShipGenerator
             profile.CentralDorsalPlateTone = ShipHullSurfaceTone::HIGHLIGHT;
             profile.AxialRidgeUsesEdgeHighlight = true;
             profile.MacroAsymmetryCategoryWeights = { 32u, 28u, 40u };
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 1u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 65u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 1u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 30u;
+            profile.AnimationTraits.Idle.VentActivityChance = 30u;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 65u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.Responsive = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 70u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 75u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 65u;
+            profile.AnimationTraits.LongitudinalMovement.Responsive = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 75u;
+            profile.AnimationTraits.Firing.MaximumRecoilLimit = 1u;
+            profile.AnimationTraits.Firing.Responsive = true;
+
             return profile;
         }
 
@@ -521,6 +559,26 @@ namespace PixelShipGenerator
             profile.WeaponHierarchyUsesWingRoot = false;
             profile.CoreRaisedSurfaceTone = ShipHullSurfaceTone::BASE;
             profile.MacroAsymmetryCategoryWeights = { 50u, 35u, 15u };
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 2u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 100u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 4u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 50u;
+            profile.AnimationTraits.Idle.VentActivityChance = 50u;
+            profile.AnimationTraits.Idle.SlowMechanicalCycle = true;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 65u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.HeavyResponse = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 65u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 70u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 60u;
+            profile.AnimationTraits.LongitudinalMovement.HeavyResponse = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 115u;
+            profile.AnimationTraits.Firing.DurationAdditionMilliseconds = 55u;
+            profile.AnimationTraits.Firing.HeavyResponse = true;
+
             return profile;
         }
 
@@ -710,6 +768,29 @@ namespace PixelShipGenerator
             profile.WeaponHierarchyUsesWingRoot = false;
             profile.MaterialWingSurfaceUsesFullWing = false;
             profile.MacroAsymmetryCategoryWeights = { 30u, 20u, 50u };
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 2u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 90u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 8u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 80u;
+            profile.AnimationTraits.Idle.VentActivityChance = 90u;
+            profile.AnimationTraits.Idle.AsynchronousEngines = true;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 110u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 2u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 2u;
+            profile.AnimationTraits.LateralMovement.Staggered = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 115u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 100u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 100u;
+            profile.AnimationTraits.LongitudinalMovement.ExhaustVariationLimit = 2u;
+            profile.AnimationTraits.LongitudinalMovement.AttachmentTravelLimit = 2u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingTravelLimit = 2u;
+            profile.AnimationTraits.LongitudinalMovement.Staggered = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 120u;
+            profile.AnimationTraits.Firing.AdditionalRecoilLimit = 1u;
+            profile.AnimationTraits.Firing.MinimumPreFireExtensionLimit = 1u;
+
             return profile;
         }
 
@@ -929,6 +1010,25 @@ namespace PixelShipGenerator
             profile.MacroAsymmetryOuterRegionChance = 30u;
             profile.MacroAsymmetryWingRootRegionChance = 35u;
             profile.MacroAsymmetryVisualWeightPercent = 80u;
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 2u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 110u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 2u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 45u;
+            profile.AnimationTraits.Idle.VentActivityChance = 28u;
+            profile.AnimationTraits.Idle.SynchronizeEngines = true;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 70u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 1u;
+            profile.AnimationTraits.LateralMovement.Synchronized = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 105u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 100u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 75u;
+            profile.AnimationTraits.LongitudinalMovement.Synchronized = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 105u;
+            profile.AnimationTraits.Firing.RailWeaponAdditionalRecoilLimit = 1u;
+
             return profile;
         }
 
@@ -1141,6 +1241,27 @@ namespace PixelShipGenerator
             profile.MacroAsymmetryOuterRegionChance = 78u;
             profile.MacroAsymmetryWingRootRegionChance = 76u;
             profile.MacroAsymmetryVisualWeightPercent = 90u;
+
+            // Task 80: resolved post-generation animation semantics.
+            profile.AnimationTraits.Idle.EnginePulseStrength = 2u;
+            profile.AnimationTraits.Idle.ExhaustAmplitudePercent = 95u;
+            profile.AnimationTraits.Idle.EngineMechanicalChance = 4u;
+            profile.AnimationTraits.Idle.WeaponMechanicalChance = 60u;
+            profile.AnimationTraits.Idle.VentActivityChance = 42u;
+            profile.AnimationTraits.Idle.AlternateEnginePhases = true;
+            profile.AnimationTraits.LateralMovement.ResponseStrengthPercent = 100u;
+            profile.AnimationTraits.LateralMovement.EngineTravelLimit = 2u;
+            profile.AnimationTraits.LateralMovement.AttachmentTravelLimit = 2u;
+            profile.AnimationTraits.LateralMovement.HeavyResponse = true;
+            profile.AnimationTraits.LongitudinalMovement.ResponseStrengthPercent = 95u;
+            profile.AnimationTraits.LongitudinalMovement.AccelerationExtensionPercent = 90u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingContractionPercent = 90u;
+            profile.AnimationTraits.LongitudinalMovement.AttachmentTravelLimit = 2u;
+            profile.AnimationTraits.LongitudinalMovement.BrakingTravelLimit = 2u;
+            profile.AnimationTraits.LongitudinalMovement.HeavyResponse = true;
+            profile.AnimationTraits.Firing.ResponseStrengthPercent = 95u;
+            profile.AnimationTraits.Firing.DurationAdditionMilliseconds = 20u;
+
             return profile;
         }
     }

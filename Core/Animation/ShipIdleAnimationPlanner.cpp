@@ -34,59 +34,16 @@ namespace IdleAnimationInternal
     IdleAnimationProfile getIdleAnimationProfile(const PixelShipGenerator::GeneratedShip& ship)
     {
         IdleAnimationProfile profile;
-
-        switch (ship.Style)
-        {
-        case PixelShipGenerator::ShipStyle::SLEEK:
-            profile.EnginePulseStrength = 1u;
-            profile.ExhaustAmplitudePercent = 65u;
-            profile.EngineMechanicalChance = 1u;
-            profile.WeaponMechanicalChance = 30u;
-            profile.VentActivityChance = 30u;
-            break;
-        case PixelShipGenerator::ShipStyle::FIGHTER:
-            profile.EnginePulseStrength = 2u;
-            profile.ExhaustAmplitudePercent = 100u;
-            profile.EngineMechanicalChance = 3u;
-            profile.WeaponMechanicalChance = 65u;
-            profile.VentActivityChance = 45u;
-            profile.AsynchronousEngines = true;
-            break;
-        case PixelShipGenerator::ShipStyle::HEAVY:
-            profile.EnginePulseStrength = 2u;
-            profile.ExhaustAmplitudePercent = 100u;
-            profile.EngineMechanicalChance = 4u;
-            profile.WeaponMechanicalChance = 50u;
-            profile.VentActivityChance = 50u;
-            profile.SlowMechanicalCycle = true;
-            break;
-        case PixelShipGenerator::ShipStyle::INDUSTRIAL:
-            profile.EnginePulseStrength = 2u;
-            profile.ExhaustAmplitudePercent = 90u;
-            profile.EngineMechanicalChance = 8u;
-            profile.WeaponMechanicalChance = 80u;
-            profile.VentActivityChance = 90u;
-            profile.AsynchronousEngines = true;
-            break;
-        case PixelShipGenerator::ShipStyle::SPEARHEAD:
-            profile.EnginePulseStrength = 2u;
-            profile.ExhaustAmplitudePercent = 110u;
-            profile.EngineMechanicalChance = 2u;
-            profile.WeaponMechanicalChance = 45u;
-            profile.VentActivityChance = 28u;
-            profile.SynchronizeEngines = true;
-            break;
-        case PixelShipGenerator::ShipStyle::DELTA:
-            profile.EnginePulseStrength = 2u;
-            profile.ExhaustAmplitudePercent = 95u;
-            profile.EngineMechanicalChance = 4u;
-            profile.WeaponMechanicalChance = 60u;
-            profile.VentActivityChance = 42u;
-            profile.AlternateEnginePhases = true;
-            break;
-        default:
-            break;
-        }
+        const PixelShipGenerator::ShipIdleAnimationTraits& traits = ship.AnimationTraits.Idle;
+        profile.EnginePulseStrength = traits.EnginePulseStrength;
+        profile.ExhaustAmplitudePercent = traits.ExhaustAmplitudePercent;
+        profile.EngineMechanicalChance = traits.EngineMechanicalChance;
+        profile.WeaponMechanicalChance = traits.WeaponMechanicalChance;
+        profile.VentActivityChance = traits.VentActivityChance;
+        profile.SynchronizeEngines = traits.SynchronizeEngines;
+        profile.AsynchronousEngines = traits.AsynchronousEngines;
+        profile.AlternateEnginePhases = traits.AlternateEnginePhases;
+        profile.SlowMechanicalCycle = traits.SlowMechanicalCycle;
 
         switch (ship.Faction)
         {

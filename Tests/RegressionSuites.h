@@ -12,6 +12,7 @@ namespace PixelShipGeneratorTests
     int runLongitudinalMovementAnimationRegression();
     int runFiringAnimationRegression();
     int runAnimationStateCompatibilityRegression();
+    int runAnimationProfileRoutingRegression();
     int runGenerationDiagnosticsRegression();
     int runGenerationRecipeRegression();
     int runGeneratorStatisticsRegression();

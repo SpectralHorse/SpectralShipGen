@@ -5,6 +5,7 @@
 
 #include "Image.h"
 #include "PixelMask.h"
+#include "ShipAnimationTraits.h"
 #include "ShipAttachment.h"
 #include "ShipFactionType.h"
 #include "ShipGenerationProfile.h"
@@ -20,7 +21,8 @@ namespace PixelShipGenerator
         ShipGenerationSeeds Seeds;
         GenerationDomainSeeds DomainSeeds;
         ShipPalette Palette;
-        ShipStyle Style = ShipStyle::FIGHTER;
+        ShipAnimationTraits AnimationTraits;
+        ShipStyle Style = ShipStyle::FIGHTER; // Built-in preset provenance / compatibility metadata.
         ShipFactionType Faction = ShipFactionType::FRONTIER;
 
         PixelMask HullMask;

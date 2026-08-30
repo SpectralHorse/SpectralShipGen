@@ -83,6 +83,7 @@ namespace
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(0x70F1A1A1ull + dimensions.Width * 257ull + dimensions.Height);
         ship.reset(dimensions.Width, dimensions.Height, seeds);
         ship.DomainSeeds = resolveGenerationDomainSeeds(seeds, {});
+        ship.AnimationTraits = getShipGenerationProfile(style).AnimationTraits;
         ship.Style = style;
         ship.Faction = faction;
 

@@ -113,38 +113,15 @@ namespace
             break;
         }
 
-        switch (ship.Style)
-        {
-        case ShipStyle::SLEEK:
-            profile.ResponseStrengthPercent = 75u;
-            profile.RecoilLimit = std::min(profile.RecoilLimit, 1u);
-            profile.Responsive = true;
-            break;
-        case ShipStyle::FIGHTER:
-            profile.ResponseStrengthPercent = 105u;
-            profile.Responsive = true;
-            break;
-        case ShipStyle::HEAVY:
-            profile.ResponseStrengthPercent = 115u;
-            profile.BaseDurationMilliseconds += 55u;
-            profile.HeavyResponse = true;
-            break;
-        case ShipStyle::INDUSTRIAL:
-            profile.ResponseStrengthPercent = 120u;
-            profile.RecoilLimit += 1u;
-            profile.PreFireExtensionLimit = std::max(1u, profile.PreFireExtensionLimit);
-            break;
-        case ShipStyle::SPEARHEAD:
-            profile.ResponseStrengthPercent = 105u;
-            if (type == ShipWeaponType::RAIL_WEAPON) { profile.RecoilLimit += 1u; }
-            break;
-        case ShipStyle::DELTA:
-            profile.ResponseStrengthPercent = 95u;
-            profile.BaseDurationMilliseconds += 20u;
-            break;
-        default:
-            break;
-        }
+        const ShipFiringAnimationTraits& traits = ship.AnimationTraits.Firing;
+        profile.ResponseStrengthPercent = traits.ResponseStrengthPercent;
+        profile.BaseDurationMilliseconds += traits.DurationAdditionMilliseconds;
+        if (traits.MaximumRecoilLimit != 0u) { profile.RecoilLimit = std::min(profile.RecoilLimit, traits.MaximumRecoilLimit); }
+        profile.RecoilLimit += traits.AdditionalRecoilLimit;
+        if (type == ShipWeaponType::RAIL_WEAPON) { profile.RecoilLimit += traits.RailWeaponAdditionalRecoilLimit; }
+        profile.PreFireExtensionLimit = std::max(profile.PreFireExtensionLimit, traits.MinimumPreFireExtensionLimit);
+        profile.HeavyResponse = profile.HeavyResponse || traits.HeavyResponse;
+        profile.Responsive = profile.Responsive || traits.Responsive;
 
         switch (ship.Faction)
         {

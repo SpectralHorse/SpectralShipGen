@@ -103,7 +103,7 @@ namespace
         return 1.0 - inverse * inverse * inverse;
     }
 
-    double sampleStyleTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementProfile& profile, double value)
+    double sampleProfileTransitionResponse(const PixelShipGenerator::GeneratedShip& ship, const LateralMovementProfile& profile, double value)
     {
         double t = std::clamp(value, 0.0, 1.0);
         if (ship.Faction == PixelShipGenerator::ShipFactionType::RELIC) { t *= t; }
@@ -123,7 +123,7 @@ namespace
         {
             if (time <= delay) { return 0.0; }
             const double local = (time - delay) / std::max(0.000001, 1.0 - delay);
-            return sampleStyleTransitionResponse(ship, profile, local);
+            return sampleProfileTransitionResponse(ship, profile, local);
         }
 
         if (phase == PixelShipGenerator::ShipMovementAnimationPhase::EXIT)
@@ -131,7 +131,7 @@ namespace
             if (time >= 1.0) { return 0.0; }
             const double activeDuration = std::max(0.000001, 1.0 - delay);
             const double local = std::clamp(time / activeDuration, 0.0, 1.0);
-            return 1.0 - sampleStyleTransitionResponse(ship, profile, local);
+            return 1.0 - sampleProfileTransitionResponse(ship, profile, local);
         }
 
         return 1.0;
@@ -159,48 +159,15 @@ namespace
     LateralMovementProfile getLateralMovementProfile(const PixelShipGenerator::GeneratedShip& ship)
     {
         LateralMovementProfile profile;
-
-        switch (ship.Style)
-        {
-        case PixelShipGenerator::ShipStyle::SLEEK:
-            profile.ResponseStrengthPercent = 65u;
-            profile.EngineTravelLimit = 1u;
-            profile.AttachmentTravelLimit = 1u;
-            profile.Responsive = true;
-            break;
-        case PixelShipGenerator::ShipStyle::FIGHTER:
-            profile.ResponseStrengthPercent = 100u;
-            profile.EngineTravelLimit = 2u;
-            profile.AttachmentTravelLimit = 1u;
-            profile.Responsive = true;
-            break;
-        case PixelShipGenerator::ShipStyle::HEAVY:
-            profile.ResponseStrengthPercent = 65u;
-            profile.EngineTravelLimit = 1u;
-            profile.AttachmentTravelLimit = 1u;
-            profile.HeavyResponse = true;
-            break;
-        case PixelShipGenerator::ShipStyle::INDUSTRIAL:
-            profile.ResponseStrengthPercent = 110u;
-            profile.EngineTravelLimit = 2u;
-            profile.AttachmentTravelLimit = 2u;
-            profile.Staggered = true;
-            break;
-        case PixelShipGenerator::ShipStyle::SPEARHEAD:
-            profile.ResponseStrengthPercent = 70u;
-            profile.EngineTravelLimit = 1u;
-            profile.AttachmentTravelLimit = 1u;
-            profile.Synchronized = true;
-            break;
-        case PixelShipGenerator::ShipStyle::DELTA:
-            profile.ResponseStrengthPercent = 100u;
-            profile.EngineTravelLimit = 2u;
-            profile.AttachmentTravelLimit = 2u;
-            profile.HeavyResponse = true;
-            break;
-        default:
-            break;
-        }
+        const PixelShipGenerator::ShipLateralMovementAnimationTraits& traits = ship.AnimationTraits.LateralMovement;
+        profile.ResponseStrengthPercent = traits.ResponseStrengthPercent;
+        profile.EngineTravelLimit = traits.EngineTravelLimit;
+        profile.WeaponTravelLimit = traits.WeaponTravelLimit;
+        profile.AttachmentTravelLimit = traits.AttachmentTravelLimit;
+        profile.Synchronized = traits.Synchronized;
+        profile.Staggered = traits.Staggered;
+        profile.HeavyResponse = traits.HeavyResponse;
+        profile.Responsive = traits.Responsive;
 
         switch (ship.Faction)
         {

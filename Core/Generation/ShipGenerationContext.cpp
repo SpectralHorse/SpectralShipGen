@@ -12,6 +12,7 @@ namespace PixelShipGenerator
     {
         Ship.reset(settings.Dimensions.Width, settings.Dimensions.Height, seeds);
         Ship.DomainSeeds = DomainSeeds;
+        Ship.AnimationTraits = profile.AnimationTraits;
         Ship.Style = settings.Style;
         Ship.Faction = settings.Faction;
         WingRegions.reset(settings.Dimensions.Width, settings.Dimensions.Height);
