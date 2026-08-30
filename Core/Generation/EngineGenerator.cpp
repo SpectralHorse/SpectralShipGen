@@ -10,6 +10,7 @@
 
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
+#include "ShipFactionProfile.h"
 
 namespace PixelShipGenerator
 {
@@ -43,24 +44,22 @@ namespace PixelShipGenerator
 
         FactionEngineProfile getFactionEngineProfile(ShipFactionType faction)
         {
+            const ShipFactionEngineProfile& source = getShipFactionProfile(faction).Engines;
             FactionEngineProfile profile;
-            switch (faction)
-            {
-            case ShipFactionType::CORPORATE:
-                profile.LayoutWeightPercent = { 78u, 132u, 112u, 108u, 118u };
-                profile.SizeWeightPercent = { 55u, 170u, 70u };
-                profile.NacelleChancePercent = 180u;
-                profile.ExternalHeightPercent = 92u;
-                break;
-            case ShipFactionType::RELIC:
-                profile.LayoutWeightPercent = { 148u, 82u, 55u, 138u, 68u };
-                profile.SizeWeightPercent = { 15u, 55u, 330u };
-                profile.NacelleChancePercent = 25u;
-                profile.ExternalHeightPercent = 60u;
-                break;
-            default:
-                break;
-            }
+            profile.LayoutWeightPercent = {
+                source.LayoutWeightMultipliersPercent.Central,
+                source.LayoutWeightMultipliersPercent.Twin,
+                source.LayoutWeightMultipliersPercent.Quad,
+                source.LayoutWeightMultipliersPercent.CentralAuxiliary,
+                source.LayoutWeightMultipliersPercent.WideBank
+            };
+            profile.SizeWeightPercent = {
+                source.SizeWeightMultipliersPercent.Small,
+                source.SizeWeightMultipliersPercent.Medium,
+                source.SizeWeightMultipliersPercent.Large
+            };
+            profile.NacelleChancePercent = source.NacelleChancePercent;
+            profile.ExternalHeightPercent = source.ExternalHeightPercent;
             return profile;
         }
 

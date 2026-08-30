@@ -7,6 +7,7 @@
 
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
+#include "ShipFactionProfile.h"
 
 namespace PixelShipGenerator
 {
@@ -837,65 +838,13 @@ namespace PixelShipGenerator
 
     MajorFeatureGenerator::FactionMajorFeatureProfile MajorFeatureGenerator::getFactionProfile(ShipFactionType faction) const
     {
+        const ShipFactionMajorFeatureProfile& source = getShipFactionProfile(faction).MajorFeatures;
         FactionMajorFeatureProfile profile;
-        profile.WeightMultipliers.fill(100u);
-
-        switch (faction)
+        profile.ChancePercent = source.ChancePercent;
+        for (std::size_t index = 0u; index < profile.WeightMultipliers.size(); ++index)
         {
-        case ShipFactionType::FRONTIER:
-            profile.ChancePercent = 110u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::CENTRAL_SPINE)] = 80u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 120u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 130u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 130u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 100u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 50u;
-            break;
-        case ShipFactionType::MILITARY:
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 130u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 90u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 110u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 120u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 70u;
-            break;
-        case ShipFactionType::ASCENDANT:
-            profile.ChancePercent = 90u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::CENTRAL_SPINE)] = 130u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 80u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 60u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 50u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 90u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 160u;
-            break;
-        case ShipFactionType::XENO:
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::CENTRAL_SPINE)] = 90u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 70u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 70u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 80u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 110u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 160u;
-            break;
-        case ShipFactionType::CORPORATE:
-            profile.ChancePercent = 98u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::CENTRAL_SPINE)] = 100u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 135u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 115u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 68u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 122u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 95u;
-            break;
-        case ShipFactionType::RELIC:
-            profile.ChancePercent = 112u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::CENTRAL_SPINE)] = 175u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::ARMOR_PLATE)] = 150u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::RECESSED_BAY)] = 120u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::VENT_BANK)] = 38u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::WING_PLATE)] = 72u;
-            profile.WeightMultipliers[static_cast<std::size_t>(ShipMajorFeatureType::TECH_CORE)] = 185u;
-            break;
-        default: break;
+            profile.WeightMultipliers[index] = source.WeightMultipliersPercent.getWeightPercent(static_cast<ShipMajorFeatureType>(index));
         }
-
         return profile;
     }
 

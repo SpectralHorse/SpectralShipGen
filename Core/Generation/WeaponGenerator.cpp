@@ -11,6 +11,7 @@
 #include "WeaponCandidateBuilder.h"
 #include "WeaponCandidateValidator.h"
 #include "WeaponGenerationInternal.h"
+#include "ShipFactionProfile.h"
 #include "WeaponHardpointPlanner.h"
 
 namespace PixelShipGenerator
@@ -204,51 +205,15 @@ namespace PixelShipGenerator
 
         FactionWeaponProfile getFactionWeaponProfile(ShipFactionType faction)
         {
+            const ShipFactionWeaponProfile& source = getShipFactionProfile(faction).Weapons;
             FactionWeaponProfile profile;
-            profile.WeightMultipliers.fill(100u);
-
-            switch (faction)
+            profile.ChancePercent = source.ChancePercent;
+            profile.SymmetryChanceOffset = source.SymmetryChanceOffset;
+            profile.EmissiveChance = source.EmissiveChance;
+            for (std::size_t index = 0u; index < profile.WeightMultipliers.size(); ++index)
             {
-            case ShipFactionType::FRONTIER:
-                profile.ChancePercent = 100u;
-                profile.SymmetryChanceOffset = -15;
-                profile.WeightMultipliers = { 125u, 85u, 90u, 70u, 135u };
-                profile.EmissiveChance = 10u;
-                break;
-            case ShipFactionType::MILITARY:
-                profile.ChancePercent = 120u;
-                profile.SymmetryChanceOffset = 15;
-                profile.WeightMultipliers = { 120u, 145u, 105u, 110u, 115u };
-                profile.EmissiveChance = 20u;
-                break;
-            case ShipFactionType::ASCENDANT:
-                profile.ChancePercent = 85u;
-                profile.SymmetryChanceOffset = 10;
-                profile.WeightMultipliers = { 60u, 80u, 125u, 165u, 55u };
-                profile.EmissiveChance = 80u;
-                break;
-            case ShipFactionType::XENO:
-                profile.ChancePercent = 100u;
-                profile.SymmetryChanceOffset = -5;
-                profile.WeightMultipliers = { 75u, 95u, 135u, 145u, 115u };
-                profile.EmissiveChance = 65u;
-                break;
-            case ShipFactionType::CORPORATE:
-                profile.ChancePercent = 108u;
-                profile.SymmetryChanceOffset = 24;
-                profile.WeightMultipliers = { 82u, 142u, 100u, 88u, 155u };
-                profile.EmissiveChance = 28u;
-                break;
-            case ShipFactionType::RELIC:
-                profile.ChancePercent = 94u;
-                profile.SymmetryChanceOffset = 4;
-                profile.WeightMultipliers = { 58u, 78u, 145u, 175u, 62u };
-                profile.EmissiveChance = 76u;
-                break;
-            default:
-                break;
+                profile.WeightMultipliers[index] = source.WeightMultipliersPercent.getWeightPercent(static_cast<ShipWeaponType>(index));
             }
-
             return profile;
         }
 

@@ -60,6 +60,9 @@ namespace PixelShipGenerator
         ShipDetailMotifWeights MotifWeightMultipliersPercent;
         uint32_t MotifRepeatPercent = 100u;
         int32_t AsymmetricDetailChanceOffset = 0;
+        // Independent chance to anchor a luminous-channel detail inside the
+        // generated central/core region when that region exists.
+        uint32_t LuminousChannelCoreRegionBiasChance = 0u;
     };
 
     struct ResolvedSurfaceDetailProfile
