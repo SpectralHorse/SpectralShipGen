@@ -59,6 +59,7 @@ namespace PixelShipGeneratorTests
     int runDiagnosticsAppRegression();
     int runPreviewConfigurationEditorRegression();
     int runPreviewFactionProfileEditorRegression();
+    int runPreviewPaletteEditorRegression();
 
     std::vector<RegressionSuite> createCoreRegressionSuites();
     std::vector<RegressionSuite> createPreviewRegressionSuites();
