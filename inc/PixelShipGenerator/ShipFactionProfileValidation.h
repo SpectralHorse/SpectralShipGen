@@ -1,24 +1,12 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "ShipFactionProfile.h"
+#include "Validation.h"
 
 namespace PixelShipGenerator
 {
-    struct ShipFactionProfileValidationIssue
-    {
-        std::string Field;
-        std::string Message;
-    };
-
-    struct ShipFactionProfileValidationResult
-    {
-        std::vector<ShipFactionProfileValidationIssue> Errors;
-
-        bool isValid() const noexcept { return Errors.empty(); }
-    };
+    using ShipFactionProfileValidationIssue = ValidationIssue;
+    using ShipFactionProfileValidationResult = ValidationResult;
 
     // Validates safety and semantic contracts only. Unusual but safe custom
     // technological/material languages are intentionally accepted.

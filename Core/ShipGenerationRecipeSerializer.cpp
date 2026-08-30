@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "BuiltInPresetCatalog.h"
 #include "ShipFactionProfileValidation.h"
 #include "ShipGenerationProfileValidation.h"
 #include "ShipGenerationRecipeJson.h"
@@ -201,41 +202,10 @@ namespace PixelShipGenerator
 
         bool validateCommonRecipe(const ShipGenerationRecipe& recipe, std::string& error)
         {
-            if (recipe.Dimensions.Width < 16u || recipe.Dimensions.Height < 16u) { error = "ship.dimensions must be at least 16x16."; return false; }
-            if (recipe.Dimensions.Width > 4096u || recipe.Dimensions.Height > 4096u) { error = "ship.dimensions are unreasonably large."; return false; }
-            if (recipe.DetailDensity > 100u) { error = "ship.settings.detail_density must be in the range 0-100."; return false; }
-            if (recipe.AsymmetricDetailChance > 100u) { error = "ship.settings.asymmetric_detail_chance must be in the range 0-100."; return false; }
-            if (recipe.RandomStreamMode >= GenerationRandomStreamMode::GENERATION_RANDOM_STREAM_MODE_END) { error = "ship.seeds.rng_mode is invalid."; return false; }
-
-            if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
-            {
-                if (recipe.Style >= ShipStyle::SHIP_STYLE_END) { error = "Built-in structural recipe source requires a valid style preset."; return false; }
-            }
-            else if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
-            {
-                const ShipGenerationProfileValidationResult validation = validateShipGenerationProfile(recipe.StructuralProfile);
-                if (!validation.isValid()) { error = "Embedded structural profile is invalid: " + validation.Errors.front().Field + " - " + validation.Errors.front().Message; return false; }
-            }
-            else { error = "Structural recipe source is invalid."; return false; }
-
-            if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
-            {
-                if (recipe.Faction >= ShipFactionType::SHIP_FACTION_TYPE_END) { error = "Built-in faction recipe source requires a valid faction preset."; return false; }
-            }
-            else if (recipe.FactionSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
-            {
-                const ShipFactionProfileValidationResult validation = validateShipFactionProfile(recipe.FactionProfile);
-                if (!validation.isValid()) { error = "Embedded faction profile is invalid: " + validation.Errors.front().Field + " - " + validation.Errors.front().Message; return false; }
-            }
-            else { error = "Faction recipe source is invalid."; return false; }
-
-            if (recipe.PaletteConfiguration.Mode >= ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END) { error = "Palette recipe source is invalid."; return false; }
-            if (recipe.PaletteConfiguration.Mode == ShipPaletteSourceMode::EXPLICIT_GENERATED)
-            {
-                const ShipPaletteGenerationProfileValidationResult validation = validateShipPaletteGenerationProfile(recipe.PaletteConfiguration.Generated);
-                if (!validation.isValid()) { error = "Embedded palette-generation profile is invalid: " + validation.Errors.front().Field + " - " + validation.Errors.front().Message; return false; }
-            }
-            return true;
+            const ValidationResult validation = validateShipGenerationRecipe(recipe);
+            if (validation.isValid()) { return true; }
+            error = "Invalid ship generation recipe: " + validation.Errors.front().Field + " - " + validation.Errors.front().Message;
+            return false;
         }
 
         bool validateAnimation(const ShipIdleAnimationSettings& settings, std::string& error)
@@ -447,52 +417,22 @@ namespace PixelShipGenerator
 
     std::string shipStyleToRecipeString(ShipStyle style)
     {
-        switch (style)
-        {
-        case ShipStyle::SLEEK: return "SLEEK";
-        case ShipStyle::FIGHTER: return "FIGHTER";
-        case ShipStyle::HEAVY: return "HEAVY";
-        case ShipStyle::INDUSTRIAL: return "INDUSTRIAL";
-        case ShipStyle::SPEARHEAD: return "SPEARHEAD";
-        case ShipStyle::DELTA: return "DELTA";
-        default: throw std::invalid_argument("Cannot serialize unknown ShipStyle value.");
-        }
+        return std::string(getBuiltInStructuralPresetId(style));
     }
 
     std::string shipFactionToRecipeString(ShipFactionType faction)
     {
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER: return "FRONTIER";
-        case ShipFactionType::MILITARY: return "MILITARY";
-        case ShipFactionType::ASCENDANT: return "ASCENDANT";
-        case ShipFactionType::XENO: return "XENO";
-        case ShipFactionType::CORPORATE: return "CORPORATE";
-        case ShipFactionType::RELIC: return "RELIC";
-        default: throw std::invalid_argument("Cannot serialize unknown ShipFactionType value.");
-        }
+        return std::string(getBuiltInFactionPresetId(faction));
     }
 
     bool shipStyleFromRecipeString(const std::string& value, ShipStyle& style)
     {
-        if (value == "SLEEK") { style = ShipStyle::SLEEK; return true; }
-        if (value == "FIGHTER") { style = ShipStyle::FIGHTER; return true; }
-        if (value == "HEAVY") { style = ShipStyle::HEAVY; return true; }
-        if (value == "INDUSTRIAL") { style = ShipStyle::INDUSTRIAL; return true; }
-        if (value == "SPEARHEAD") { style = ShipStyle::SPEARHEAD; return true; }
-        if (value == "DELTA") { style = ShipStyle::DELTA; return true; }
-        return false;
+        return tryGetBuiltInStructuralPreset(value, style);
     }
 
     bool shipFactionFromRecipeString(const std::string& value, ShipFactionType& faction)
     {
-        if (value == "FRONTIER") { faction = ShipFactionType::FRONTIER; return true; }
-        if (value == "MILITARY") { faction = ShipFactionType::MILITARY; return true; }
-        if (value == "ASCENDANT") { faction = ShipFactionType::ASCENDANT; return true; }
-        if (value == "XENO") { faction = ShipFactionType::XENO; return true; }
-        if (value == "CORPORATE") { faction = ShipFactionType::CORPORATE; return true; }
-        if (value == "RELIC") { faction = ShipFactionType::RELIC; return true; }
-        return false;
+        return tryGetBuiltInFactionPreset(value, faction);
     }
 
     std::string serializeShipGenerationRecipe(const ShipGenerationRecipeDocument& document)

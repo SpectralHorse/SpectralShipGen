@@ -9,12 +9,14 @@
 #include "ShipGenerationSeeds.h"
 #include "ShipIdleAnimation.h"
 #include "ShipPaletteConfiguration.h"
+#include "Validation.h"
 
 namespace PixelShipGenerator
 {
     struct ShipGenerationSettings;
     struct ShipGenerationConfiguration;
     struct ExplicitShipGenerationConfiguration;
+    struct ShipResolvedGenerationConfiguration;
 
     enum class ShipGenerationRecipeProfileSource : uint32_t
     {
@@ -61,6 +63,9 @@ namespace PixelShipGenerator
     ShipGenerationRecipe makeShipGenerationRecipe(const ShipGenerationSettings& settings);
     ShipGenerationRecipe makeShipGenerationRecipe(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile);
     ShipGenerationRecipe makeShipGenerationRecipe(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile);
+    ShipGenerationRecipe makeShipGenerationRecipe(const ShipResolvedGenerationConfiguration& configuration);
+
+    ValidationResult validateShipGenerationRecipe(const ShipGenerationRecipe& recipe);
 
     bool operator==(const ShipGenerationRecipe& first, const ShipGenerationRecipe& second);
     bool operator!=(const ShipGenerationRecipe& first, const ShipGenerationRecipe& second);

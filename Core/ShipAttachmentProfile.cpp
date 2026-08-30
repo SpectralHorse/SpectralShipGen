@@ -20,10 +20,6 @@ namespace PixelShipGenerator
 
     const ShipFactionAttachmentProfile& getShipFactionAttachmentProfile(ShipFactionType faction)
     {
-        if (faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
-        {
-            return getShipFactionProfile(ShipFactionType::FRONTIER).Attachments;
-        }
         return getShipFactionProfile(faction).Attachments;
     }
 }

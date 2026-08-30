@@ -35,10 +35,6 @@ namespace PixelShipGenerator
 
     const ShipFactionSurfaceDetailProfile& getShipFactionSurfaceDetailProfile(ShipFactionType faction)
     {
-        if (faction >= ShipFactionType::SHIP_FACTION_TYPE_END)
-        {
-            return getShipFactionProfile(ShipFactionType::FRONTIER).SurfaceDetails;
-        }
         return getShipFactionProfile(faction).SurfaceDetails;
     }
 }

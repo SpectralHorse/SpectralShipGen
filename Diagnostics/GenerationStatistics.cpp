@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "DiagnosticsRunner.h"
+#include "BuiltInPresetCatalog.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationSettings.h"
 #include "ShipGenerator.h"
@@ -23,34 +24,16 @@ namespace
 
     const char* styleName(PixelShipGenerator::ShipStyle style)
     {
-        using PixelShipGenerator::ShipStyle;
-        switch (style)
-        {
-        case ShipStyle::SLEEK: return "SLEEK";
-        case ShipStyle::FIGHTER: return "FIGHTER";
-        case ShipStyle::HEAVY: return "HEAVY";
-        case ShipStyle::INDUSTRIAL: return "INDUSTRIAL";
-        case ShipStyle::SPEARHEAD: return "SPEARHEAD";
-        case ShipStyle::DELTA: return "DELTA";
-        case ShipStyle::SHIP_STYLE_END: return "CUSTOM";
-        default: return "UNKNOWN";
-        }
+        if (style == PixelShipGenerator::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
+        for (const auto& entry : PixelShipGenerator::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
+        return "UNKNOWN";
     }
 
     const char* factionName(PixelShipGenerator::ShipFactionType faction)
     {
-        using PixelShipGenerator::ShipFactionType;
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER: return "FRONTIER";
-        case ShipFactionType::MILITARY: return "MILITARY";
-        case ShipFactionType::ASCENDANT: return "ASCENDANT";
-        case ShipFactionType::XENO: return "XENO";
-        case ShipFactionType::CORPORATE: return "CORPORATE";
-        case ShipFactionType::RELIC: return "RELIC";
-        case ShipFactionType::SHIP_FACTION_TYPE_END: return "CUSTOM";
-        default: return "UNKNOWN";
-        }
+        if (faction == PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
+        for (const auto& entry : PixelShipGenerator::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
+        return "UNKNOWN";
     }
     struct MaskMetrics
     {

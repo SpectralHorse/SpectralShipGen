@@ -11,6 +11,7 @@
 #include <tuple>
 
 #include "ShipGenerator.h"
+#include "ShipResolvedGenerationConfiguration.h"
 #include "ShipGenerationProfile.h"
 #include "ShipFactionProfile.h"
 #include "ShipGenerationSeeds.h"
@@ -303,7 +304,7 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsResult DiagnosticsRunner::run(const DiagnosticsRunConfiguration& configuration, const DiagnosticsProgressCallback& progressCallback, const DiagnosticsCancellationCallback& cancellationCallback, const DiagnosticsSampleCallback& sampleCallback) const
     {
-        return runInternal(configuration, nullptr, nullptr, progressCallback, cancellationCallback, sampleCallback);
+        return runInternal(configuration, nullptr, progressCallback, cancellationCallback, sampleCallback);
     }
 
     DiagnosticsResult DiagnosticsRunner::run(
@@ -314,26 +315,39 @@ namespace PixelShipGeneratorDiagnostics
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
     {
-        DiagnosticsRunConfiguration explicitConfiguration = configuration;
-        explicitConfiguration.Styles = { PixelShipGenerator::ShipStyle::SHIP_STYLE_END };
-        explicitConfiguration.Factions = { PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END };
-        return runInternal(explicitConfiguration, &profile, &factionProfile, progressCallback, cancellationCallback, sampleCallback);
+        PixelShipGenerator::ExplicitShipGenerationConfiguration generation;
+        generation.Dimensions = configuration.Dimensions.empty() ? PixelShipGenerator::ShipDimensions{ 44u, 44u } : configuration.Dimensions.front();
+        generation.DetailDensity = configuration.DetailDensity;
+        generation.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+        generation.AttachmentsEnabled = configuration.AttachmentsEnabled;
+        return run(configuration, PixelShipGenerator::resolveShipGenerationConfiguration(generation, profile, factionProfile), progressCallback, cancellationCallback, sampleCallback);
     }
 
-    DiagnosticsResult DiagnosticsRunner::runInternal(
+    DiagnosticsResult DiagnosticsRunner::run(
         const DiagnosticsRunConfiguration& configuration,
-        const PixelShipGenerator::ShipGenerationProfile* profile,
-        const PixelShipGenerator::ShipFactionProfile* factionProfile,
+        const PixelShipGenerator::ShipResolvedGenerationConfiguration& resolvedConfiguration,
         const DiagnosticsProgressCallback& progressCallback,
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
     {
-        const bool explicitProfiles = profile != nullptr || factionProfile != nullptr;
-        if (explicitProfiles && (profile == nullptr || factionProfile == nullptr))
+        DiagnosticsRunConfiguration explicitConfiguration = configuration;
+        explicitConfiguration.Styles = { resolvedConfiguration.Provenance.StructuralPreset.value_or(PixelShipGenerator::ShipStyle::SHIP_STYLE_END) };
+        explicitConfiguration.Factions = { resolvedConfiguration.Provenance.FactionPreset.value_or(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END) };
+        explicitConfiguration.PaletteSourceMode = resolvedConfiguration.Generation.PaletteConfiguration.Mode;
+        if (explicitConfiguration.ConfigurationLabel.empty() && (!resolvedConfiguration.Provenance.StructuralPreset.has_value() || !resolvedConfiguration.Provenance.FactionPreset.has_value()))
         {
-            throw std::invalid_argument("Explicit diagnostics require both ShipGenerationProfile and ShipFactionProfile.");
+            explicitConfiguration.ConfigurationLabel = "CUSTOM";
         }
+        return runInternal(explicitConfiguration, &resolvedConfiguration, progressCallback, cancellationCallback, sampleCallback);
+    }
 
+    DiagnosticsResult DiagnosticsRunner::runInternal(
+        const DiagnosticsRunConfiguration& configuration,
+        const PixelShipGenerator::ShipResolvedGenerationConfiguration* resolvedConfiguration,
+        const DiagnosticsProgressCallback& progressCallback,
+        const DiagnosticsCancellationCallback& cancellationCallback,
+        const DiagnosticsSampleCallback& sampleCallback) const
+    {
         DiagnosticsResult result;
         result.Configuration = configuration;
         const std::vector<DiagnosticsWorkItem> schedule = resolveDiagnosticsWorkSchedule(configuration);
@@ -402,17 +416,17 @@ namespace PixelShipGeneratorDiagnostics
             {
                 const bool detailedTiming = configuration.DetailedPerformanceInstrumentation && categoryEnabled(configuration, DiagnosticsCategory::PERFORMANCE);
                 PixelShipGenerator::GeneratedShip ship;
-                if (explicitProfiles)
+                if (resolvedConfiguration != nullptr)
                 {
-                    PixelShipGenerator::ExplicitShipGenerationConfiguration settings;
-                    settings.Seed = item.Seed;
-                    settings.Dimensions = item.Dimensions;
-                    settings.DetailDensity = configuration.DetailDensity;
-                    settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
-                    settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
+                    PixelShipGenerator::ShipResolvedGenerationConfiguration settings = *resolvedConfiguration;
+                    settings.Generation.Seed = item.Seed;
+                    settings.Generation.Dimensions = item.Dimensions;
+                    settings.Generation.DetailDensity = configuration.DetailDensity;
+                    settings.Generation.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
+                    settings.Generation.AttachmentsEnabled = configuration.AttachmentsEnabled;
                     ship = detailedTiming
-                        ? generator.generate(settings, *profile, *factionProfile, &debugInfo, &performance)
-                        : generator.generate(settings, *profile, *factionProfile, &debugInfo);
+                        ? generator.generate(settings, &debugInfo, &performance)
+                        : generator.generate(settings, &debugInfo);
                 }
                 else
                 {

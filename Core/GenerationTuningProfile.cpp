@@ -1,4 +1,5 @@
 #include <PixelShipGenerator/GenerationTuningProfile.h>
+#include <PixelShipGenerator/BuiltInPresetCatalog.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -45,10 +46,9 @@ namespace PixelShipGenerator
     GenerationTuningProfile createDefaultGenerationTuningProfile()
     {
         GenerationTuningProfile result;
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipStyle::SHIP_STYLE_END); ++index)
+        for (const BuiltInStructuralPreset& preset : getBuiltInStructuralPresetCatalog())
         {
-            const ShipStyle style = static_cast<ShipStyle>(index);
-            result.Styles[index] = createStyleTuningProfile(style);
+            result.Styles[styleIndex(preset.Preset)] = createStyleTuningProfile(preset.Preset);
         }
         return result;
     }

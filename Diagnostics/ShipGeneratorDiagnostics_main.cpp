@@ -10,6 +10,7 @@
 
 #include "DiagnosticsRunner.h"
 #include "GenerationStatistics.h"
+#include "BuiltInPresetCatalog.h"
 
 namespace
 {
@@ -28,26 +29,12 @@ namespace
 
     bool parseStyle(const std::string& value, PixelShipGenerator::ShipStyle& style)
     {
-        using PixelShipGenerator::ShipStyle;
-        if (value == "SLEEK") { style = ShipStyle::SLEEK; return true; }
-        if (value == "FIGHTER") { style = ShipStyle::FIGHTER; return true; }
-        if (value == "HEAVY") { style = ShipStyle::HEAVY; return true; }
-        if (value == "INDUSTRIAL") { style = ShipStyle::INDUSTRIAL; return true; }
-        if (value == "SPEARHEAD") { style = ShipStyle::SPEARHEAD; return true; }
-        if (value == "DELTA") { style = ShipStyle::DELTA; return true; }
-        return false;
+        return PixelShipGenerator::tryGetBuiltInStructuralPreset(value, style);
     }
 
     bool parseFaction(const std::string& value, PixelShipGenerator::ShipFactionType& faction)
     {
-        using PixelShipGenerator::ShipFactionType;
-        if (value == "FRONTIER") { faction = ShipFactionType::FRONTIER; return true; }
-        if (value == "MILITARY") { faction = ShipFactionType::MILITARY; return true; }
-        if (value == "ASCENDANT") { faction = ShipFactionType::ASCENDANT; return true; }
-        if (value == "XENO") { faction = ShipFactionType::XENO; return true; }
-        if (value == "CORPORATE") { faction = ShipFactionType::CORPORATE; return true; }
-        if (value == "RELIC") { faction = ShipFactionType::RELIC; return true; }
-        return false;
+        return PixelShipGenerator::tryGetBuiltInFactionPreset(value, faction);
     }
     void printUsage(std::ostream& output)
     {
@@ -286,12 +273,7 @@ namespace
         }
 
         std::vector<PixelShipGenerator::ShipStyle> styles;
-
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END); ++index)
-        {
-            styles.push_back(static_cast<PixelShipGenerator::ShipStyle>(index));
-        }
-
+        for (const auto& entry : PixelShipGenerator::getBuiltInStructuralPresetCatalog()) { styles.push_back(entry.Preset); }
         return styles;
     }
 
@@ -303,12 +285,7 @@ namespace
         }
 
         std::vector<PixelShipGenerator::ShipFactionType> factions;
-
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END); ++index)
-        {
-            factions.push_back(static_cast<PixelShipGenerator::ShipFactionType>(index));
-        }
-
+        for (const auto& entry : PixelShipGenerator::getBuiltInFactionPresetCatalog()) { factions.push_back(entry.Preset); }
         return factions;
     }
 }

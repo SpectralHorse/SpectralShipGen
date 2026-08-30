@@ -40,6 +40,7 @@ namespace PixelShipGeneratorTests
     int runStaticFactionProfileRoutingRegression();
     int runCustomFactionApiRegression();
     int runPaletteConfigurationRegression();
+    int runPublicConfigurationApiRegression();
     int runStructuralNegativeSpaceRegression();
     int runSilhouetteArticulationRegression();
     int runVisualHierarchyRegression();

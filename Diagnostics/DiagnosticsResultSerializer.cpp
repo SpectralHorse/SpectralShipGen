@@ -245,7 +245,9 @@ namespace PixelShipGeneratorDiagnostics
         out << "    \"detailed_timing\":" << (result.Configuration.DetailedPerformanceInstrumentation ? "true" : "false") << ",\n";
         out << "    \"detail_level\":" << static_cast<uint32_t>(result.Configuration.DetailLevel) << ",\n";
         out << "    \"build_configuration\":\"" << escaped(result.Configuration.BuildConfiguration) << "\",\n";
-        out << "    \"version_identifier\":\"" << escaped(result.Configuration.VersionIdentifier) << "\"\n  },\n";
+        out << "    \"version_identifier\":\"" << escaped(result.Configuration.VersionIdentifier) << "\",\n";
+        out << "    \"configuration_label\":\"" << escaped(result.Configuration.ConfigurationLabel) << "\",\n";
+        out << "    \"palette_source_mode\":" << static_cast<uint32_t>(result.Configuration.PaletteSourceMode) << "\n  },\n";
         out << "  \"samples\":[\n";
         for (std::size_t i = 0u; i < result.Samples.size(); ++i)
         {
@@ -316,6 +318,13 @@ namespace PixelShipGeneratorDiagnostics
             result.Configuration.DetailLevel = static_cast<DiagnosticsDetailLevel>(u32(member(config, "detail_level")));
             result.Configuration.BuildConfiguration = stringValue(member(config, "build_configuration"));
             result.Configuration.VersionIdentifier = stringValue(member(config, "version_identifier"));
+            if (const JsonValue* value = optionalMember(config, "configuration_label")) { result.Configuration.ConfigurationLabel = stringValue(*value); }
+            if (const JsonValue* value = optionalMember(config, "palette_source_mode"))
+            {
+                const uint32_t mode = u32(*value);
+                if (mode >= static_cast<uint32_t>(PixelShipGenerator::ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END)) { throw std::runtime_error("Invalid diagnostics palette source mode."); }
+                result.Configuration.PaletteSourceMode = static_cast<PixelShipGenerator::ShipPaletteSourceMode>(mode);
+            }
             const JsonValue& samples = member(root, "samples"); if (samples.Type != JsonType::ARRAY) { throw std::runtime_error("samples must be an array."); }
             result.Samples.reserve(samples.Array.size());
             for (const auto& j : samples.Array)

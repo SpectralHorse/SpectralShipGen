@@ -8,6 +8,7 @@
 #include "ShipGenerationSettings.h"
 #include "ShipGenerationPerformance.h"
 #include "ShipGenerationRecipe.h"
+#include "ShipResolvedGenerationConfiguration.h"
 
 namespace PixelShipGenerator
 {
@@ -17,6 +18,12 @@ namespace PixelShipGenerator
     {
     public:
         ShipGenerator();
+
+        // Canonical public resolved-configuration path. Built-in convenience,
+        // explicit profile and portable recipe entry points all resolve into
+        // this same semantic representation before generation.
+        GeneratedShip generate(const ShipResolvedGenerationConfiguration& configuration, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
+        GeneratedShip generateCalibrated(const ShipResolvedGenerationConfiguration& configuration, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
         // Backward-compatible built-in preset API. Style is resolved to a
         // ShipGenerationProfile and then routed through the same canonical
@@ -49,6 +56,13 @@ namespace PixelShipGenerator
     private:
         friend struct ShipGeneratorStaticFactionRegressionAccess;
 
+        GeneratedShip generateInternal(const ShipResolvedGenerationConfiguration& configuration,
+            const GenerationCalibrationSettings* calibrationSettings,
+            ShipGenerationDebugInfo* debugInfo,
+            ShipGenerationPerformanceInfo* performanceInfo);
+
+        // Internal compatibility bridge retained for focused routing regressions;
+        // it immediately constructs the canonical resolved configuration.
         GeneratedShip generateInternal(const ExplicitShipGenerationConfiguration& configuration,
             const ShipGenerationProfile& profile,
             const ShipFactionProfile& factionProfile,

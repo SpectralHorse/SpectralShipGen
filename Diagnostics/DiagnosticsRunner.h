@@ -12,11 +12,13 @@
 #include "ShipDimensions.h"
 #include "ShipGenerationPerformance.h"
 #include "ShipVisualAnchorType.h"
+#include "ShipPaletteConfiguration.h"
 
 namespace PixelShipGenerator
 {
     struct ShipGenerationProfile;
     struct ShipFactionProfile;
+    struct ShipResolvedGenerationConfiguration;
 }
 
 namespace PixelShipGeneratorDiagnostics
@@ -54,6 +56,11 @@ namespace PixelShipGeneratorDiagnostics
         DiagnosticsDetailLevel DetailLevel = DiagnosticsDetailLevel::RAW_SAMPLES_AND_SUMMARY;
         std::string BuildConfiguration;
         std::string VersionIdentifier;
+        // Optional custom/developer-facing identity plus palette source. Built-in
+        // style/faction identity remains represented by Styles/Factions; custom
+        // runs use *_END there rather than fabricating a preset.
+        std::string ConfigurationLabel;
+        PixelShipGenerator::ShipPaletteSourceMode PaletteSourceMode = PixelShipGenerator::ShipPaletteSourceMode::FACTION_PROFILE_GENERATED;
     };
 
     struct DiagnosticsWorkItem
@@ -240,10 +247,9 @@ namespace PixelShipGeneratorDiagnostics
             const DiagnosticsCancellationCallback& cancellationCallback = {},
             const DiagnosticsSampleCallback& sampleCallback = {}) const;
 
-        // Runs diagnostics from explicit structural/faction behavior without
-        // fabricating built-in preset identity. Result work items use the
-        // *_END provenance sentinels; portable profile serialization remains
-        // deferred to the public recipe/configuration work.
+        // Backward-compatible explicit structural/faction diagnostics overload.
+        // It resolves into the canonical ShipResolvedGenerationConfiguration
+        // path without fabricating built-in preset identity.
         DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
             const PixelShipGenerator::ShipGenerationProfile& profile,
             const PixelShipGenerator::ShipFactionProfile& factionProfile,
@@ -251,10 +257,17 @@ namespace PixelShipGeneratorDiagnostics
             const DiagnosticsCancellationCallback& cancellationCallback = {},
             const DiagnosticsSampleCallback& sampleCallback = {}) const;
 
+        // Canonical custom-configuration diagnostics path, including explicit
+        // generated/fixed palette source and truthful optional preset identity.
+        DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
+            const PixelShipGenerator::ShipResolvedGenerationConfiguration& resolvedConfiguration,
+            const DiagnosticsProgressCallback& progressCallback = {},
+            const DiagnosticsCancellationCallback& cancellationCallback = {},
+            const DiagnosticsSampleCallback& sampleCallback = {}) const;
+
     private:
         DiagnosticsResult runInternal(const DiagnosticsRunConfiguration& configuration,
-            const PixelShipGenerator::ShipGenerationProfile* profile,
-            const PixelShipGenerator::ShipFactionProfile* factionProfile,
+            const PixelShipGenerator::ShipResolvedGenerationConfiguration* resolvedConfiguration,
             const DiagnosticsProgressCallback& progressCallback,
             const DiagnosticsCancellationCallback& cancellationCallback,
             const DiagnosticsSampleCallback& sampleCallback) const;

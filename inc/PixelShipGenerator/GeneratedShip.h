@@ -10,6 +10,7 @@
 #include "ShipFactionProfile.h"
 #include "ShipFactionType.h"
 #include "ShipGenerationProfile.h"
+#include "ShipGenerationProvenance.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipIdleAnimationMetadata.h"
 #include "ShipPalette.h"
@@ -27,8 +28,11 @@ namespace PixelShipGenerator
         ShipAnimationTraits AnimationTraits;
         ShipFactionAnimationProfile FactionAnimationProfile;
         ShipFactionPaintColorRole FactionWeaponMuzzleRole = ShipFactionPaintColorRole::ENGINE_HIGHLIGHT;
-        ShipStyle Style = ShipStyle::SHIP_STYLE_END; // Built-in preset provenance; SHIP_STYLE_END means custom/no built-in origin.
-        ShipFactionType Faction = ShipFactionType::SHIP_FACTION_TYPE_END; // Built-in preset provenance; END means custom/no built-in origin.
+        ShipGenerationProvenance Provenance;
+        // Backward-compatible provenance mirrors. New code should prefer Provenance,
+        // whose optional preset identities do not require custom enum sentinels.
+        ShipStyle Style = ShipStyle::SHIP_STYLE_END;
+        ShipFactionType Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
 
         PixelMask HullMask;
         PixelMask CockpitMask;
