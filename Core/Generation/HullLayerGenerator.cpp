@@ -15,19 +15,6 @@ namespace PixelShipGenerator
     {
         constexpr uint32_t MaximumHullLayerPlacementAttempts = 8u;
 
-        uint32_t getFactionLayerChancePercent(ShipFactionType faction)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER: return 108u;
-            case ShipFactionType::MILITARY: return 105u;
-            case ShipFactionType::ASCENDANT: return 88u;
-            case ShipFactionType::XENO: return 100u;
-            case ShipFactionType::CORPORATE: return 106u;
-            case ShipFactionType::RELIC: return 124u;
-            default: return 100u;
-            }
-        }
 
         uint32_t getOverlapPixelCount(const PixelMask& first, const PixelMask& second)
         {
@@ -63,7 +50,7 @@ namespace PixelShipGenerator
 
         const uint32_t scaleChance = 22u + (context.ScaleTraits.MajorFeatureCapacity * 78u + 50u) / 100u;
         uint32_t generationChance = static_cast<uint32_t>((static_cast<uint64_t>(context.Profile.HullLayerChance) * scaleChance + 50u) / 100u);
-        generationChance = static_cast<uint32_t>((static_cast<uint64_t>(generationChance) * getFactionLayerChancePercent(context.Settings.Faction) + 50u) / 100u);
+        generationChance = static_cast<uint32_t>((static_cast<uint64_t>(generationChance) * context.FactionProfile.HullLayers.ChancePercent + 50u) / 100u);
         if (context.VisualHierarchy.InfluenceEnabled)
         {
             if (context.VisualHierarchy.targets(ShipVisualAnchorType::HULL_LAYERS))
@@ -91,7 +78,7 @@ namespace PixelShipGenerator
         if (context.ScaleTraits.MajorFeatureCapacity >= 42u) { maximumLayers = 2u; }
         if (context.ScaleTraits.MajorFeatureCapacity >= 82u) { maximumLayers = 3u; }
         maximumLayers = std::min(maximumLayers, context.Profile.MaximumHullLayers);
-        if (context.Settings.Faction == ShipFactionType::RELIC) { maximumLayers = std::min(maximumLayers, 2u); }
+        if (context.FactionProfile.HullLayers.MaximumLayerCount != 0u) { maximumLayers = std::min(maximumLayers, context.FactionProfile.HullLayers.MaximumLayerCount); }
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.isPrimary(ShipVisualAnchorType::HULL_LAYERS) && context.ScaleTraits.Tier >= GenerationScaleTier::MEDIUM)
         {
             maximumLayers = std::min(3u, maximumLayers + 1u);
@@ -188,7 +175,7 @@ namespace PixelShipGenerator
             if (type == ShipHullLayerType::SHOULDER_ARMOR && !context.WingRegions.hasWings() && context.ScaleTraits.HorizontalCapacity < 35u) { continue; }
             const uint32_t cost = getLayerComplexityCost(type);
             if (!context.ComplexityBudget.canAfford(GenerationComplexityCategory::HULL_LAYER, cost)) { continue; }
-            const uint64_t weight = getLayerWeight(context.Profile, context.Settings.Faction, type);
+            const uint64_t weight = getLayerWeight(context.Profile, context.FactionProfile.HullLayers, type);
             weights[index] = weight;
             totalWeight += weight;
         }
@@ -515,9 +502,9 @@ namespace PixelShipGenerator
         }
     }
 
-    uint32_t HullLayerGenerator::getLayerWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipHullLayerType type) const
+    uint32_t HullLayerGenerator::getLayerWeight(const ShipGenerationProfile& profile, const ShipFactionHullLayerProfile& factionProfile, ShipHullLayerType type) const
     {
-        std::array<uint32_t, static_cast<std::size_t>(ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END)> weights = {
+        const std::array<uint32_t, static_cast<std::size_t>(ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END)> weights = {
             profile.HullLayerWeights.CentralDorsalPlate,
             profile.HullLayerWeights.ForwardArmor,
             profile.HullLayerWeights.WingArmor,
@@ -525,40 +512,8 @@ namespace PixelShipGenerator
             profile.HullLayerWeights.RearEngineCover
         };
 
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER:
-            weights[static_cast<std::size_t>(ShipHullLayerType::FORWARD_ARMOR)] += 20u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::WING_ARMOR)] += 15u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::REAR_ENGINE_COVER)] += 15u;
-            break;
-        case ShipFactionType::MILITARY:
-            weights[static_cast<std::size_t>(ShipHullLayerType::FORWARD_ARMOR)] += 20u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::SHOULDER_ARMOR)] += 15u;
-            break;
-        case ShipFactionType::ASCENDANT:
-            weights[static_cast<std::size_t>(ShipHullLayerType::CENTRAL_DORSAL_PLATE)] += 35u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::FORWARD_ARMOR)] += 10u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::REAR_ENGINE_COVER)] = std::max(1u, weights[static_cast<std::size_t>(ShipHullLayerType::REAR_ENGINE_COVER)] / 2u);
-            break;
-        case ShipFactionType::XENO:
-            weights[static_cast<std::size_t>(ShipHullLayerType::CENTRAL_DORSAL_PLATE)] += 15u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::WING_ARMOR)] += 20u;
-            break;
-        case ShipFactionType::CORPORATE:
-            weights[static_cast<std::size_t>(ShipHullLayerType::CENTRAL_DORSAL_PLATE)] += 18u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::FORWARD_ARMOR)] += 22u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::SHOULDER_ARMOR)] += 18u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::REAR_ENGINE_COVER)] += 8u;
-            break;
-        case ShipFactionType::RELIC:
-            weights[static_cast<std::size_t>(ShipHullLayerType::CENTRAL_DORSAL_PLATE)] += 55u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::SHOULDER_ARMOR)] += 30u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::REAR_ENGINE_COVER)] += 25u;
-            weights[static_cast<std::size_t>(ShipHullLayerType::WING_ARMOR)] = std::max(1u, weights[static_cast<std::size_t>(ShipHullLayerType::WING_ARMOR)] * 3u / 4u);
-            break;
-        default: break;
-        }
-        return weights[static_cast<std::size_t>(type)];
-    }
-}
+        const ShipFactionHullLayerWeightAdjustment& adjustment = factionProfile.WeightAdjustments.getAdjustment(type);
+        const int64_t offsetWeight = std::max<int64_t>(1, static_cast<int64_t>(weights[static_cast<std::size_t>(type)]) + adjustment.Offset);
+        const uint64_t scaledWeight = static_cast<uint64_t>(offsetWeight) * adjustment.Scale.Numerator / adjustment.Scale.Denominator;
+        return static_cast<uint32_t>(std::max<uint64_t>(1u, scaledWeight));
+    }}

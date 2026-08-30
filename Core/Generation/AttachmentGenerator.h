@@ -59,7 +59,7 @@ namespace PixelShipGenerator
         bool addAttachmentLocalRectangle(PixelMask& mask, const AttachmentAnchor& anchor, uint32_t outwardStart, uint32_t outwardLength, int32_t tangentStart, uint32_t tangentSize) const;
         bool setAttachmentLocalPixel(PixelMask& mask, const AttachmentAnchor& anchor, uint32_t outwardDistance, int32_t tangentOffset, bool value = true) const;
         std::pair<int32_t, int32_t> getAttachmentTangentOffset(ShipAttachmentDirection direction) const;
-        ResolvedAttachmentProfile resolveAttachmentProfile(const ShipGenerationProfile& styleProfile, ShipFactionType faction) const;
+        ResolvedAttachmentProfile resolveAttachmentProfile(const ShipGenerationProfile& styleProfile, const ShipFactionAttachmentProfile& factionProfile) const;
         uint32_t scaleAttachmentPixelsFrom64(uint32_t value, uint32_t dimension, uint32_t sizePercent) const;
 
         static constexpr uint32_t MaximumAttachmentPlacementAttempts = 24u;

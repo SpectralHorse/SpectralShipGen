@@ -351,7 +351,7 @@ namespace PixelShipGenerator
             const CockpitSizeClass sizeClass = static_cast<CockpitSizeClass>(index);
             if (!sizeClassFeasible(context.ScaleTraits, sizeClass)) { continue; }
             uint32_t weight = context.Profile.CockpitSizeWeights.getWeight(sizeClass);
-            weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * getFactionSizeWeightPercent(context.Settings.Faction, sizeClass) + 50u) / 100u);
+            weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * context.FactionProfile.Cockpit.SizeWeightMultipliersPercent.getWeightPercent(sizeClass) + 50u) / 100u);
             if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.targets(ShipVisualAnchorType::COCKPIT))
             {
                 const uint32_t influence = context.VisualHierarchy.getAnchorWeightPercent(ShipVisualAnchorType::COCKPIT);
@@ -393,7 +393,7 @@ namespace PixelShipGenerator
             if (shapeType == CockpitShapeType::WIDE_COMMAND_DECK && context.ScaleTraits.HorizontalCapacity + 12u < context.ScaleTraits.LongitudinalCapacity) { continue; }
 
             uint32_t weight = context.Profile.CockpitShapeWeights.getWeight(shapeType);
-            weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * getFactionShapeWeightPercent(context.Settings.Faction, shapeType) + 50u) / 100u);
+            weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * context.FactionProfile.Cockpit.ShapeWeightMultipliersPercent.getWeightPercent(shapeType) + 50u) / 100u);
             if (shapeType == CockpitShapeType::ELONGATED_CANOPY && context.ScaleTraits.LongitudinalCapacity > context.ScaleTraits.HorizontalCapacity)
             {
                 weight = weight * 5u / 4u;
@@ -629,53 +629,4 @@ namespace PixelShipGenerator
         }
     }
 
-    uint32_t CockpitGenerator::getFactionSizeWeightPercent(ShipFactionType faction, CockpitSizeClass sizeClass) const
-    {
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER:
-            return sizeClass >= CockpitSizeClass::LARGE ? 112u : 100u;
-        case ShipFactionType::MILITARY:
-            return sizeClass == CockpitSizeClass::MASSIVE ? 88u : (sizeClass == CockpitSizeClass::STANDARD ? 112u : 102u);
-        case ShipFactionType::ASCENDANT:
-            return sizeClass == CockpitSizeClass::LARGE ? 118u : (sizeClass == CockpitSizeClass::MASSIVE ? 92u : 100u);
-        case ShipFactionType::XENO:
-            return sizeClass >= CockpitSizeClass::LARGE ? 115u : 96u;
-        case ShipFactionType::CORPORATE:
-            return sizeClass == CockpitSizeClass::LARGE ? 122u : (sizeClass == CockpitSizeClass::STANDARD ? 112u : (sizeClass == CockpitSizeClass::MASSIVE ? 96u : 88u));
-        case ShipFactionType::RELIC:
-            return sizeClass == CockpitSizeClass::MASSIVE ? 138u : (sizeClass == CockpitSizeClass::LARGE ? 126u : (sizeClass == CockpitSizeClass::COMPACT ? 68u : 92u));
-        default:
-            return 100u;
-        }
-    }
-
-    uint32_t CockpitGenerator::getFactionShapeWeightPercent(ShipFactionType faction, CockpitShapeType shapeType) const
-    {
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER:
-            return (shapeType == CockpitShapeType::WIDE_COMMAND_DECK || shapeType == CockpitShapeType::LAYERED_BRIDGE) ? 118u : 100u;
-        case ShipFactionType::MILITARY:
-            return (shapeType == CockpitShapeType::WIDE_COMMAND_DECK || shapeType == CockpitShapeType::DORSAL_BRIDGE) ? 120u : (shapeType == CockpitShapeType::SPLIT_CANOPY ? 88u : 100u);
-        case ShipFactionType::ASCENDANT:
-            return (shapeType == CockpitShapeType::ELONGATED_CANOPY || shapeType == CockpitShapeType::DORSAL_BRIDGE) ? 120u : (shapeType == CockpitShapeType::WIDE_COMMAND_DECK ? 90u : 100u);
-        case ShipFactionType::XENO:
-            return (shapeType == CockpitShapeType::SPLIT_CANOPY || shapeType == CockpitShapeType::LAYERED_BRIDGE) ? 135u : 96u;
-        case ShipFactionType::CORPORATE:
-            if (shapeType == CockpitShapeType::WIDE_COMMAND_DECK) { return 165u; }
-            if (shapeType == CockpitShapeType::ELONGATED_CANOPY) { return 125u; }
-            if (shapeType == CockpitShapeType::DORSAL_BRIDGE) { return 92u; }
-            return shapeType == CockpitShapeType::SPLIT_CANOPY ? 70u : 100u;
-        case ShipFactionType::RELIC:
-            if (shapeType == CockpitShapeType::LAYERED_BRIDGE) { return 450u; }
-            if (shapeType == CockpitShapeType::DORSAL_BRIDGE) { return 300u; }
-            if (shapeType == CockpitShapeType::WIDE_COMMAND_DECK) { return 105u; }
-            if (shapeType == CockpitShapeType::SPLIT_CANOPY) { return 110u; }
-            if (shapeType == CockpitShapeType::ELONGATED_CANOPY) { return 50u; }
-            return shapeType == CockpitShapeType::COMPACT_CANOPY ? 45u : 80u;
-        default:
-            return 100u;
-        }
-    }
 }

@@ -53,7 +53,7 @@ namespace PixelShipGenerator
         bool isFeaturePixelAvailable(const ShipGenerationContext& context, uint32_t x, uint32_t y) const;
         bool isWingFeaturePixelAvailable(const ShipGenerationContext& context, uint32_t x, uint32_t y) const;
         uint32_t scaleFeaturePixels(uint32_t value, uint32_t dimension, uint32_t scalePercent) const;
-        FactionMajorFeatureProfile getFactionProfile(ShipFactionType faction) const;
+        FactionMajorFeatureProfile resolveFactionProfile(const ShipFactionMajorFeatureProfile& source) const;
         uint32_t getStyleFeatureWeight(const ShipGenerationProfile& profile, ShipMajorFeatureType type) const;
 
         static constexpr uint32_t MaximumFeaturePlacementAttempts = 18u;

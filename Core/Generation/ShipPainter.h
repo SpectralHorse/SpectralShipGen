@@ -27,7 +27,7 @@ namespace PixelShipGenerator
         void paintAttachments(GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
         void paintLivery(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
         void paintCockpit(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
-        void paintEngines(GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
+        void paintEngines(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const;
         void paintDetails(GeneratedShip& ship, const ShipPalette& palette) const;
         void paintComponentDepthReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const;
         void paintSemanticContactShadow(const ShipGenerationContext& context, GeneratedShip& ship, const PixelMask& elevatedMask, bool strongShadow) const;
@@ -66,7 +66,7 @@ namespace PixelShipGenerator
         Color getAttachmentPixelColor(const GeneratedShip& ship, const ShipAttachmentPlacement& placement, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
         Color getLegacyCockpitPixelColor(const PixelMask& cockpitMask, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
         Color getCockpitGlassPixelColor(const CockpitData& cockpit, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
-        Color getEnginePixelColor(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
+        Color getEnginePixelColor(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity, const ShipFactionFinishProfile& finishProfile) const;
         Color getMechanicalPixelColor(const PixelMask& mechanicalMask, uint32_t x, uint32_t y, const ShipPalette& palette) const;
         Color getAccentPixelColor(const PixelMask& accentMask, uint32_t x, uint32_t y, const ShipPalette& palette) const;
         Color getLightPixelColor(const PixelMask& lightMask, uint32_t x, uint32_t y, const ShipPalette& palette) const;

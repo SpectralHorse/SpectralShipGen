@@ -42,7 +42,7 @@ namespace PixelShipGenerator
         bool addPixel(const ShipGenerationContext& context, PixelMask& mask, int32_t x, int32_t y) const;
         uint32_t getTreatmentCost(ShipCoreTreatmentType type) const;
         bool isDominantTreatment(ShipCoreTreatmentType type) const;
-        uint32_t getTreatmentWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipCoreTreatmentType type) const;
+        uint32_t getTreatmentWeight(const ShipGenerationProfile& profile, const ShipFactionCoreTreatmentProfile& factionProfile, ShipCoreTreatmentType type) const;
         void rebuildBoundaryMask(CoreTreatmentData& data) const;
     };
 }

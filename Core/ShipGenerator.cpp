@@ -172,26 +172,26 @@ namespace PixelShipGenerator
     GeneratedShip ShipGenerator::generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
         validateBuiltInStyle(settings.Style);
-        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), settings.Style, nullptr, debugInfo, performanceInfo);
+        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationSettings& settings, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
     {
         validateBuiltInStyle(settings.Style);
-        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), settings.Style, &calibrationSettings, debugInfo, nullptr);
+        return generateInternal(copyGenerationConfiguration(settings), getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, &calibrationSettings, debugInfo, nullptr);
     }
 
     GeneratedShip ShipGenerator::generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
-        return generateInternal(configuration, profile, ShipStyle::SHIP_STYLE_END, nullptr, debugInfo, performanceInfo);
+        return generateInternal(configuration, profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, nullptr, debugInfo, performanceInfo);
     }
 
     GeneratedShip ShipGenerator::generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo)
     {
-        return generateInternal(configuration, profile, ShipStyle::SHIP_STYLE_END, &calibrationSettings, debugInfo, nullptr);
+        return generateInternal(configuration, profile, getShipFactionProfile(configuration.Faction), ShipStyle::SHIP_STYLE_END, &calibrationSettings, debugInfo, nullptr);
     }
 
-    GeneratedShip ShipGenerator::generateInternal(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& sourceProfile, ShipStyle builtInStyleProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
+    GeneratedShip ShipGenerator::generateInternal(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& sourceProfile, const ShipFactionProfile& factionProfile, ShipStyle builtInStyleProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
         validateGenerationConfiguration(configuration);
 
@@ -205,8 +205,8 @@ namespace PixelShipGenerator
         ShipGenerationSeeds seeds = deriveShipGenerationSeeds(configuration.Seed);
         seeds = applyShipGenerationSeedOverrides(seeds, configuration.SeedOverrides);
 
-        ShipGenerationContext context(configuration, profile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance);
-        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), configuration.Faction, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings, builtInStyleProvenance);
+        context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
 
         HullGenerator hullGenerator;
         HullLayerGenerator hullLayerGenerator;

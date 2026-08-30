@@ -40,6 +40,26 @@ namespace
         default: return palette.HullSecondary;
         }
     }
+
+    PixelShipGenerator::Color resolveFactionPaintColor(PixelShipGenerator::ShipFactionPaintColorRole role, const PixelShipGenerator::Color& defaultColor, const PixelShipGenerator::ShipPalette& palette)
+    {
+        switch (role)
+        {
+        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_BASE: return palette.HullBase;
+        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_SECONDARY: return palette.HullSecondary;
+        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_HIGHLIGHT: return palette.HullHighlight;
+        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_ACCENT: return palette.HullAccent;
+        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_ACCENT_HIGHLIGHT: return palette.HullAccentHighlight;
+        case PixelShipGenerator::ShipFactionPaintColorRole::MECHANICAL_BASE: return palette.MechanicalBase;
+        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_BASE: return palette.EngineBase;
+        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_HIGHLIGHT: return palette.EngineHighlight;
+        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_HOT_CORE: return palette.EngineHotCore;
+        case PixelShipGenerator::ShipFactionPaintColorRole::LIGHT_BASE: return palette.LightBase;
+        case PixelShipGenerator::ShipFactionPaintColorRole::LIGHT_HIGHLIGHT: return palette.LightHighlight;
+        case PixelShipGenerator::ShipFactionPaintColorRole::PROFILE_DEFAULT:
+        default: return defaultColor;
+        }
+    }
 }
 
 namespace PixelShipGenerator
@@ -60,7 +80,7 @@ namespace PixelShipGenerator
         paintLivery(context, ship, palette);
         paintDetails(ship, palette);
         paintCockpit(context, ship, palette, context.ScaleTraits);
-        paintEngines(ship, palette, context.ScaleTraits);
+        paintEngines(context, ship, palette, context.ScaleTraits);
         paintComponentDepthReadability(context, ship, palette);
     }
 
@@ -192,8 +212,7 @@ namespace PixelShipGenerator
                 }
                 else if (core.SecondaryMaterialMask.get(x, y))
                 {
-                    const Color material = context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE
-                        ? palette.HullHighlight : (context.Settings.Faction == ShipFactionType::RELIC ? palette.HullBase : palette.HullSecondary);
+                    const Color material = resolveFactionPaintColor(context.FactionProfile.Finish.CoreSecondaryMaterialRole, palette.HullSecondary, palette);
                     ship.FinalImage.setPixel(x, y, getDirectionalMaskColor(core.SecondaryMaterialMask, x, y, palette.HullDeepShadow, palette.HullShadow, material, palette.HullHighlight, palette.HullEdgeHighlight));
                 }
             }
@@ -204,9 +223,8 @@ namespace PixelShipGenerator
             for (uint32_t x = 0u; x < ship.HullMask.getWidth(); ++x)
             {
                 if (!core.RaisedMask.get(x, y)) { continue; }
-                Color interior = getHullSurfaceToneColor(context.Profile.CoreRaisedSurfaceTone, palette);
-                if (context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE) { interior = palette.HullHighlight; }
-                else if (context.Settings.Faction == ShipFactionType::RELIC) { interior = palette.HullBase; }
+                const Color defaultInterior = getHullSurfaceToneColor(context.Profile.CoreRaisedSurfaceTone, palette);
+                const Color interior = resolveFactionPaintColor(context.FactionProfile.Finish.CoreRaisedRole, defaultInterior, palette);
                 ship.FinalImage.setPixel(x, y, getRaisedMaskColor(core.RaisedMask, x, y, interior, palette, strongBevel));
             }
         }
@@ -217,9 +235,11 @@ namespace PixelShipGenerator
             {
                 if (!core.LuminousMask.get(x, y)) { continue; }
                 const PixelMaskUtils::DirectionalMaskExposure exposure = PixelMaskUtils::getDirectionalMaskExposure(core.LuminousMask, x, y);
-                Color color = context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::RELIC ? palette.LightHighlight : palette.LightBase;
-                if (context.Settings.Faction == ShipFactionType::XENO) { color = exposure.Top || exposure.Left ? palette.HullAccentHighlight : palette.HullAccent; }
-                else if (exposure.Top || exposure.Left) { color = palette.LightHighlight; }
+                Color color = resolveFactionPaintColor(context.FactionProfile.Finish.CoreLuminousRole, palette.LightBase, palette);
+                if (exposure.Top || exposure.Left)
+                {
+                    color = resolveFactionPaintColor(context.FactionProfile.Finish.CoreLuminousHighlightRole, palette.LightHighlight, palette);
+                }
                 ship.FinalImage.setPixel(x, y, color);
             }
         }
@@ -248,9 +268,8 @@ namespace PixelShipGenerator
                 Color interiorColor = order == 0u ? palette.HullSecondary : palette.HullBase;
                 if (placement.Type == ShipHullLayerType::CENTRAL_DORSAL_PLATE)
                 {
-                    interiorColor = getHullSurfaceToneColor(context.Profile.CentralDorsalPlateTone, palette);
-                    if (context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE) { interiorColor = palette.HullHighlight; }
-                    else if (context.Settings.Faction == ShipFactionType::RELIC) { interiorColor = palette.HullBase; }
+                    const Color defaultInterior = getHullSurfaceToneColor(context.Profile.CentralDorsalPlateTone, palette);
+                    interiorColor = resolveFactionPaintColor(context.FactionProfile.Finish.CentralDorsalPlateRole, defaultInterior, palette);
                 }
                 else if (placement.Type == ShipHullLayerType::REAR_ENGINE_COVER)
                 {
@@ -398,8 +417,7 @@ namespace PixelShipGenerator
 
                 if (weapons.MuzzleMask.get(x, y))
                 {
-                    ship.FinalImage.setPixel(x, y, context.Settings.Faction == ShipFactionType::RELIC ? palette.LightHighlight
-                        : (context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::XENO ? palette.HullAccentHighlight : palette.EngineHighlight));
+                    ship.FinalImage.setPixel(x, y, resolveFactionPaintColor(context.FactionProfile.Finish.WeaponMuzzleRole, palette.EngineHighlight, palette));
                     continue;
                 }
 
@@ -411,24 +429,12 @@ namespace PixelShipGenerator
 
                 if (weapons.BodyMask.get(x, y))
                 {
-                    Color interiorColor = palette.EngineBase;
-
-                    switch (context.Settings.Faction)
-                    {
-                    case ShipFactionType::FRONTIER: interiorColor = palette.MechanicalBase; break;
-                    case ShipFactionType::MILITARY: interiorColor = palette.HullSecondary; break;
-                    case ShipFactionType::ASCENDANT: interiorColor = palette.HullHighlight; break;
-                    case ShipFactionType::XENO: interiorColor = palette.HullAccent; break;
-                    case ShipFactionType::CORPORATE: interiorColor = palette.HullSecondary; break;
-                    case ShipFactionType::RELIC: interiorColor = palette.HullBase; break;
-                    default: break;
-                    }
-
+                    const Color interiorColor = resolveFactionPaintColor(context.FactionProfile.Finish.WeaponBodyRole, palette.EngineBase, palette);
                     Color bodyColor = getRaisedMaskColor(weapons.BodyMask, x, y, interiorColor, palette, strongBevel);
 
-                    if (context.Settings.Faction == ShipFactionType::XENO && bodyColor == palette.HullHighlight)
+                    if (bodyColor == palette.HullHighlight)
                     {
-                        bodyColor = palette.HullAccentHighlight;
+                        bodyColor = resolveFactionPaintColor(context.FactionProfile.Finish.WeaponRaisedHighlightRole, palette.HullHighlight, palette);
                     }
 
                     ship.FinalImage.setPixel(x, y, bodyColor);
@@ -492,8 +498,7 @@ namespace PixelShipGenerator
             for (uint32_t x = bounds.MinX; x <= bounds.MaxX; ++x)
             {
                 if (!context.Cockpit.BaseMask.get(x, y)) { continue; }
-                const Color baseInterior = context.Settings.Faction == ShipFactionType::CORPORATE ? palette.HullHighlight
-                    : (context.Settings.Faction == ShipFactionType::RELIC ? palette.HullBase : palette.HullSecondary);
+                const Color baseInterior = resolveFactionPaintColor(context.FactionProfile.Finish.CockpitBaseRole, palette.HullSecondary, palette);
                 ship.FinalImage.setPixel(x, y, getRaisedMaskColor(context.Cockpit.BaseMask, x, y, baseInterior, palette, strongStructure));
             }
         }
@@ -504,8 +509,7 @@ namespace PixelShipGenerator
             for (uint32_t x = bounds.MinX; x <= bounds.MaxX; ++x)
             {
                 if (!context.Cockpit.FrameMask.get(x, y)) { continue; }
-                const Color interior = context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE
-                    ? palette.HullHighlight : (context.Settings.Faction == ShipFactionType::RELIC ? palette.HullBase : palette.HullSecondary);
+                const Color interior = resolveFactionPaintColor(context.FactionProfile.Finish.CockpitFrameRole, palette.HullSecondary, palette);
                 ship.FinalImage.setPixel(x, y, getRaisedMaskColor(context.Cockpit.FrameMask, x, y, interior, palette, strongStructure));
             }
         }
@@ -540,7 +544,7 @@ namespace PixelShipGenerator
         }
     }
 
-    void ShipPainter::paintEngines(GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const
+    void ShipPainter::paintEngines(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette, const GenerationScaleTraits& scaleTraits) const
     {
         for (uint32_t y = 0u; y < ship.EngineExhaustMask.getHeight(); ++y)
         {
@@ -598,7 +602,7 @@ namespace PixelShipGenerator
                     continue;
                 }
 
-                ship.FinalImage.setPixel(x, y, getEnginePixelColor(ship, x, y, palette, scaleTraits.ShadingComplexity));
+                ship.FinalImage.setPixel(x, y, getEnginePixelColor(ship, x, y, palette, scaleTraits.ShadingComplexity, context.FactionProfile.Finish));
             }
         }
     }
@@ -1474,7 +1478,7 @@ namespace PixelShipGenerator
 
             if (isCentralRidgePixel(context, x, y, ridgeBandWidth) && PixelMaskUtils::getMaskDepth(ship.HullMask, x, y, ridgeMaximumDepth) >= ridgeMaximumDepth)
             {
-                if (context.Profile.AxialRidgeUsesEdgeHighlight || context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::CORPORATE)
+                if (context.Profile.AxialRidgeUsesEdgeHighlight || context.FactionProfile.Finish.ForceAxialRidgeEdgeHighlight)
                 {
                     return shadingComplexity >= 60u ? palette.HullEdgeHighlight : palette.HullHighlight;
                 }
@@ -1704,7 +1708,7 @@ namespace PixelShipGenerator
         return depth == 0u ? palette.CockpitDark : palette.CockpitBase;
     }
 
-    Color ShipPainter::getEnginePixelColor(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const
+    Color ShipPainter::getEnginePixelColor(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity, const ShipFactionFinishProfile& finishProfile) const
     {
         const PixelMask& engineMask = ship.EngineMask;
         const int32_t pixelX = static_cast<int32_t>(x);
@@ -1719,7 +1723,7 @@ namespace PixelShipGenerator
             const uint32_t distanceFromLeft = x - span.StartX;
             const uint32_t distanceFromRight = span.EndX - x;
             const bool centerPixel = distanceFromLeft == distanceFromRight || (span.Width % 2u == 0u && (distanceFromLeft + 1u == distanceFromRight || distanceFromRight + 1u == distanceFromLeft));
-            return centerPixel ? (ship.Faction == ShipFactionType::RELIC ? palette.LightHighlight : palette.EngineHotCore) : palette.EngineDark;
+            return centerPixel ? resolveFactionPaintColor(finishProfile.EngineHotCoreRole, palette.EngineHotCore, palette) : palette.EngineDark;
         }
 
         if (embeddedRoot)
@@ -1751,7 +1755,7 @@ namespace PixelShipGenerator
 
         if (centerPixel && span.Width >= 5u && depth >= maximumDepth)
         {
-            return ship.Faction == ShipFactionType::RELIC ? palette.LightBase : palette.EngineHighlight;
+            return resolveFactionPaintColor(finishProfile.EngineInteriorHighlightRole, palette.EngineHighlight, palette);
         }
 
         if (shadingComplexity >= 60u && depth == 1u && !centerPixel)

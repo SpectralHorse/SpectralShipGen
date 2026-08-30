@@ -45,8 +45,6 @@ namespace PixelShipGenerator
         bool isCockpitPlacementValid(const CandidateCockpit& candidate, const ShipGenerationContext& context, uint32_t maximumCockpitPixelCount) const;
         uint32_t getCockpitComplexityCost(CockpitSizeClass sizeClass, CockpitShapeType shapeType) const;
         uint32_t getMaximumCockpitHullPercent(const ShipGenerationContext& context, CockpitSizeClass sizeClass) const;
-        uint32_t getFactionSizeWeightPercent(ShipFactionType faction, CockpitSizeClass sizeClass) const;
-        uint32_t getFactionShapeWeightPercent(ShipFactionType faction, CockpitShapeType shapeType) const;
 
         static constexpr uint32_t MaximumCockpitGenerationAttempts = 20u;
     };

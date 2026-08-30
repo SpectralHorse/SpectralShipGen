@@ -123,7 +123,7 @@ namespace PixelShipGenerator
         ship.LightMask.clear(false);
         context.DetailMotifs.reset(ship.HullMask.getWidth(), ship.HullMask.getHeight());
 
-        ResolvedSurfaceDetailProfile detailProfile = resolveSurfaceDetailProfile(settings, profile);
+        ResolvedSurfaceDetailProfile detailProfile = resolveSurfaceDetailProfile(settings, profile, context.FactionProfile.SurfaceDetails);
 
         if (context.DebugInfo != nullptr)
         {
@@ -814,9 +814,10 @@ namespace PixelShipGenerator
                 uint32_t x = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, width - 1u);
                 uint32_t y = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, height - 1u);
 
-                if (type == SupplementalSurfaceDetailType::LUMINOUS_CHANNEL && context.Settings.Faction == ShipFactionType::RELIC
+                if (type == SupplementalSurfaceDetailType::LUMINOUS_CHANNEL
+                    && context.FactionProfile.SurfaceDetails.LuminousChannelCoreRegionBiasChance > 0u
                     && PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.CoreRegionMask) > 0u
-                    && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 72u)
+                    && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < context.FactionProfile.SurfaceDetails.LuminousChannelCoreRegionBiasChance)
                 {
                     trySelectDetailAnchorFromMask(context, context.CoreTreatment.CoreRegionMask, x, y);
                 }
@@ -1224,9 +1225,8 @@ namespace PixelShipGenerator
         return true;
     }
 
-    ResolvedSurfaceDetailProfile DetailGenerator::resolveSurfaceDetailProfile(const ShipGenerationConfiguration& settings, const ShipGenerationProfile& styleProfile) const
+    ResolvedSurfaceDetailProfile DetailGenerator::resolveSurfaceDetailProfile(const ShipGenerationConfiguration& settings, const ShipGenerationProfile& styleProfile, const ShipFactionSurfaceDetailProfile& factionProfile) const
     {
-        const ShipFactionSurfaceDetailProfile& factionProfile = getShipFactionSurfaceDetailProfile(settings.Faction);
         ResolvedSurfaceDetailProfile result;
 
         result.DetailDensityPercent = composeSurfaceDetailPercent(styleProfile.DetailDensityPercent, factionProfile.DetailDensityPercent);

@@ -46,26 +46,6 @@ namespace PixelShipGenerator
             }
         }
 
-        uint32_t getFactionWeightPercent(ShipFactionType faction, ShipMaterialZoneType type)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER:
-                return type == ShipMaterialZoneType::REAR_MECHANICAL || type == ShipMaterialZoneType::HARDPOINT_SURROUND ? 135u : 100u;
-            case ShipFactionType::MILITARY:
-                return type == ShipMaterialZoneType::WING_SURFACE || type == ShipMaterialZoneType::SHOULDER_SURFACE || type == ShipMaterialZoneType::HARDPOINT_SURROUND ? 125u : 95u;
-            case ShipFactionType::ASCENDANT:
-                return type == ShipMaterialZoneType::AXIAL_BAND || type == ShipMaterialZoneType::COCKPIT_COLLAR ? 130u : (type == ShipMaterialZoneType::REAR_MECHANICAL ? 70u : 90u);
-            case ShipFactionType::XENO:
-                return type == ShipMaterialZoneType::WING_SURFACE || type == ShipMaterialZoneType::AXIAL_BAND ? 125u : 100u;
-            case ShipFactionType::CORPORATE:
-                return type == ShipMaterialZoneType::COCKPIT_COLLAR || type == ShipMaterialZoneType::SHOULDER_SURFACE || type == ShipMaterialZoneType::WING_SURFACE ? 135u : (type == ShipMaterialZoneType::REAR_MECHANICAL ? 85u : 100u);
-            case ShipFactionType::RELIC:
-                return type == ShipMaterialZoneType::AXIAL_BAND || type == ShipMaterialZoneType::REAR_MECHANICAL || type == ShipMaterialZoneType::SHOULDER_SURFACE ? 135u : 90u;
-            default: return 100u;
-            }
-        }
-
         uint32_t getAnchorWeightPercent(const VisualHierarchyPlan& hierarchy, ShipMaterialZoneType type)
         {
             if (!hierarchy.InfluenceEnabled) { return 100u; }
@@ -156,7 +136,7 @@ namespace PixelShipGenerator
     uint32_t MaterialCompositionGenerator::getZoneWeight(const ShipGenerationContext& context, ShipMaterialZoneType type) const
     {
         uint32_t weight = context.Profile.MaterialZoneWeights.getWeight(type);
-        weight = scalePercent(weight, getFactionWeightPercent(context.Settings.Faction, type));
+        weight = scalePercent(weight, context.FactionProfile.Materials.ZoneWeightMultipliersPercent.getWeightPercent(type));
         weight = scalePercent(weight, getAnchorWeightPercent(context.VisualHierarchy, type));
         return weight;
     }

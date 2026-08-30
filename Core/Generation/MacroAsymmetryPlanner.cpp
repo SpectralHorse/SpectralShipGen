@@ -14,20 +14,6 @@ namespace PixelShipGenerator
     {
         constexpr uint64_t MacroAsymmetrySalt = 0x7F4A7C159E3779B9ull;
 
-        uint32_t getFactionChancePercent(ShipFactionType faction)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER: return 125u;
-            case ShipFactionType::MILITARY: return 65u;
-            case ShipFactionType::ASCENDANT: return 72u;
-            case ShipFactionType::XENO: return 135u;
-            case ShipFactionType::CORPORATE: return 58u;
-            case ShipFactionType::RELIC: return 88u;
-            default: return 100u;
-            }
-        }
-
         uint32_t nextRoll(uint64_t& state, uint32_t maximumExclusive)
         {
             state = mixGenerationSeed64(state + 0x9E3779B97F4A7C15ull);
@@ -66,7 +52,7 @@ namespace PixelShipGenerator
         context.MacroAsymmetry = MacroAsymmetryPlan();
         if (context.Profile.MacroAsymmetryChance == 0u || context.ScaleTraits.MajorFeatureCapacity < 12u) { return; }
 
-        uint32_t chance = static_cast<uint32_t>((static_cast<uint64_t>(context.Profile.MacroAsymmetryChance) * getFactionChancePercent(context.Settings.Faction) + 50u) / 100u);
+        uint32_t chance = static_cast<uint32_t>((static_cast<uint64_t>(context.Profile.MacroAsymmetryChance) * context.FactionProfile.MacroAsymmetry.ChancePercent + 50u) / 100u);
         chance = static_cast<uint32_t>((static_cast<uint64_t>(chance) * (30u + context.ScaleTraits.MajorFeatureCapacity * 70u / 100u) + 50u) / 100u);
         if (context.VisualHierarchy.InfluenceEnabled)
         {

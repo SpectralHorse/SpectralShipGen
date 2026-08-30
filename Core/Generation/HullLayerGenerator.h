@@ -41,6 +41,6 @@ namespace PixelShipGenerator
         uint32_t getLayerComplexityCost(ShipHullLayerType type) const;
         bool isDominantLayer(ShipHullLayerType type) const;
         uint32_t getLayerOrder(ShipHullLayerType type) const;
-        uint32_t getLayerWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipHullLayerType type) const;
+        uint32_t getLayerWeight(const ShipGenerationProfile& profile, const ShipFactionHullLayerProfile& factionProfile, ShipHullLayerType type) const;
     };
 }

@@ -10,6 +10,8 @@
 
 namespace PixelShipGenerator
 {
+    struct ShipFactionProfile;
+
     class ShipGenerator
     {
     public:
@@ -31,8 +33,11 @@ namespace PixelShipGenerator
         GeneratedShip generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
     private:
+        friend struct ShipGeneratorStaticFactionRegressionAccess;
+
         GeneratedShip generateInternal(const ShipGenerationConfiguration& configuration,
             const ShipGenerationProfile& profile,
+            const ShipFactionProfile& factionProfile,
             ShipStyle builtInStyleProvenance,
             const GenerationCalibrationSettings* calibrationSettings,
             ShipGenerationDebugInfo* debugInfo,

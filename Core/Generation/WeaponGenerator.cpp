@@ -11,7 +11,6 @@
 #include "WeaponCandidateBuilder.h"
 #include "WeaponCandidateValidator.h"
 #include "WeaponGenerationInternal.h"
-#include "ShipFactionProfile.h"
 #include "WeaponHardpointPlanner.h"
 
 namespace PixelShipGenerator
@@ -203,9 +202,8 @@ namespace PixelShipGenerator
             }
         }
 
-        FactionWeaponProfile getFactionWeaponProfile(ShipFactionType faction)
+        FactionWeaponProfile resolveFactionWeaponProfile(const ShipFactionWeaponProfile& source)
         {
-            const ShipFactionWeaponProfile& source = getShipFactionProfile(faction).Weapons;
             FactionWeaponProfile profile;
             profile.ChancePercent = source.ChancePercent;
             profile.SymmetryChanceOffset = source.SymmetryChanceOffset;
@@ -350,7 +348,7 @@ namespace PixelShipGenerator
             return;
         }
 
-        const FactionWeaponProfile factionProfile = getFactionWeaponProfile(context.Settings.Faction);
+        const FactionWeaponProfile factionProfile = resolveFactionWeaponProfile(context.FactionProfile.Weapons);
         const uint32_t generationChance = getGenerationChance(context, factionProfile, !hardpoints.empty());
         const bool macroRequested = context.MacroAsymmetry.targets(MacroAsymmetryCategory::LARGE_WEAPON);
 

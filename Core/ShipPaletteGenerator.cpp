@@ -138,25 +138,24 @@ namespace PixelShipGenerator
         }
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipFactionProfile& factionProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
     {
-        const ShipFactionPaletteProfile& factionProfile = getShipFactionPaletteProfile(faction);
+        const ShipFactionPaletteProfile& paletteProfile = factionProfile.Palette;
         std::mt19937_64 randomGenerator(paletteSeed);
 
         HSVColor hullColor;
-        hullColor.Hue = static_cast<int32_t>(getRandomUInt(randomGenerator, factionProfile.HullHue));
-        hullColor.Saturation = getRandomUInt(randomGenerator, factionProfile.HullSaturation);
-        hullColor.Value = getRandomUInt(randomGenerator, factionProfile.HullValue);
+        hullColor.Hue = static_cast<int32_t>(getRandomUInt(randomGenerator, paletteProfile.HullHue));
+        hullColor.Saturation = getRandomUInt(randomGenerator, paletteProfile.HullSaturation);
+        hullColor.Value = getRandomUInt(randomGenerator, paletteProfile.HullValue);
 
-        if (faction == ShipFactionType::CORPORATE)
+        if (factionProfile.PaletteBehavior.HullValueMode == ShipFactionHullValueMode::ALTERNATING_BRIGHT_DARK_RANGES)
         {
-            // Two deterministic finish families keep Corporate from collapsing
-            // into one white/blue palette: bright commercial alloy or dark
-            // premium bodywork, both with a low-saturation primary hull.
             const uint64_t finishVariant = mixSeed(paletteSeed ^ 0xC08B3A7E5D1F249Bull);
-            hullColor.Value = (finishVariant & 1ull) != 0ull
-                ? 68u + static_cast<uint32_t>((finishVariant >> 8u) % 17ull)
-                : 32u + static_cast<uint32_t>((finishVariant >> 8u) % 17ull);
+            const PaletteUIntRange& valueRange = (finishVariant & 1ull) != 0ull
+                ? factionProfile.PaletteBehavior.BrightHullValue
+                : factionProfile.PaletteBehavior.DarkHullValue;
+            const uint32_t span = valueRange.Max - valueRange.Min + 1u;
+            hullColor.Value = valueRange.Min + static_cast<uint32_t>((finishVariant >> 8u) % span);
         }
 
         hullColor.Saturation = scalePercentage(hullColor.Saturation, styleProfile.PaletteHullSaturationPercent);
@@ -174,9 +173,13 @@ namespace PixelShipGenerator
         {
             const int32_t secondaryMagnitude = std::max(4, static_cast<int32_t>((8u * styleProfile.MaterialSecondaryContrastPercent + 50u) / 100u));
             int32_t secondaryDirection = (mixSeed(paletteSeed ^ 0xA3C59AC3E17B5D6Full) & 1ull) != 0ull ? 1 : -1;
-            if (faction == ShipFactionType::ASCENDANT) { secondaryDirection = -1; }
-            else if (faction == ShipFactionType::CORPORATE) { secondaryDirection = hullColor.Value >= 55u ? -1 : 1; }
-            else if (faction == ShipFactionType::RELIC) { secondaryDirection = 1; }
+            switch (factionProfile.PaletteBehavior.SecondaryToneDirection)
+            {
+            case ShipFactionSecondaryToneDirection::DARKER: secondaryDirection = -1; break;
+            case ShipFactionSecondaryToneDirection::LIGHTER: secondaryDirection = 1; break;
+            case ShipFactionSecondaryToneDirection::CONTRAST_FROM_HULL_MIDPOINT: secondaryDirection = hullColor.Value >= 55u ? -1 : 1; break;
+            default: break;
+            }
             hullSecondaryColor.Value = applySignedOffset(hullColor.Value, secondaryDirection * (secondaryMagnitude + getRandomInt(randomGenerator, { -2, 2 })));
         }
         else
@@ -190,17 +193,18 @@ namespace PixelShipGenerator
 
         const ShadedColors hullColors = createShadedColors(hullColor, contrast);
 
-        HSVColor accentColor = generateRoleColor(randomGenerator, hullColor.Hue, factionProfile.Accent);
-        if (faction == ShipFactionType::CORPORATE && hueDistance(accentColor.Hue, hullColor.Hue) < 65u)
+        HSVColor accentColor = generateRoleColor(randomGenerator, hullColor.Hue, paletteProfile.Accent);
+        if (factionProfile.PaletteBehavior.MinimumAccentHueDistance > 0u
+            && hueDistance(accentColor.Hue, hullColor.Hue) < factionProfile.PaletteBehavior.MinimumAccentHueDistance)
         {
-            // Brand accents must stay visibly distinct from the neutral primary
-            // finish even when the broad procedural hue ranges overlap.
-            accentColor.Hue = wrapHue(accentColor.Hue + ((mixSeed(paletteSeed) & 1ull) != 0ull ? 120 : 210));
+            accentColor.Hue = wrapHue(accentColor.Hue + ((mixSeed(paletteSeed) & 1ull) != 0ull
+                ? factionProfile.PaletteBehavior.AccentHueSeparationShiftA
+                : factionProfile.PaletteBehavior.AccentHueSeparationShiftB));
         }
         accentColor.Saturation = scalePercentage(accentColor.Saturation, styleProfile.PaletteAccentSaturationPercent);
         const ShadedColors accentColors = createShadedColors(accentColor, std::max(3u, contrast - 2u));
 
-        HSVColor cockpitColor = generateRoleColor(randomGenerator, hullColor.Hue, factionProfile.Cockpit);
+        HSVColor cockpitColor = generateRoleColor(randomGenerator, hullColor.Hue, paletteProfile.Cockpit);
         cockpitColor.Value = scalePercentage(cockpitColor.Value, styleProfile.PaletteEmissiveValuePercent);
         const ShadedColors cockpitColors = createShadedColors(cockpitColor, std::max(4u, contrast));
 
@@ -208,10 +212,10 @@ namespace PixelShipGenerator
         cockpitGlintColor.Saturation = scalePercentage(cockpitColor.Saturation, 70u);
         cockpitGlintColor.Value = std::min(100u, cockpitColor.Value + 18u);
 
-        HSVColor lightColor = generateRoleColor(randomGenerator, hullColor.Hue, factionProfile.Light);
+        HSVColor lightColor = generateRoleColor(randomGenerator, hullColor.Hue, paletteProfile.Light);
         lightColor.Value = scalePercentage(lightColor.Value, styleProfile.PaletteEmissiveValuePercent);
 
-        HSVColor exhaustColor = generateRoleColor(randomGenerator, hullColor.Hue, factionProfile.Exhaust);
+        HSVColor exhaustColor = generateRoleColor(randomGenerator, hullColor.Hue, paletteProfile.Exhaust);
         exhaustColor.Value = scalePercentage(exhaustColor.Value, styleProfile.PaletteEmissiveValuePercent);
 
         HSVColor engineHotCoreColor = exhaustColor;
@@ -223,8 +227,8 @@ namespace PixelShipGenerator
 
         HSVColor engineColor;
         engineColor.Hue = wrapHue(hullColor.Hue + getRandomInt(randomGenerator, { -8, 8 }));
-        engineColor.Saturation = getRandomUInt(randomGenerator, factionProfile.MechanicalSaturation);
-        engineColor.Value = getRandomUInt(randomGenerator, factionProfile.MechanicalValue);
+        engineColor.Saturation = getRandomUInt(randomGenerator, paletteProfile.MechanicalSaturation);
+        engineColor.Value = getRandomUInt(randomGenerator, paletteProfile.MechanicalValue);
         HSVColor mechanicalBaseColor = engineColor;
         const ShadedColors engineColors = createShadedColors(engineColor, std::max(4u, contrast - 2u));
 
@@ -281,4 +285,9 @@ namespace PixelShipGenerator
 
         return palette;
     }
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    {
+        return generate(paletteSeed, getShipFactionProfile(faction), styleProfile, enhancedMaterialContrast);
+    }
+
 }

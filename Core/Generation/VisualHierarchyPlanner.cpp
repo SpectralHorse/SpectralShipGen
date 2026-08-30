@@ -230,7 +230,7 @@ namespace PixelShipGenerator
             const ShipVisualAnchorType anchor = static_cast<ShipVisualAnchorType>(index);
             if (anchor == excluded || !isAnchorFeasible(context, anchor, hullAvailable)) { continue; }
             uint64_t weight = getStyleWeight(context, anchor);
-            weight = weight * getFactionWeightPercent(context.Settings.Faction, anchor) / 100u;
+            weight = weight * context.FactionProfile.VisualHierarchy.AnchorWeightMultipliersPercent.getWeightPercent(anchor) / 100u;
             weight = weight * scaleWeightPercent(context.ScaleTraits, anchor) / 100u;
             weights[index] = weight;
             total += weight;
@@ -268,7 +268,7 @@ namespace PixelShipGenerator
             const ShipVisualAnchorType anchor = static_cast<ShipVisualAnchorType>(index);
             if (anchor == primary || !isAnchorFeasible(context, anchor, false)) { continue; }
             uint64_t weight = getStyleWeight(context, anchor);
-            weight = weight * getFactionWeightPercent(context.Settings.Faction, anchor) / 100u;
+            weight = weight * context.FactionProfile.VisualHierarchy.AnchorWeightMultipliersPercent.getWeightPercent(anchor) / 100u;
             weight = weight * scaleWeightPercent(context.ScaleTraits, anchor) / 100u;
             weights[index] = weight;
             total += weight;
@@ -287,38 +287,6 @@ namespace PixelShipGenerator
     uint32_t VisualHierarchyPlanner::getStyleWeight(const ShipGenerationContext& context, ShipVisualAnchorType anchor) const
     {
         return context.Profile.VisualAnchorWeights.getWeight(anchor);
-    }
-
-    uint32_t VisualHierarchyPlanner::getFactionWeightPercent(ShipFactionType faction, ShipVisualAnchorType anchor) const
-    {
-        switch (faction)
-        {
-        case ShipFactionType::FRONTIER:
-            if (anchor == ShipVisualAnchorType::NEGATIVE_SPACE || anchor == ShipVisualAnchorType::ENGINES || anchor == ShipVisualAnchorType::MACRO_ASYMMETRY) { return 125u; }
-            if (anchor == ShipVisualAnchorType::CENTRAL_CORE) { return 80u; }
-            break;
-        case ShipFactionType::MILITARY:
-            if (anchor == ShipVisualAnchorType::WEAPONS || anchor == ShipVisualAnchorType::HULL_LAYERS || anchor == ShipVisualAnchorType::WINGS) { return 125u; }
-            if (anchor == ShipVisualAnchorType::MACRO_ASYMMETRY) { return 70u; }
-            break;
-        case ShipFactionType::ASCENDANT:
-            if (anchor == ShipVisualAnchorType::COCKPIT || anchor == ShipVisualAnchorType::CENTRAL_CORE || anchor == ShipVisualAnchorType::SILHOUETTE) { return 125u; }
-            if (anchor == ShipVisualAnchorType::NEGATIVE_SPACE) { return 90u; }
-            break;
-        case ShipFactionType::XENO:
-            if (anchor == ShipVisualAnchorType::SILHOUETTE || anchor == ShipVisualAnchorType::NEGATIVE_SPACE || anchor == ShipVisualAnchorType::MAJOR_FEATURE) { return 120u; }
-            break;
-        case ShipFactionType::CORPORATE:
-            if (anchor == ShipVisualAnchorType::COCKPIT || anchor == ShipVisualAnchorType::HULL_LAYERS || anchor == ShipVisualAnchorType::ENGINES) { return 120u; }
-            if (anchor == ShipVisualAnchorType::MACRO_ASYMMETRY) { return 65u; }
-            break;
-        case ShipFactionType::RELIC:
-            if (anchor == ShipVisualAnchorType::CENTRAL_CORE || anchor == ShipVisualAnchorType::HULL_LAYERS || anchor == ShipVisualAnchorType::MAJOR_FEATURE) { return 135u; }
-            if (anchor == ShipVisualAnchorType::WEAPONS) { return 90u; }
-            break;
-        default: break;
-        }
-        return 100u;
     }
 
     uint64_t VisualHierarchyPlanner::getPlanningSeed(const ShipGenerationContext& context, uint64_t salt) const

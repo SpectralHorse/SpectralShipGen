@@ -19,6 +19,7 @@
 #include "LiveryData.h"
 #include "MacroAsymmetry.h"
 #include "ShipGenerationDebugInfo.h"
+#include "ShipFactionProfile.h"
 #include "ShipGenerationProfile.h"
 #include "ShipGenerationSeeds.h"
 #include "ShipGenerationSettings.h"
@@ -33,6 +34,7 @@ namespace PixelShipGenerator
     {
         ShipGenerationContext(const ShipGenerationConfiguration& settings,
             const ShipGenerationProfile& profile,
+            const ShipFactionProfile& factionProfile,
             const ShipGenerationSeeds& seeds,
             ShipGenerationDebugInfo* debugInfo = nullptr,
             const GenerationCalibrationSettings* calibrationSettings = nullptr,
@@ -62,6 +64,7 @@ namespace PixelShipGenerator
 
         ShipGenerationConfiguration Settings;
         const ShipGenerationProfile& Profile;
+        const ShipFactionProfile& FactionProfile;
         GenerationScaleTraits ScaleTraits;
         GenerationComplexityBudget ComplexityBudget;
         GenerationSpatialBudget SpatialBudget;

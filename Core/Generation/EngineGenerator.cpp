@@ -10,7 +10,6 @@
 
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
-#include "ShipFactionProfile.h"
 
 namespace PixelShipGenerator
 {
@@ -42,9 +41,8 @@ namespace PixelShipGenerator
             uint32_t ExternalHeightPercent = 100u;
         };
 
-        FactionEngineProfile getFactionEngineProfile(ShipFactionType faction)
+        FactionEngineProfile resolveFactionEngineProfile(const ShipFactionEngineProfile& source)
         {
-            const ShipFactionEngineProfile& source = getShipFactionProfile(faction).Engines;
             FactionEngineProfile profile;
             profile.LayoutWeightPercent = {
                 source.LayoutWeightMultipliersPercent.Central,
@@ -73,7 +71,7 @@ namespace PixelShipGenerator
     {
         GeneratedShip& ship = context.Ship;
         const ShipGenerationProfile& profile = context.Profile;
-        const FactionEngineProfile factionEngineProfile = getFactionEngineProfile(context.Settings.Faction);
+        const FactionEngineProfile factionEngineProfile = resolveFactionEngineProfile(context.FactionProfile.Engines);
         ship.EngineMask.clear(false);
         ship.EngineExhaustMask.clear(false);
         ship.IdleAnimationMetadata.EngineComponents.clear();
@@ -297,7 +295,7 @@ namespace PixelShipGenerator
         const bool wideBankAvailable = rearWidth >= getLayoutMinimumWidth(EngineLayoutType::WIDE_BANK, minimumUnitWidth);
         const uint32_t horizontalCapacity = context.ScaleTraits.HorizontalCapacity;
         const uint32_t longitudinalCapacity = context.ScaleTraits.LongitudinalCapacity;
-        const FactionEngineProfile factionProfile = getFactionEngineProfile(context.Settings.Faction);
+        const FactionEngineProfile factionProfile = resolveFactionEngineProfile(context.FactionProfile.Engines);
         uint32_t centralWeight = applyPercent(profile.CentralEngineWeight, factionProfile.LayoutWeightPercent[static_cast<std::size_t>(EngineLayoutType::CENTRAL)]);
         uint32_t twinWeight = twinAvailable ? applyPercent(static_cast<uint32_t>((static_cast<uint64_t>(profile.TwinEngineWeight) * (65u + horizontalCapacity * 35u / 100u) + 50u) / 100u), factionProfile.LayoutWeightPercent[static_cast<std::size_t>(EngineLayoutType::TWIN)]) : 0u;
         uint32_t quadWeight = quadAvailable ? applyPercent(static_cast<uint32_t>((static_cast<uint64_t>(profile.QuadEngineWeight) * (30u + horizontalCapacity * 70u / 100u) + 50u) / 100u), factionProfile.LayoutWeightPercent[static_cast<std::size_t>(EngineLayoutType::QUAD)]) : 0u;
@@ -344,7 +342,7 @@ namespace PixelShipGenerator
         const bool mediumAvailable = rearWidth >= 4u && availableRearSpace >= 2u;
         const bool largeGeometryAvailable = rearWidth >= 7u && availableRearSpace >= 4u;
         const bool largeLayoutAvailable = layout != EngineLayoutType::QUAD && layout != EngineLayoutType::WIDE_BANK;
-        const FactionEngineProfile factionProfile = getFactionEngineProfile(context.Settings.Faction);
+        const FactionEngineProfile factionProfile = resolveFactionEngineProfile(context.FactionProfile.Engines);
         uint32_t smallWeight = applyPercent(profile.SmallEngineSizeWeight, factionProfile.SizeWeightPercent[static_cast<std::size_t>(EngineSizeClass::SMALL)]);
         uint32_t mediumWeight = mediumAvailable ? applyPercent(static_cast<uint32_t>((static_cast<uint64_t>(profile.MediumEngineSizeWeight) * (60u + context.ScaleTraits.MajorFeatureCapacity * 40u / 100u) + 50u) / 100u), factionProfile.SizeWeightPercent[static_cast<std::size_t>(EngineSizeClass::MEDIUM)]) : 0u;
         uint32_t largeWeight = largeGeometryAvailable && largeLayoutAvailable ? applyPercent(static_cast<uint32_t>((static_cast<uint64_t>(profile.LargeEngineSizeWeight) * (20u + context.ScaleTraits.SmallFeatureCapacity * 80u / 100u) + 50u) / 100u), factionProfile.SizeWeightPercent[static_cast<std::size_t>(EngineSizeClass::LARGE)]) : 0u;

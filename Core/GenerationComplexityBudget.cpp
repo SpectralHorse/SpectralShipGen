@@ -13,141 +13,51 @@ namespace PixelShipGenerator
             return static_cast<std::size_t>(category);
         }
 
-        uint32_t getFactionBudgetPercent(ShipFactionType faction)
+        int32_t getCategoryOffset(const ShipFactionComplexityCategoryOffsets& offsets, GenerationComplexityCategory category)
         {
-            switch (faction)
+            switch (category)
             {
-            case ShipFactionType::FRONTIER: return 106u;
-            case ShipFactionType::MILITARY: return 98u;
-            case ShipFactionType::ASCENDANT: return 92u;
-            case ShipFactionType::XENO: return 102u;
-            case ShipFactionType::CORPORATE: return 98u;
-            case ShipFactionType::RELIC: return 104u;
-            default: return 100u;
+            case GenerationComplexityCategory::SILHOUETTE: return offsets.Silhouette;
+            case GenerationComplexityCategory::COCKPIT_STRUCTURE: return offsets.CockpitStructure;
+            case GenerationComplexityCategory::HULL_LAYER: return offsets.HullLayer;
+            case GenerationComplexityCategory::MAJOR_FEATURE: return offsets.MajorFeature;
+            case GenerationComplexityCategory::LARGE_WEAPON: return offsets.LargeWeapon;
+            case GenerationComplexityCategory::ATTACHMENT: return offsets.Attachment;
+            case GenerationComplexityCategory::DETAIL: return offsets.Detail;
+            default: return 0;
             }
         }
 
-        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure)
+        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(const ShipGenerationProfile& profile, const ShipFactionComplexityProfile& factionProfile, bool reserveCockpitStructure)
         {
-            if (!reserveCockpitStructure)
+            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = reserveCockpitStructure
+                ? profile.ComplexityCategoryWeights.toArray()
+                : profile.LegacyComplexityCategoryWeights.toArray();
+            const ShipFactionComplexityCategoryOffsets& offsets = reserveCockpitStructure
+                ? factionProfile.CategoryOffsets
+                : factionProfile.LegacyCategoryOffsets;
+
+            for (std::size_t index = 0u; index < weights.size(); ++index)
             {
-                std::array<int32_t, GenerationComplexityBudget::CategoryCount> legacyWeights = profile.LegacyComplexityCategoryWeights.toArray();
-
-                switch (faction)
-                {
-                case ShipFactionType::FRONTIER:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] += 3;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::DETAIL)] += 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] -= 2;
-                    break;
-                case ShipFactionType::MILITARY:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::LARGE_WEAPON)] += 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::DETAIL)] -= 2;
-                    break;
-                case ShipFactionType::ASCENDANT:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 3;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::SILHOUETTE)] -= 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 2;
-                    break;
-                case ShipFactionType::XENO:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] += 1;
-                    break;
-                case ShipFactionType::CORPORATE:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::LARGE_WEAPON)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::DETAIL)] += 1;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 1;
-                    break;
-                case ShipFactionType::RELIC:
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 4;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 3;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::DETAIL)] -= 3;
-                    legacyWeights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 2;
-                    break;
-                default: break;
-                }
-                for (std::size_t index = 0u; index < legacyWeights.size(); ++index)
-                {
-                    if (index == categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)) { continue; }
-                    legacyWeights[index] = std::max(1, legacyWeights[index]);
-                }
-                return legacyWeights;
+                const GenerationComplexityCategory category = static_cast<GenerationComplexityCategory>(index);
+                weights[index] += getCategoryOffset(offsets, category);
+                if (!reserveCockpitStructure && category == GenerationComplexityCategory::COCKPIT_STRUCTURE) { continue; }
+                weights[index] = std::max(1, weights[index]);
             }
-
-            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = profile.ComplexityCategoryWeights.toArray();
-
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] += 3;
-                weights[categoryIndex(GenerationComplexityCategory::DETAIL)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] -= 2;
-                break;
-            case ShipFactionType::MILITARY:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::LARGE_WEAPON)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::DETAIL)] -= 2;
-                break;
-            case ShipFactionType::ASCENDANT:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 3;
-                weights[categoryIndex(GenerationComplexityCategory::SILHOUETTE)] -= 2;
-                weights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 2;
-                break;
-            case ShipFactionType::XENO:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] += 1;
-                break;
-            case ShipFactionType::CORPORATE:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 2;
-                weights[categoryIndex(GenerationComplexityCategory::LARGE_WEAPON)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::DETAIL)] += 1;
-                weights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 1;
-                break;
-            case ShipFactionType::RELIC:
-                weights[categoryIndex(GenerationComplexityCategory::COCKPIT_STRUCTURE)] += 3;
-                weights[categoryIndex(GenerationComplexityCategory::HULL_LAYER)] += 5;
-                weights[categoryIndex(GenerationComplexityCategory::MAJOR_FEATURE)] += 4;
-                weights[categoryIndex(GenerationComplexityCategory::DETAIL)] -= 4;
-                weights[categoryIndex(GenerationComplexityCategory::ATTACHMENT)] -= 2;
-                break;
-            default:
-                break;
-            }
-
-            for (int32_t& weight : weights)
-            {
-                weight = std::max(1, weight);
-            }
-
             return weights;
         }
     }
 
-    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure)
+    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, bool reserveCockpitStructure)
     {
         GenerationComplexityBudget budget;
         const uint32_t scaleCapacity = (scaleTraits.MajorFeatureCapacity * 2u + scaleTraits.DetailComplexity + scaleTraits.AttachmentComplexity + scaleTraits.SmallFeatureCapacity + 2u) / 5u;
         uint64_t totalBudget = 38u + (static_cast<uint64_t>(scaleCapacity) * 82u + 50u) / 100u;
         totalBudget = (totalBudget * profile.ComplexityBudgetPercent + 50u) / 100u;
-        totalBudget = (totalBudget * getFactionBudgetPercent(faction) + 50u) / 100u;
+        totalBudget = (totalBudget * factionProfile.Complexity.TotalBudgetPercent + 50u) / 100u;
         budget.m_InitialBudget = static_cast<uint32_t>(std::clamp<uint64_t>(totalBudget, 28u, 132u));
 
-        const auto weights = getCategoryWeights(profile, faction, reserveCockpitStructure);
+        const auto weights = getCategoryWeights(profile, factionProfile.Complexity, reserveCockpitStructure);
         uint32_t totalWeight = 0u;
         for (int32_t weight : weights) { totalWeight += static_cast<uint32_t>(weight); }
 
@@ -167,9 +77,14 @@ namespace PixelShipGenerator
         return budget;
     }
 
+    GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure)
+    {
+        return create(scaleTraits, profile, getShipFactionProfile(faction), reserveCockpitStructure);
+    }
+
     GenerationComplexityBudget GenerationComplexityBudget::create(const GenerationScaleTraits& scaleTraits, ShipStyle style, ShipFactionType faction, bool reserveCockpitStructure)
     {
-        return create(scaleTraits, getShipGenerationProfile(style), faction, reserveCockpitStructure);
+        return create(scaleTraits, getShipGenerationProfile(style), getShipFactionProfile(faction), reserveCockpitStructure);
     }
 
     bool GenerationComplexityBudget::canAfford(GenerationComplexityCategory category, uint32_t cost) const

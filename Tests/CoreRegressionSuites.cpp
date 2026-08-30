@@ -38,6 +38,7 @@ namespace PixelShipGeneratorTests
             { "static-profile-routing", "Static Profile Routing", RegressionCategory::DETERMINISM, runStaticProfileRoutingRegression, false },
             { "faction-expansion", "Faction Expansion", RegressionCategory::VISUAL_SEMANTICS, runFactionExpansionRegression, true },
             { "faction-profile", "Unified ShipFactionProfile", RegressionCategory::DETERMINISM, runFactionProfileRegression, false },
+            { "static-faction-profile-routing", "Static Faction Profile Routing", RegressionCategory::DETERMINISM, runStaticFactionProfileRoutingRegression, false },
             { "structural-negative-space", "Structural Negative Space", RegressionCategory::GEOMETRY, runStructuralNegativeSpaceRegression, true },
             { "silhouette-articulation", "Silhouette Articulation", RegressionCategory::GEOMETRY, runSilhouetteArticulationRegression, true },
             { "visual-hierarchy", "Visual Hierarchy", RegressionCategory::VISUAL_SEMANTICS, runVisualHierarchyRegression, true },

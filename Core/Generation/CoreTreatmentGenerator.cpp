@@ -25,19 +25,6 @@ namespace PixelShipGenerator
             return value;
         }
 
-        uint32_t getFactionChancePercent(ShipFactionType faction)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER: return 104u;
-            case ShipFactionType::MILITARY: return 106u;
-            case ShipFactionType::ASCENDANT: return 94u;
-            case ShipFactionType::XENO: return 100u;
-            case ShipFactionType::CORPORATE: return 108u;
-            case ShipFactionType::RELIC: return 128u;
-            default: return 100u;
-            }
-        }
 
     }
 
@@ -84,7 +71,7 @@ namespace PixelShipGenerator
 
         const uint32_t scaleChance = 35u + context.ScaleTraits.ShadingComplexity * 65u / 100u;
         uint32_t chance = context.Profile.CoreTreatmentChance * scaleChance / 100u;
-        chance = std::min(94u, chance * getFactionChancePercent(context.Settings.Faction) / 100u);
+        chance = std::min(94u, chance * context.FactionProfile.CoreTreatment.ChancePercent / 100u);
         if (context.VisualHierarchy.InfluenceEnabled)
         {
             if (context.VisualHierarchy.targets(ShipVisualAnchorType::CENTRAL_CORE))
@@ -216,14 +203,14 @@ namespace PixelShipGenerator
         uint64_t totalWeight = 0u;
         for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
         {
-            if (!used[index]) { totalWeight += getTreatmentWeight(context.Profile, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index)); }
+            if (!used[index]) { totalWeight += getTreatmentWeight(context.Profile, context.FactionProfile.CoreTreatment, static_cast<ShipCoreTreatmentType>(index)); }
         }
         if (totalWeight == 0u) { return ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END; }
         uint64_t roll = context.getGenerationRandomUInt64(GenerationDomain::HULL_LAYERS, 0u, totalWeight - 1u);
         for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
         {
             if (used[index]) { continue; }
-            const uint32_t weight = getTreatmentWeight(context.Profile, context.Settings.Faction, static_cast<ShipCoreTreatmentType>(index));
+            const uint32_t weight = getTreatmentWeight(context.Profile, context.FactionProfile.CoreTreatment, static_cast<ShipCoreTreatmentType>(index));
             if (roll < weight) { return static_cast<ShipCoreTreatmentType>(index); }
             roll -= weight;
         }
@@ -349,11 +336,11 @@ namespace PixelShipGenerator
         for (uint32_t y = startY; y <= bounds.MaxY; ++y)
         {
             addSymmetricPixel(context, candidate.Recessed, static_cast<int32_t>(leftCenter), static_cast<int32_t>(y));
-            if (context.Settings.Faction == ShipFactionType::RELIC && y % 3u == 0u)
-            {
-                addSymmetricPixel(context, candidate.Luminous, static_cast<int32_t>(leftCenter), static_cast<int32_t>(y));
-            }
-            else if ((context.Settings.Faction == ShipFactionType::ASCENDANT || context.Settings.Faction == ShipFactionType::XENO) && y % 3u != 0u)
+            const ShipFactionCoreChannelLuminousPattern luminousPattern = context.FactionProfile.CoreTreatment.CoreChannelLuminousPattern;
+            const bool luminous = luminousPattern == ShipFactionCoreChannelLuminousPattern::EVERY_THIRD_ROW
+                ? y % 3u == 0u
+                : (luminousPattern == ShipFactionCoreChannelLuminousPattern::EXCEPT_EVERY_THIRD_ROW && y % 3u != 0u);
+            if (luminous)
             {
                 addSymmetricPixel(context, candidate.Luminous, static_cast<int32_t>(leftCenter), static_cast<int32_t>(y));
             }
@@ -427,9 +414,9 @@ namespace PixelShipGenerator
         return type == ShipCoreTreatmentType::RAISED_CORE_PLATE || type == ShipCoreTreatmentType::CENTRAL_SPINE;
     }
 
-    uint32_t CoreTreatmentGenerator::getTreatmentWeight(const ShipGenerationProfile& profile, ShipFactionType faction, ShipCoreTreatmentType type) const
+    uint32_t CoreTreatmentGenerator::getTreatmentWeight(const ShipGenerationProfile& profile, const ShipFactionCoreTreatmentProfile& factionProfile, ShipCoreTreatmentType type) const
     {
-        std::array<uint32_t, 6u> weights = {
+        const std::array<uint32_t, 6u> weights = {
             profile.CoreTreatmentWeights.CentralSpine,
             profile.CoreTreatmentWeights.CockpitSurround,
             profile.CoreTreatmentWeights.RaisedCorePlate,
@@ -437,13 +424,9 @@ namespace PixelShipGenerator
             profile.CoreTreatmentWeights.LongitudinalArmorBand,
             profile.CoreTreatmentWeights.CoreChannel
         };
-        if (faction == ShipFactionType::ASCENDANT) { weights[0] += 6u; weights[5] += 8u; weights[3] = std::max(1u, weights[3] - 5u); }
-        else if (faction == ShipFactionType::FRONTIER) { weights[2] += 4u; weights[3] += 4u; }
-        else if (faction == ShipFactionType::MILITARY) { weights[1] += 5u; weights[4] += 5u; }
-        else if (faction == ShipFactionType::XENO) { weights[3] += 5u; weights[5] += 5u; }
-        else if (faction == ShipFactionType::CORPORATE) { weights[1] += 9u; weights[2] += 7u; weights[4] += 10u; weights[3] = std::max(1u, weights[3] - 3u); }
-        else if (faction == ShipFactionType::RELIC) { weights[0] += 16u; weights[2] += 20u; weights[5] += 22u; weights[1] = std::max(1u, weights[1] - 4u); }
-        return weights[static_cast<std::size_t>(type)];
+        const int64_t adjusted = static_cast<int64_t>(weights[static_cast<std::size_t>(type)])
+            + static_cast<int64_t>(factionProfile.WeightOffsets.getOffset(type));
+        return static_cast<uint32_t>(std::max<int64_t>(1, adjusted));
     }
 
     void CoreTreatmentGenerator::rebuildBoundaryMask(CoreTreatmentData& data) const

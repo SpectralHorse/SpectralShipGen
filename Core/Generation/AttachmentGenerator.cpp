@@ -62,7 +62,7 @@ namespace PixelShipGenerator
         ship.AttachmentMask.clear(false);
         ship.AttachmentPlacements.clear();
 
-        const ResolvedAttachmentProfile profile = resolveAttachmentProfile(styleProfile, settings.Faction);
+        const ResolvedAttachmentProfile profile = resolveAttachmentProfile(styleProfile, context.FactionProfile.Attachments);
         const bool macroRequested = context.MacroAsymmetry.targets(MacroAsymmetryCategory::ATTACHMENT);
 
         if (profile.MaximumAttachmentGroups == 0u || !context.ComplexityBudget.canAfford(GenerationComplexityCategory::ATTACHMENT, 6u))
@@ -1056,9 +1056,8 @@ namespace PixelShipGenerator
         return { 1, 0 };
     }
 
-    AttachmentGenerator::ResolvedAttachmentProfile AttachmentGenerator::resolveAttachmentProfile(const ShipGenerationProfile& styleProfile, ShipFactionType faction) const
+    AttachmentGenerator::ResolvedAttachmentProfile AttachmentGenerator::resolveAttachmentProfile(const ShipGenerationProfile& styleProfile, const ShipFactionAttachmentProfile& factionProfile) const
     {
-        const ShipFactionAttachmentProfile& factionProfile = getShipFactionAttachmentProfile(faction);
         ResolvedAttachmentProfile result;
 
         for (uint32_t index = 0u; index < static_cast<uint32_t>(ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)

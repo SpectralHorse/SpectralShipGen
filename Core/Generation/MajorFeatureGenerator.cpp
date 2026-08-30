@@ -7,7 +7,6 @@
 
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
-#include "ShipFactionProfile.h"
 
 namespace PixelShipGenerator
 {
@@ -53,7 +52,7 @@ namespace PixelShipGenerator
             return;
         }
 
-        const FactionMajorFeatureProfile factionProfile = getFactionProfile(context.Settings.Faction);
+        const FactionMajorFeatureProfile factionProfile = resolveFactionProfile(context.FactionProfile.MajorFeatures);
         uint32_t generationChance = static_cast<uint32_t>((static_cast<uint64_t>(context.Profile.MajorFeatureChance) * factionProfile.ChancePercent + 50u) / 100u);
         const uint32_t scaleChancePercent = std::min(100u, 35u + (context.ScaleTraits.MajorFeatureCapacity * 65u + 20u) / 40u);
         generationChance = static_cast<uint32_t>((static_cast<uint64_t>(generationChance) * scaleChancePercent + 50u) / 100u);
@@ -836,9 +835,8 @@ namespace PixelShipGenerator
         return std::max(1u, static_cast<uint32_t>((static_cast<uint64_t>(scaled) * scalePercent + 50u) / 100u));
     }
 
-    MajorFeatureGenerator::FactionMajorFeatureProfile MajorFeatureGenerator::getFactionProfile(ShipFactionType faction) const
+    MajorFeatureGenerator::FactionMajorFeatureProfile MajorFeatureGenerator::resolveFactionProfile(const ShipFactionMajorFeatureProfile& source) const
     {
-        const ShipFactionMajorFeatureProfile& source = getShipFactionProfile(faction).MajorFeatures;
         FactionMajorFeatureProfile profile;
         profile.ChancePercent = source.ChancePercent;
         for (std::size_t index = 0u; index < profile.WeightMultipliers.size(); ++index)

@@ -62,79 +62,6 @@ namespace PixelShipGenerator
             return 100u;
         }
 
-        uint32_t getFactionNegativeSpaceChancePercent(ShipFactionType faction)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER: return 110u;
-            case ShipFactionType::MILITARY: return 95u;
-            case ShipFactionType::ASCENDANT: return 88u;
-            case ShipFactionType::XENO: return 105u;
-            case ShipFactionType::CORPORATE: return 92u;
-            case ShipFactionType::RELIC: return 115u;
-            default: return 100u;
-            }
-        }
-
-        uint32_t getFactionNegativeSpaceWeightPercent(ShipFactionType faction, ShipStructuralNegativeSpaceType type)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::REAR_FORK: return 115u;
-                case ShipStructuralNegativeSpaceType::OPEN_FRAME_BAY: return 135u;
-                case ShipStructuralNegativeSpaceType::NACELLE_CHANNEL: return 135u;
-                default: return 95u;
-                }
-            case ShipFactionType::MILITARY:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::WING_CHANNEL: return 120u;
-                case ShipStructuralNegativeSpaceType::SHOULDER_GAP: return 115u;
-                case ShipStructuralNegativeSpaceType::OPEN_FRAME_BAY: return 75u;
-                default: return 100u;
-                }
-            case ShipFactionType::ASCENDANT:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::WING_CHANNEL: return 135u;
-                case ShipStructuralNegativeSpaceType::SHOULDER_GAP: return 125u;
-                case ShipStructuralNegativeSpaceType::OPEN_FRAME_BAY: return 65u;
-                case ShipStructuralNegativeSpaceType::NACELLE_CHANNEL: return 80u;
-                default: return 85u;
-                }
-            case ShipFactionType::XENO:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::SHOULDER_GAP: return 125u;
-                case ShipStructuralNegativeSpaceType::OPEN_FRAME_BAY: return 125u;
-                case ShipStructuralNegativeSpaceType::REAR_FORK: return 110u;
-                default: return 90u;
-                }
-            case ShipFactionType::CORPORATE:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::WING_CHANNEL: return 125u;
-                case ShipStructuralNegativeSpaceType::SHOULDER_GAP: return 140u;
-                case ShipStructuralNegativeSpaceType::NACELLE_CHANNEL: return 115u;
-                case ShipStructuralNegativeSpaceType::REAR_FORK: return 75u;
-                default: return 95u;
-                }
-            case ShipFactionType::RELIC:
-                switch (type)
-                {
-                case ShipStructuralNegativeSpaceType::REAR_FORK: return 135u;
-                case ShipStructuralNegativeSpaceType::OPEN_FRAME_BAY: return 155u;
-                case ShipStructuralNegativeSpaceType::NACELLE_CHANNEL: return 115u;
-                case ShipStructuralNegativeSpaceType::WING_CHANNEL: return 78u;
-                default: return 95u;
-                }
-            default: return 100u;
-            }
-        }
-
         void reserveRemovedPixel(PixelMask& hullMask, PixelMask& reservedMask, uint32_t x, uint32_t y, bool& changed)
         {
             if (hullMask.get(x, y))
@@ -681,7 +608,7 @@ namespace PixelShipGenerator
 
         // Faction only nudges the manner of articulation. The resolved profile remains
         // the primary structural language and no profile x faction matrix is used.
-        if (context.Settings.Faction == ShipFactionType::FRONTIER || context.Settings.Faction == ShipFactionType::XENO || context.Settings.Faction == ShipFactionType::RELIC)
+        if (context.FactionProfile.Hull.PreferAlternateArticulationOrder)
         {
             std::swap(priorities[1u], priorities[2u]);
         }
@@ -723,7 +650,7 @@ namespace PixelShipGenerator
 
         uint32_t chance = static_cast<uint32_t>((static_cast<uint64_t>(profile.StructuralNegativeSpaceChance) * profile.StructuralNegativeSpaceScalePercent + 50u) / 100u);
         chance = static_cast<uint32_t>((static_cast<uint64_t>(chance) * getNegativeSpaceScaleChancePercent(context.ScaleTraits) + 50u) / 100u);
-        chance = static_cast<uint32_t>((static_cast<uint64_t>(chance) * getFactionNegativeSpaceChancePercent(context.Settings.Faction) + 50u) / 100u);
+        chance = static_cast<uint32_t>((static_cast<uint64_t>(chance) * context.FactionProfile.Hull.NegativeSpaceChancePercent + 50u) / 100u);
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.targets(ShipVisualAnchorType::NEGATIVE_SPACE))
         {
             chance = static_cast<uint32_t>((static_cast<uint64_t>(chance) * context.VisualHierarchy.getAnchorWeightPercent(ShipVisualAnchorType::NEGATIVE_SPACE) + 50u) / 100u);
@@ -810,7 +737,7 @@ namespace PixelShipGenerator
         }
 
         uint32_t weight = context.Profile.StructuralNegativeSpaceWeights.getWeight(type);
-        weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * getFactionNegativeSpaceWeightPercent(context.Settings.Faction, type) + 50u) / 100u);
+        weight = static_cast<uint32_t>((static_cast<uint64_t>(weight) * context.FactionProfile.Hull.NegativeSpaceWeightMultipliersPercent.getWeightPercent(type) + 50u) / 100u);
         return weight;
     }
 

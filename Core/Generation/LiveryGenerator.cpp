@@ -66,46 +66,6 @@ namespace PixelShipGenerator
             }
         }
 
-        uint32_t getFactionChancePercent(ShipFactionType faction)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER: return 96u;
-            case ShipFactionType::MILITARY: return 118u;
-            case ShipFactionType::ASCENDANT: return 78u;
-            case ShipFactionType::XENO: return 98u;
-            case ShipFactionType::CORPORATE: return 145u;
-            case ShipFactionType::RELIC: return 78u;
-            default: return 100u;
-            }
-        }
-
-        uint32_t getFactionWeightPercent(ShipFactionType faction, ShipLiveryType type)
-        {
-            switch (faction)
-            {
-            case ShipFactionType::FRONTIER:
-                return type == ShipLiveryType::ID_PANEL || type == ShipLiveryType::SHOULDER_BLOCK ? 135u
-                    : (type == ShipLiveryType::CENTER_STRIPE || type == ShipLiveryType::NOSE_BAND ? 115u : 92u);
-            case ShipFactionType::MILITARY:
-                return type == ShipLiveryType::WING_BAND || type == ShipLiveryType::SHOULDER_BLOCK || type == ShipLiveryType::NOSE_BAND ? 135u
-                    : (type == ShipLiveryType::GEOMETRIC_INSIGNIA ? 90u : 105u);
-            case ShipFactionType::ASCENDANT:
-                return type == ShipLiveryType::CENTER_STRIPE || type == ShipLiveryType::CHEVRON || type == ShipLiveryType::GEOMETRIC_INSIGNIA ? 125u
-                    : (type == ShipLiveryType::ID_PANEL || type == ShipLiveryType::SHOULDER_BLOCK ? 70u : 90u);
-            case ShipFactionType::XENO:
-                return type == ShipLiveryType::CHEVRON || type == ShipLiveryType::GEOMETRIC_INSIGNIA || type == ShipLiveryType::DOUBLE_CENTER_STRIPE ? 135u
-                    : 90u;
-            case ShipFactionType::CORPORATE:
-                return type == ShipLiveryType::ID_PANEL || type == ShipLiveryType::CENTER_STRIPE || type == ShipLiveryType::DOUBLE_CENTER_STRIPE || type == ShipLiveryType::GEOMETRIC_INSIGNIA ? 150u
-                    : (type == ShipLiveryType::WING_BAND || type == ShipLiveryType::SHOULDER_BLOCK ? 125u : 110u);
-            case ShipFactionType::RELIC:
-                return type == ShipLiveryType::GEOMETRIC_INSIGNIA || type == ShipLiveryType::CHEVRON ? 145u
-                    : (type == ShipLiveryType::WING_BAND || type == ShipLiveryType::ID_PANEL ? 65u : 82u);
-            default: return 100u;
-            }
-        }
-
         uint32_t getAnchorWeightPercent(const VisualHierarchyPlan& hierarchy, ShipLiveryType type)
         {
             if (!hierarchy.InfluenceEnabled) { return 100u; }
@@ -145,7 +105,7 @@ namespace PixelShipGenerator
         }
 
         uint32_t chance = scalePercent(context.Profile.LiveryChance, getScaleChancePercent(context.ScaleTraits));
-        chance = scalePercent(chance, getFactionChancePercent(context.Settings.Faction));
+        chance = scalePercent(chance, context.FactionProfile.Livery.ChancePercent);
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.PrimaryAnchor == ShipVisualAnchorType::SILHOUETTE)
         {
             chance = scalePercent(chance, 72u);
@@ -237,7 +197,7 @@ namespace PixelShipGenerator
     uint32_t LiveryGenerator::getTypeWeight(const ShipGenerationContext& context, ShipLiveryType type, bool secondary) const
     {
         uint32_t weight = context.Profile.LiveryWeights.getWeight(type);
-        weight = scalePercent(weight, getFactionWeightPercent(context.Settings.Faction, type));
+        weight = scalePercent(weight, context.FactionProfile.Livery.WeightMultipliersPercent.getWeightPercent(type));
         weight = scalePercent(weight, getAnchorWeightPercent(context.VisualHierarchy, type));
 
         if (context.ScaleTraits.Tier == GenerationScaleTier::TINY)
@@ -467,7 +427,7 @@ namespace PixelShipGenerator
         PixelMask mask(width, height, false);
         const PixelMaskUtils::MaskBounds bounds = PixelMaskUtils::calculateMaskBounds(context.Ship.HullMask);
         if (!bounds.Valid) { return mask; }
-        asymmetric = allowAsymmetricMarking(context, randomGenerator) && context.Settings.Faction != ShipFactionType::MILITARY;
+        asymmetric = allowAsymmetricMarking(context, randomGenerator) && context.FactionProfile.Livery.AllowAsymmetricGeometricInsignia;
         const uint32_t radius = context.ScaleTraits.Tier >= GenerationScaleTier::LARGE ? 3u : (context.ScaleTraits.Tier >= GenerationScaleTier::MEDIUM ? 2u : 1u);
         const uint32_t occupiedHeight = bounds.MaxY - bounds.MinY + 1u;
         const uint32_t cy = bounds.MinY + occupiedHeight * randomUInt(randomGenerator, 38u, 62u) / 100u;
@@ -617,15 +577,8 @@ namespace PixelShipGenerator
     {
         uint32_t chance = context.Profile.LiveryAsymmetricChance;
         if (context.MacroAsymmetry.Fulfilled) { chance = std::min(100u, chance + 45u); }
-        switch (context.Settings.Faction)
-        {
-        case ShipFactionType::FRONTIER: chance = std::min(100u, chance + 20u); break;
-        case ShipFactionType::CORPORATE: chance = std::min(100u, chance + 28u); break;
-        case ShipFactionType::XENO: chance = std::min(100u, chance + 15u); break;
-        case ShipFactionType::MILITARY: chance = chance / 3u; break;
-        case ShipFactionType::ASCENDANT: chance = chance / 2u; break;
-        default: break;
-        }
+        chance = static_cast<uint32_t>(std::clamp<int32_t>(static_cast<int32_t>(chance) + context.FactionProfile.Livery.AsymmetricChanceOffset, 0, 100));
+        chance /= context.FactionProfile.Livery.AsymmetricChanceDivisor;
         return randomUInt(randomGenerator, 0u, 99u) < chance;
     }
 }
