@@ -5,12 +5,12 @@
 #include <limits>
 #include <vector>
 
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 #include "ShipFactionAnimationUtils.h"
-#include <PixelShipGenerator/GenerationScaleTraits.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
 #include "PixelMaskUtils.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace IdleAnimationInternal
     {
@@ -29,13 +29,13 @@ namespace PixelShipGenerator
             value ^= static_cast<uint64_t>(x) * 0x9E3779B185EBCA87ull;
             value ^= static_cast<uint64_t>(y) * 0xC2B2AE3D27D4EB4Full;
             value ^= salt;
-            return PixelShipGenerator::mixGenerationSeed64(value);
+            return SpectralShipGen::mixGenerationSeed64(value);
         }
 
-        IdleAnimationProfile getIdleAnimationProfile(const PixelShipGenerator::GeneratedShip& ship)
+        IdleAnimationProfile getIdleAnimationProfile(const SpectralShipGen::GeneratedShip& ship)
         {
             IdleAnimationProfile profile;
-            const PixelShipGenerator::ShipIdleAnimationTraits& traits = ship.AnimationTraits.Idle;
+            const SpectralShipGen::ShipIdleAnimationTraits& traits = ship.AnimationTraits.Idle;
             profile.EnginePulseStrength = traits.EnginePulseStrength;
             profile.ExhaustAmplitudePercent = traits.ExhaustAmplitudePercent;
             profile.EngineMechanicalChance = traits.EngineMechanicalChance;
@@ -46,26 +46,26 @@ namespace PixelShipGenerator
             profile.AlternateEnginePhases = traits.AlternateEnginePhases;
             profile.SlowMechanicalCycle = traits.SlowMechanicalCycle;
 
-            const PixelShipGenerator::ShipFactionIdleAnimationProfile& factionProfile = ship.FactionAnimationProfile.Idle;
+            const SpectralShipGen::ShipFactionIdleAnimationProfile& factionProfile = ship.FactionAnimationProfile.Idle;
             profile.EnginePulseStrength = std::max(profile.EnginePulseStrength, factionProfile.EnginePulseStrengthMinimum);
-            profile.ExhaustAmplitudePercent = PixelShipGenerator::FactionAnimationInternal::applyValueScale(profile.ExhaustAmplitudePercent, factionProfile.ExhaustAmplitudeScale);
-            profile.EngineMechanicalChance = PixelShipGenerator::FactionAnimationInternal::applySignedOffset(profile.EngineMechanicalChance, factionProfile.EngineMechanicalChanceOffset);
-            profile.EngineMechanicalChance = PixelShipGenerator::FactionAnimationInternal::applyOptionalMaximum(profile.EngineMechanicalChance, factionProfile.EngineMechanicalChanceMaximum);
+            profile.ExhaustAmplitudePercent = SpectralShipGen::FactionAnimationInternal::applyValueScale(profile.ExhaustAmplitudePercent, factionProfile.ExhaustAmplitudeScale);
+            profile.EngineMechanicalChance = SpectralShipGen::FactionAnimationInternal::applySignedOffset(profile.EngineMechanicalChance, factionProfile.EngineMechanicalChanceOffset);
+            profile.EngineMechanicalChance = SpectralShipGen::FactionAnimationInternal::applyOptionalMaximum(profile.EngineMechanicalChance, factionProfile.EngineMechanicalChanceMaximum);
             profile.EngineMechanicalChance = std::max(profile.EngineMechanicalChance, factionProfile.EngineMechanicalChanceMinimum);
-            profile.WeaponMechanicalChance = PixelShipGenerator::FactionAnimationInternal::applySignedOffset(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceOffset);
-            profile.WeaponMechanicalChance = PixelShipGenerator::FactionAnimationInternal::applyValueScale(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceScale);
-            profile.WeaponMechanicalChance = PixelShipGenerator::FactionAnimationInternal::applyOptionalMaximum(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceMaximum);
+            profile.WeaponMechanicalChance = SpectralShipGen::FactionAnimationInternal::applySignedOffset(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceOffset);
+            profile.WeaponMechanicalChance = SpectralShipGen::FactionAnimationInternal::applyValueScale(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceScale);
+            profile.WeaponMechanicalChance = SpectralShipGen::FactionAnimationInternal::applyOptionalMaximum(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceMaximum);
             profile.WeaponMechanicalChance = std::max(profile.WeaponMechanicalChance, factionProfile.WeaponMechanicalChanceMinimum);
-            profile.VentActivityChance = PixelShipGenerator::FactionAnimationInternal::applyValueScale(profile.VentActivityChance, factionProfile.VentActivityChanceScale);
+            profile.VentActivityChance = SpectralShipGen::FactionAnimationInternal::applyValueScale(profile.VentActivityChance, factionProfile.VentActivityChanceScale);
             if (factionProfile.TechPulseStrength != 0u) { profile.TechPulseStrength = factionProfile.TechPulseStrength; }
-            profile.SynchronizeEngines = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.SynchronizeEngines, factionProfile.SynchronizeEngines);
-            profile.AsynchronousEngines = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.AsynchronousEngines, factionProfile.AsynchronousEngines);
-            profile.AlternateEnginePhases = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.AlternateEnginePhases, factionProfile.AlternateEnginePhases);
-            profile.AlternateWeaponPhases = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.AlternateWeaponPhases, factionProfile.AlternateWeaponPhases);
-            profile.SlowMechanicalCycle = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.SlowMechanicalCycle, factionProfile.SlowMechanicalCycle);
-            profile.IrregularEngineCycle = PixelShipGenerator::FactionAnimationInternal::applyBooleanOverride(profile.IrregularEngineCycle, factionProfile.IrregularEngineCycle);
+            profile.SynchronizeEngines = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.SynchronizeEngines, factionProfile.SynchronizeEngines);
+            profile.AsynchronousEngines = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.AsynchronousEngines, factionProfile.AsynchronousEngines);
+            profile.AlternateEnginePhases = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.AlternateEnginePhases, factionProfile.AlternateEnginePhases);
+            profile.AlternateWeaponPhases = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.AlternateWeaponPhases, factionProfile.AlternateWeaponPhases);
+            profile.SlowMechanicalCycle = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.SlowMechanicalCycle, factionProfile.SlowMechanicalCycle);
+            profile.IrregularEngineCycle = SpectralShipGen::FactionAnimationInternal::applyBooleanOverride(profile.IrregularEngineCycle, factionProfile.IrregularEngineCycle);
 
-            const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+            const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
             const uint32_t mechanicalScalePercent = 20u + scaleTraits.AnimationComplexity * 80u / 100u;
             profile.EngineMechanicalChance = static_cast<uint32_t>((static_cast<uint64_t>(profile.EngineMechanicalChance) * mechanicalScalePercent + 50u) / 100u);
             profile.WeaponMechanicalChance = static_cast<uint32_t>((static_cast<uint64_t>(profile.WeaponMechanicalChance) * mechanicalScalePercent + 50u) / 100u);
@@ -75,7 +75,7 @@ namespace PixelShipGenerator
             return profile;
         }
 
-        uint32_t getMaskNeighbourCount(const PixelShipGenerator::PixelMask& mask, int32_t x, int32_t y)
+        uint32_t getMaskNeighbourCount(const SpectralShipGen::PixelMask& mask, int32_t x, int32_t y)
         {
             uint32_t count = 0u;
 
@@ -98,7 +98,7 @@ namespace PixelShipGenerator
             return count;
         }
 
-        uint32_t getEngineAmplitudePercent(const IdleAnimationProfile& profile, const PixelShipGenerator::ShipEngineAnimationComponent& component, std::size_t engineCount)
+        uint32_t getEngineAmplitudePercent(const IdleAnimationProfile& profile, const SpectralShipGen::ShipEngineAnimationComponent& component, std::size_t engineCount)
         {
             uint32_t amplitude = profile.ExhaustAmplitudePercent;
 
@@ -114,7 +114,7 @@ namespace PixelShipGenerator
             return std::max(25u, amplitude);
         }
 
-        uint32_t countAttachmentPixels(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipAttachmentPlacement& placement)
+        uint32_t countAttachmentPixels(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipAttachmentPlacement& placement)
         {
             uint32_t count = 0u;
 
@@ -132,7 +132,7 @@ namespace PixelShipGenerator
             return count;
         }
 
-        uint32_t getPlannedMaximumExhaustTravel(const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t amplitudePercent)
+        uint32_t getPlannedMaximumExhaustTravel(const SpectralShipGen::ShipEngineAnimationComponent& component, uint32_t amplitudePercent)
         {
             const uint32_t extension = component.MaximumExhaustLength > component.ExhaustLength ? component.MaximumExhaustLength - component.ExhaustLength : 0u;
             const uint32_t contraction = component.ExhaustLength > component.MinimumExhaustLength ? component.ExhaustLength - component.MinimumExhaustLength : 0u;
@@ -144,12 +144,12 @@ namespace PixelShipGenerator
             return settings.Seed.has_value() ? *settings.Seed : mixGenerationSeed64(ship.Seeds.Master ^ AnimationSeedSalt);
         }
 
-        IdleAnimationPlan createIdleAnimationPlan(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipIdleAnimationSettings& settings, uint64_t seed)
+        IdleAnimationPlan createIdleAnimationPlan(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipIdleAnimationSettings& settings, uint64_t seed)
         {
             IdleAnimationPlan plan;
             plan.Profile = getIdleAnimationProfile(ship);
             plan.PreferredMicroMovementDirection = (getAnimationHash(seed, 0u, 0u, MicroMovementSalt) & 1ull) == 0ull ? -1 : 1;
-            const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+            const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
 
             if (settings.LightBlinking)
             {
@@ -173,7 +173,7 @@ namespace PixelShipGenerator
 
             for (std::size_t engineIndex = 0u; engineIndex < ship.IdleAnimationMetadata.EngineComponents.size(); ++engineIndex)
             {
-                const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
+                const SpectralShipGen::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
                 const uint32_t centerX = component.NozzleStartX + component.NozzleWidth / 2u;
                 const uint64_t variationHash = getAnimationHash(seed, centerX, component.NozzleY, EngineVariationSalt ^ static_cast<uint64_t>(engineIndex));
                 const uint64_t mechanicalHash = getAnimationHash(seed, centerX, component.NozzleY, EngineMechanicalSalt);
@@ -205,7 +205,7 @@ namespace PixelShipGenerator
             plan.WeaponParameters.reserve(ship.IdleAnimationMetadata.WeaponComponents.size());
             bool hasWeaponMechanicalNormalPhase = false;
             bool hasWeaponMechanicalAlternatePhase = false;
-            for (const PixelShipGenerator::ShipWeaponAnimationComponent& component : ship.IdleAnimationMetadata.WeaponComponents)
+            for (const SpectralShipGen::ShipWeaponAnimationComponent& component : ship.IdleAnimationMetadata.WeaponComponents)
             {
                 const uint64_t hash = getAnimationHash(seed, component.AnchorX, component.AnchorY, WeaponMovementSalt);
                 WeaponAnimationParameters parameters;
@@ -229,16 +229,16 @@ namespace PixelShipGenerator
             plan.MajorFeatureParameters.reserve(ship.IdleAnimationMetadata.MajorFeatureComponents.size());
             uint32_t activeMajorFeatureCount = 0u;
             bool hasActiveVentBank = false;
-            for (const PixelShipGenerator::ShipMajorFeatureAnimationComponent& component : ship.IdleAnimationMetadata.MajorFeatureComponents)
+            for (const SpectralShipGen::ShipMajorFeatureAnimationComponent& component : ship.IdleAnimationMetadata.MajorFeatureComponents)
             {
-                const uint64_t hash = getAnimationHash(seed, component.MinimumX, component.MinimumY, MajorFeatureSalt ^ (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK ? DetailVariationSalt : 0ull));
+                const uint64_t hash = getAnimationHash(seed, component.MinimumX, component.MinimumY, MajorFeatureSalt ^ (component.Type == SpectralShipGen::ShipMajorFeatureType::VENT_BANK ? DetailVariationSalt : 0ull));
                 MajorFeatureAnimationParameters parameters;
-                if (component.Type == PixelShipGenerator::ShipMajorFeatureType::TECH_CORE && settings.LightBlinking)
+                if (component.Type == SpectralShipGen::ShipMajorFeatureType::TECH_CORE && settings.LightBlinking)
                 {
                     parameters.Active = true;
                     parameters.AlternatePhase = ship.FactionAnimationProfile.Idle.AlternateTechCorePhases && (hash & 1ull) != 0ull;
                 }
-                else if (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK && settings.SmallDetailVariation && scaleTraits.AnimationComplexity >= 20u && hash % 100u < plan.Profile.VentActivityChance)
+                else if (component.Type == SpectralShipGen::ShipMajorFeatureType::VENT_BANK && settings.SmallDetailVariation && scaleTraits.AnimationComplexity >= 20u && hash % 100u < plan.Profile.VentActivityChance)
                 {
                     parameters.Active = true;
                     parameters.PatternParity = static_cast<uint32_t>(hash & 1ull);
@@ -272,8 +272,8 @@ namespace PixelShipGenerator
                 const uint32_t maximumPixelCount = scaleTraits.AnimationComplexity >= 80u ? 36u : 20u;
                 for (std::size_t placementIndex = 0u; placementIndex < ship.AttachmentPlacements.size(); ++placementIndex)
                 {
-                    const PixelShipGenerator::ShipAttachmentPlacement& placement = ship.AttachmentPlacements[placementIndex];
-                    if (placement.Type != PixelShipGenerator::ShipAttachmentType::SENSOR_ARRAY && placement.Type != PixelShipGenerator::ShipAttachmentType::TECHNOLOGY_NODE) { continue; }
+                    const SpectralShipGen::ShipAttachmentPlacement& placement = ship.AttachmentPlacements[placementIndex];
+                    if (placement.Type != SpectralShipGen::ShipAttachmentType::SENSOR_ARRAY && placement.Type != SpectralShipGen::ShipAttachmentType::TECHNOLOGY_NODE) { continue; }
                     if (getAttachmentMaximumOutwardDistance(placement) < 2u || countAttachmentPixels(ship, placement) > maximumPixelCount) { continue; }
                     const uint64_t hash = getAnimationHash(seed, placement.AnchorX, placement.AnchorY, MicroMovementSalt);
                     if (hash < selectedHash)
@@ -284,8 +284,8 @@ namespace PixelShipGenerator
                 }
             }
 
-            PixelShipGenerator::AnimationSamplingRequirements& requirements = plan.SamplingRequirements;
-            requirements.Type = PixelShipGenerator::ShipAnimationType::IDLE;
+            SpectralShipGen::AnimationSamplingRequirements& requirements = plan.SamplingRequirements;
+            requirements.Type = SpectralShipGen::ShipAnimationType::IDLE;
             requirements.Mode = settings.SamplingMode;
             requirements.DurationMilliseconds = std::max(1u, settings.AnimationDurationMilliseconds);
             requirements.ExactFrameCount = std::max(1u, settings.FrameCount);
@@ -318,7 +318,7 @@ namespace PixelShipGenerator
             }
             if (hasWeaponMechanicalNormalPhase) { ++requirements.IndependentPhaseGroupCount; }
             if (hasWeaponMechanicalAlternatePhase) { ++requirements.IndependentPhaseGroupCount; }
-            if (settings.LightBlinking && PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(ship.IdleAnimationMetadata.WeaponEmissiveMask) > 0u) { ++requirements.IndependentPhaseGroupCount; }
+            if (settings.LightBlinking && SpectralShipGen::PixelMaskUtils::getMaskPixelCount(ship.IdleAnimationMetadata.WeaponEmissiveMask) > 0u) { ++requirements.IndependentPhaseGroupCount; }
 
             uint32_t activeLightGroupCount = 0u;
             for (const std::vector<PixelCoordinate>& group : plan.LightGroupPixels)

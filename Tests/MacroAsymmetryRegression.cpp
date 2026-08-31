@@ -6,12 +6,12 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/MacroAsymmetry.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/MacroAsymmetry.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     struct Case
     {
@@ -218,9 +218,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runMacroAsymmetryRegression()
+int SpectralShipGenTests::runMacroAsymmetryRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
     ShipGenerator generator;
     bool success = true;
 

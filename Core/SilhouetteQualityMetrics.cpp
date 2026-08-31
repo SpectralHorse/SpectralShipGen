@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/SilhouetteQualityMetrics.h>
+#include <SpectralShipGen/SilhouetteQualityMetrics.h>
 
 #include <algorithm>
 #include <array>
@@ -7,7 +7,7 @@
 #include <limits>
 #include <vector>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

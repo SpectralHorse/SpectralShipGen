@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
 
 #include <stdexcept>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

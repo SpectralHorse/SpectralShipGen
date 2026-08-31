@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipGenerationPerformance.h>
+#include <SpectralShipGen/ShipGenerationPerformance.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipGenerationPerformanceStageName(ShipGenerationPerformanceStage stage)
     {

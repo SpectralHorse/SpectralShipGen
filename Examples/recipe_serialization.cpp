@@ -1,12 +1,12 @@
 #include <stdexcept>
 #include <string>
 
-#include <PixelShipGenerator/ShipGenerationRecipe.h>
-#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerationRecipe.h>
+#include <SpectralShipGen/ShipGenerationRecipeSerializer.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 GeneratedShip generateFromPortableBuiltInRecipe()
 {

@@ -6,13 +6,13 @@
 #include <iostream>
 
 #include "PixelMaskUtils.h"
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipMaterialZoneType.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipMaterialZoneType.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 namespace
 {
@@ -174,7 +174,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runMaterialCompositionRegression()
+int SpectralShipGenTests::runMaterialCompositionRegression()
 {
     bool success = true;
     success = checkDeterminismAndPaletteIsolation() && success;

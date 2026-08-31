@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsResultSerializer.h>
 
 #include <cctype>
 #include <cmath>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace PixelShipGeneratorDiagnostics
+namespace SpectralShipGenDiagnostics
 {
     namespace
     {
@@ -305,9 +305,9 @@ namespace PixelShipGeneratorDiagnostics
             const JsonValue& dims = member(config, "dimensions"); if (dims.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.dimensions must be an array."); }
             for (const auto& d : dims.Array) { result.Configuration.Dimensions.push_back({ u32(member(d, "width")), u32(member(d, "height")) }); }
             const JsonValue& styles = member(config, "styles"); if (styles.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.styles must be an array."); }
-            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<PixelShipGenerator::ShipStyle>(index)); }
+            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<SpectralShipGen::ShipStyle>(index)); }
             const JsonValue& factions = member(config, "factions"); if (factions.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.factions must be an array."); }
-            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<PixelShipGenerator::ShipFactionType>(index)); }
+            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<SpectralShipGen::ShipFactionType>(index)); }
             result.Configuration.SamplesPerConfiguration = u64(member(config, "samples_per_configuration"));
             result.Configuration.DiagnosticSeed = u64(member(config, "diagnostic_seed"));
             result.Configuration.DetailDensity = u32(member(config, "detail_density"));
@@ -322,8 +322,8 @@ namespace PixelShipGeneratorDiagnostics
             if (const JsonValue* value = optionalMember(config, "palette_source_mode"))
             {
                 const uint32_t mode = u32(*value);
-                if (mode >= static_cast<uint32_t>(PixelShipGenerator::ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END)) { throw std::runtime_error("Invalid diagnostics palette source mode."); }
-                result.Configuration.PaletteSourceMode = static_cast<PixelShipGenerator::ShipPaletteSourceMode>(mode);
+                if (mode >= static_cast<uint32_t>(SpectralShipGen::ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END)) { throw std::runtime_error("Invalid diagnostics palette source mode."); }
+                result.Configuration.PaletteSourceMode = static_cast<SpectralShipGen::ShipPaletteSourceMode>(mode);
             }
             const JsonValue& samples = member(root, "samples"); if (samples.Type != JsonType::ARRAY) { throw std::runtime_error("samples must be an array."); }
             result.Samples.reserve(samples.Array.size());
@@ -333,8 +333,8 @@ namespace PixelShipGeneratorDiagnostics
                 s.WorkItem.WorkIndex = u64(member(j, "work_index")); s.WorkItem.ConfigurationIndex = u64(member(j, "configuration_index")); s.WorkItem.SampleIndex = u64(member(j, "sample_index")); s.WorkItem.Seed = u64(member(j, "seed"));
                 s.WorkItem.Dimensions = { u32(member(j, "width")), u32(member(j, "height")) };
                 const uint32_t style = u32(member(j, "style")); const uint32_t faction = u32(member(j, "faction"));
-                if (style > static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END) || faction > static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample style/faction."); }
-                s.WorkItem.Style = static_cast<PixelShipGenerator::ShipStyle>(style); s.WorkItem.Faction = static_cast<PixelShipGenerator::ShipFactionType>(faction);
+                if (style > static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END) || faction > static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample style/faction."); }
+                s.WorkItem.Style = static_cast<SpectralShipGen::ShipStyle>(style); s.WorkItem.Faction = static_cast<SpectralShipGen::ShipFactionType>(faction);
                 s.Success = boolean(member(j, "success")); s.ErrorMessage = stringValue(member(j, "error")); s.TotalGenerationNanoseconds = u64(member(j, "total_ns"));
                 const JsonValue& stages = member(j, "stage_ns"); if (stages.Type != JsonType::ARRAY || stages.Array.size() != s.Performance.StageDurationNanoseconds.size()) { throw std::runtime_error("Invalid stage timing array."); }
                 for (std::size_t index = 0u; index < stages.Array.size(); ++index) { s.Performance.StageDurationNanoseconds[index] = u64(stages.Array[index]); }
@@ -373,8 +373,8 @@ namespace PixelShipGeneratorDiagnostics
                 s.DetailMotifOccurrenceCount = u32(member(j, "detail_motif_occurrences"));
                 s.MajorFeatureCount = u32(member(j, "major_features")); s.WeaponCount = u32(member(j, "weapons")); s.EngineCount = u32(member(j, "engines")); s.ComplexityUtilizationPercent = number(member(j, "complexity_utilization_percent"));
                 const uint32_t primary = u32(member(j, "primary_visual_anchor")); const uint32_t secondary = u32(member(j, "secondary_visual_anchor"));
-                if (primary > static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END) || secondary > static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)) { throw std::runtime_error("Invalid visual anchor."); }
-                s.PrimaryVisualAnchor = static_cast<PixelShipGenerator::ShipVisualAnchorType>(primary); s.SecondaryVisualAnchor = static_cast<PixelShipGenerator::ShipVisualAnchorType>(secondary); s.VisualHierarchyFallbackOccurred = boolean(member(j, "visual_hierarchy_fallback"));
+                if (primary > static_cast<uint32_t>(SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END) || secondary > static_cast<uint32_t>(SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)) { throw std::runtime_error("Invalid visual anchor."); }
+                s.PrimaryVisualAnchor = static_cast<SpectralShipGen::ShipVisualAnchorType>(primary); s.SecondaryVisualAnchor = static_cast<SpectralShipGen::ShipVisualAnchorType>(secondary); s.VisualHierarchyFallbackOccurred = boolean(member(j, "visual_hierarchy_fallback"));
                 s.FinalImageSignature = u64(member(j, "image_signature"));
                 result.Samples.push_back(std::move(s));
             }

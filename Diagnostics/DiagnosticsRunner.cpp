@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
 
 #include <algorithm>
 #include <chrono>
@@ -10,13 +10,13 @@
 #include <stdexcept>
 #include <tuple>
 
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipFactionProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 
-namespace PixelShipGeneratorDiagnostics
+namespace SpectralShipGenDiagnostics
 {
     namespace
     {
@@ -27,10 +27,10 @@ namespace PixelShipGeneratorDiagnostics
         {
             return (configuration.EnabledCategories & static_cast<uint32_t>(category)) != 0u;
         }
-        uint64_t imageSignature(const PixelShipGenerator::Image& image)
+        uint64_t imageSignature(const SpectralShipGen::Image& image)
         {
             uint64_t hash = 1469598103934665603ull;
-            for (const PixelShipGenerator::Color& color : image.getPixels())
+            for (const SpectralShipGen::Color& color : image.getPixels())
             {
                 const uint8_t bytes[] = { color.R, color.G, color.B, color.A };
                 for (const uint8_t value : bytes) { hash = (hash ^ value) * 1099511628211ull; }
@@ -83,7 +83,7 @@ namespace PixelShipGeneratorDiagnostics
             std::vector<double> weaponCounts;
             std::vector<double> engineCounts;
             std::vector<double> complexityUtilization;
-            std::array<std::vector<double>, PixelShipGenerator::ShipGenerationPerformanceStageCount> stageTimes;
+            std::array<std::vector<double>, SpectralShipGen::ShipGenerationPerformanceStageCount> stageTimes;
             generationTimes.reserve(samples.size());
             hullAttempts.reserve(samples.size());
             materialZoneCounts.reserve(samples.size());
@@ -159,7 +159,7 @@ namespace PixelShipGeneratorDiagnostics
                 if (result.SilhouetteRejectionCounts[i] > maximum)
                 {
                     maximum = result.SilhouetteRejectionCounts[i];
-                    result.MostCommonSilhouetteRejection = static_cast<PixelShipGenerator::SilhouetteValidationFailureReason>(i);
+                    result.MostCommonSilhouetteRejection = static_cast<SpectralShipGen::SilhouetteValidationFailureReason>(i);
                 }
             }
             return result;
@@ -221,11 +221,11 @@ namespace PixelShipGeneratorDiagnostics
         std::vector<DiagnosticsWorkItem> result;
         uint64_t workIndex = 0u;
         uint64_t configurationIndex = 0u;
-        for (const PixelShipGenerator::ShipDimensions dimensions : configuration.Dimensions)
+        for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
         {
-            for (const PixelShipGenerator::ShipStyle style : configuration.Styles)
+            for (const SpectralShipGen::ShipStyle style : configuration.Styles)
             {
-                for (const PixelShipGenerator::ShipFactionType faction : configuration.Factions)
+                for (const SpectralShipGen::ShipFactionType faction : configuration.Factions)
                 {
                     for (uint64_t sampleIndex = 0u; sampleIndex < configuration.SamplesPerConfiguration; ++sampleIndex)
                     {
@@ -309,30 +309,30 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsResult DiagnosticsRunner::run(
         const DiagnosticsRunConfiguration& configuration,
-        const PixelShipGenerator::ShipGenerationProfile& profile,
-        const PixelShipGenerator::ShipFactionProfile& factionProfile,
+        const SpectralShipGen::ShipGenerationProfile& profile,
+        const SpectralShipGen::ShipFactionProfile& factionProfile,
         const DiagnosticsProgressCallback& progressCallback,
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
     {
-        PixelShipGenerator::ExplicitShipGenerationConfiguration generation;
-        generation.Dimensions = configuration.Dimensions.empty() ? PixelShipGenerator::ShipDimensions{ 44u, 44u } : configuration.Dimensions.front();
+        SpectralShipGen::ExplicitShipGenerationConfiguration generation;
+        generation.Dimensions = configuration.Dimensions.empty() ? SpectralShipGen::ShipDimensions{ 44u, 44u } : configuration.Dimensions.front();
         generation.DetailDensity = configuration.DetailDensity;
         generation.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
         generation.AttachmentsEnabled = configuration.AttachmentsEnabled;
-        return run(configuration, PixelShipGenerator::resolveShipGenerationConfiguration(generation, profile, factionProfile), progressCallback, cancellationCallback, sampleCallback);
+        return run(configuration, SpectralShipGen::resolveShipGenerationConfiguration(generation, profile, factionProfile), progressCallback, cancellationCallback, sampleCallback);
     }
 
     DiagnosticsResult DiagnosticsRunner::run(
         const DiagnosticsRunConfiguration& configuration,
-        const PixelShipGenerator::ShipResolvedGenerationConfiguration& resolvedConfiguration,
+        const SpectralShipGen::ShipResolvedGenerationConfiguration& resolvedConfiguration,
         const DiagnosticsProgressCallback& progressCallback,
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
     {
         DiagnosticsRunConfiguration explicitConfiguration = configuration;
-        explicitConfiguration.Styles = { resolvedConfiguration.Provenance.StructuralPreset.value_or(PixelShipGenerator::ShipStyle::SHIP_STYLE_END) };
-        explicitConfiguration.Factions = { resolvedConfiguration.Provenance.FactionPreset.value_or(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END) };
+        explicitConfiguration.Styles = { resolvedConfiguration.Provenance.StructuralPreset.value_or(SpectralShipGen::ShipStyle::SHIP_STYLE_END) };
+        explicitConfiguration.Factions = { resolvedConfiguration.Provenance.FactionPreset.value_or(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) };
         explicitConfiguration.PaletteSourceMode = resolvedConfiguration.Generation.PaletteConfiguration.Mode;
         if (explicitConfiguration.ConfigurationLabel.empty() && (!resolvedConfiguration.Provenance.StructuralPreset.has_value() || !resolvedConfiguration.Provenance.FactionPreset.has_value()))
         {
@@ -343,7 +343,7 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsResult DiagnosticsRunner::runInternal(
         const DiagnosticsRunConfiguration& configuration,
-        const PixelShipGenerator::ShipResolvedGenerationConfiguration* resolvedConfiguration,
+        const SpectralShipGen::ShipResolvedGenerationConfiguration* resolvedConfiguration,
         const DiagnosticsProgressCallback& progressCallback,
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
@@ -355,11 +355,11 @@ namespace PixelShipGeneratorDiagnostics
         const uint64_t configurationCount = static_cast<uint64_t>(configuration.Dimensions.size()) * configuration.Styles.size() * configuration.Factions.size();
         result.ConfigurationResults.resize(static_cast<std::size_t>(configurationCount));
         uint64_t configurationIndex = 0u;
-        for (const PixelShipGenerator::ShipDimensions dimensions : configuration.Dimensions)
+        for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
         {
-            for (const PixelShipGenerator::ShipStyle style : configuration.Styles)
+            for (const SpectralShipGen::ShipStyle style : configuration.Styles)
             {
-                for (const PixelShipGenerator::ShipFactionType faction : configuration.Factions)
+                for (const SpectralShipGen::ShipFactionType faction : configuration.Factions)
                 {
                     DiagnosticsWorkItem representative;
                     representative.ConfigurationIndex = configurationIndex;
@@ -378,7 +378,7 @@ namespace PixelShipGeneratorDiagnostics
             return result;
         }
 
-        PixelShipGenerator::ShipGenerator generator;
+        SpectralShipGen::ShipGenerator generator;
         EtaEstimator eta;
         const auto runStart = Clock::now();
         std::vector<DiagnosticsRawSampleResult> allSamples;
@@ -404,21 +404,21 @@ namespace PixelShipGeneratorDiagnostics
                 const auto remaining = eta.estimate(schedule, index);
                 progress.EstimatedRemainingAvailable = remaining.has_value();
                 progress.EstimatedRemainingNanoseconds = remaining.value_or(0u);
-                progress.CurrentStage = PixelShipGenerator::ShipGenerationPerformanceStage::SETUP_PLANNING;
+                progress.CurrentStage = SpectralShipGen::ShipGenerationPerformanceStage::SETUP_PLANNING;
                 progressCallback(progress);
             }
             DiagnosticsRawSampleResult sample;
             sample.WorkItem = item;
-            PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
-            PixelShipGenerator::ShipGenerationPerformanceInfo performance;
+            SpectralShipGen::ShipGenerationDebugInfo debugInfo;
+            SpectralShipGen::ShipGenerationPerformanceInfo performance;
             const auto sampleStart = Clock::now();
             try
             {
                 const bool detailedTiming = configuration.DetailedPerformanceInstrumentation && categoryEnabled(configuration, DiagnosticsCategory::PERFORMANCE);
-                PixelShipGenerator::GeneratedShip ship;
+                SpectralShipGen::GeneratedShip ship;
                 if (resolvedConfiguration != nullptr)
                 {
-                    PixelShipGenerator::ShipResolvedGenerationConfiguration settings = *resolvedConfiguration;
+                    SpectralShipGen::ShipResolvedGenerationConfiguration settings = *resolvedConfiguration;
                     settings.Generation.Seed = item.Seed;
                     settings.Generation.Dimensions = item.Dimensions;
                     settings.Generation.DetailDensity = configuration.DetailDensity;
@@ -430,7 +430,7 @@ namespace PixelShipGeneratorDiagnostics
                 }
                 else
                 {
-                    PixelShipGenerator::ShipGenerationSettings settings;
+                    SpectralShipGen::ShipGenerationSettings settings;
                     settings.Seed = item.Seed;
                     settings.Dimensions = item.Dimensions;
                     settings.Style = item.Style;
@@ -526,7 +526,7 @@ namespace PixelShipGeneratorDiagnostics
                 const auto remaining = eta.estimate(schedule, index + 1u);
                 progress.EstimatedRemainingAvailable = remaining.has_value();
                 progress.EstimatedRemainingNanoseconds = remaining.value_or(0u);
-                progress.CurrentStage = PixelShipGenerator::ShipGenerationPerformanceStage::SHIP_GENERATION_PERFORMANCE_STAGE_END;
+                progress.CurrentStage = SpectralShipGen::ShipGenerationPerformanceStage::SHIP_GENERATION_PERFORMANCE_STAGE_END;
                 progressCallback(progress);
             }
         }
@@ -559,7 +559,7 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average material zones: " << result.OverallSummary.MaterialZoneCount.Mean << '\n';
         output << "Livery coverage %: avg " << result.OverallSummary.LiveryCoveragePercent.Mean << " | median " << result.OverallSummary.LiveryCoveragePercent.Median << " | P95 " << result.OverallSummary.LiveryCoveragePercent.P95 << '\n';
         output << "Livery largest connected coverage %: avg " << result.OverallSummary.LiveryLargestConnectedCoveragePercent.Mean << " | P95 " << result.OverallSummary.LiveryLargestConnectedCoveragePercent.P95 << '\n';
-        output << "Most common silhouette rejection: " << PixelShipGenerator::getSilhouetteValidationFailureReasonName(result.OverallSummary.MostCommonSilhouetteRejection) << '\n';
+        output << "Most common silhouette rejection: " << SpectralShipGen::getSilhouetteValidationFailureReasonName(result.OverallSummary.MostCommonSilhouetteRejection) << '\n';
         if (result.Configuration.DetailedPerformanceInstrumentation)
         {
             output << "Stage timing (mean ms):\n";
@@ -567,7 +567,7 @@ namespace PixelShipGeneratorDiagnostics
             {
                 const auto& timing = result.OverallSummary.StageTimeMilliseconds[stage];
                 if (timing.Count == 0u) { continue; }
-                output << "  " << PixelShipGenerator::getShipGenerationPerformanceStageName(static_cast<PixelShipGenerator::ShipGenerationPerformanceStage>(stage)) << ": " << timing.Mean << '\n';
+                output << "  " << SpectralShipGen::getShipGenerationPerformanceStageName(static_cast<SpectralShipGen::ShipGenerationPerformanceStage>(stage)) << ": " << timing.Mean << '\n';
             }
         }
         if (!result.Configuration.BuildConfiguration.empty()) { output << "Build: " << result.Configuration.BuildConfiguration << '\n'; }
@@ -583,9 +583,9 @@ namespace PixelShipGeneratorDiagnostics
         std::string header = legacyHeader.str();
         while (!header.empty() && (header.back() == '\n' || header.back() == '\r')) { header.pop_back(); }
         output << header << ",timing_mode,build_configuration,version_identifier,generation_time_mean_ms,generation_time_median_ms,generation_time_p95_ms,generation_time_max_ms,hull_retry_attempts_per_100,negative_space_attempt_rate_percent,negative_space_success_rate_percent,livery_coverage_mean_percent,livery_coverage_median_percent,livery_coverage_p95_percent,livery_largest_connected_mean_percent,livery_largest_connected_p95_percent,livery_coverage_rejections,livery_material_rejections";
-        for (std::size_t stage = 0u; stage < PixelShipGenerator::ShipGenerationPerformanceStageCount; ++stage)
+        for (std::size_t stage = 0u; stage < SpectralShipGen::ShipGenerationPerformanceStageCount; ++stage)
         {
-            output << ",stage_" << PixelShipGenerator::getShipGenerationPerformanceStageName(static_cast<PixelShipGenerator::ShipGenerationPerformanceStage>(stage)) << "_mean_ms";
+            output << ",stage_" << SpectralShipGen::getShipGenerationPerformanceStageName(static_cast<SpectralShipGen::ShipGenerationPerformanceStage>(stage)) << "_mean_ms";
         }
         output << '\n';
         for (const auto& configurationResult : result.ConfigurationResults)

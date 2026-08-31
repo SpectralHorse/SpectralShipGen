@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipMovementAnimation.h>
+#include <SpectralShipGen/ShipMovementAnimation.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const ShipMovementAnimationClip& getMovementAnimationClip(const ShipMovementAnimation& animation, ShipMovementAnimationPhase phase)
     {

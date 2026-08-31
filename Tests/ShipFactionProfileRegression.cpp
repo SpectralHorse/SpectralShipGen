@@ -5,15 +5,15 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <PixelShipGenerator/ShipAttachmentProfile.h>
-#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
-#include <PixelShipGenerator/ShipFactionProfile.h>
-#include <PixelShipGenerator/ShipFactionProfileValidation.h>
-#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
+#include <SpectralShipGen/ShipAttachmentProfile.h>
+#include <SpectralShipGen/ShipFactionPaletteProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfileValidation.h>
+#include <SpectralShipGen/ShipSurfaceDetailProfile.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     struct ExpectedFactionCoreData
     {
@@ -152,7 +152,7 @@ namespace
 
 }
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     int runFactionProfileRegression()
     {

@@ -5,12 +5,12 @@
 #include <exception>
 #include <iostream>
 
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -44,9 +44,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGenerationSpatialBudgetRegression()
+int SpectralShipGenTests::runGenerationSpatialBudgetRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     try
     {

@@ -5,14 +5,14 @@
 
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
 #include "ShipPainter.h"
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -224,7 +224,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runComponentDepthReadabilityRegression()
+int SpectralShipGenTests::runComponentDepthReadabilityRegression()
 {
     if (!runSemanticCueCase(24u, 24u, false))
     {

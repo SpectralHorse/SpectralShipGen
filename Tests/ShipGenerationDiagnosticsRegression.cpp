@@ -4,13 +4,13 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    bool imagesEqual(const PixelShipGenerator::Image& first, const PixelShipGenerator::Image& second, uint32_t width, uint32_t height)
+    bool imagesEqual(const SpectralShipGen::Image& first, const SpectralShipGen::Image& second, uint32_t width, uint32_t height)
     {
         for (uint32_t y = 0u; y < height; ++y)
         {
@@ -26,7 +26,7 @@ namespace
         return true;
     }
 
-    bool masksEqual(const PixelShipGenerator::PixelMask& first, const PixelShipGenerator::PixelMask& second)
+    bool masksEqual(const SpectralShipGen::PixelMask& first, const SpectralShipGen::PixelMask& second)
     {
         if (first.getWidth() != second.getWidth() || first.getHeight() != second.getHeight())
         {
@@ -48,23 +48,23 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGenerationDiagnosticsRegression()
+int SpectralShipGenTests::runGenerationDiagnosticsRegression()
 {
-    PixelShipGenerator::ShipGenerator generator;
+    SpectralShipGen::ShipGenerator generator;
     constexpr std::array<uint32_t, 7u> Resolutions = { 24u, 32u, 44u, 64u, 96u, 128u, 160u };
 
     for (std::size_t index = 0u; index < Resolutions.size(); ++index)
     {
-        PixelShipGenerator::ShipGenerationSettings settings;
+        SpectralShipGen::ShipGenerationSettings settings;
         settings.Seed = 0x9E3779B97F4A7C15ull + static_cast<uint64_t>(index) * 0x10001ull;
         settings.Dimensions.Width = Resolutions[index];
         settings.Dimensions.Height = Resolutions[index];
-        settings.Style = static_cast<PixelShipGenerator::ShipStyle>(index % static_cast<std::size_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END));
-        settings.Faction = static_cast<PixelShipGenerator::ShipFactionType>(index % static_cast<std::size_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END));
+        settings.Style = static_cast<SpectralShipGen::ShipStyle>(index % static_cast<std::size_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END));
+        settings.Faction = static_cast<SpectralShipGen::ShipFactionType>(index % static_cast<std::size_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END));
 
-        const PixelShipGenerator::GeneratedShip normalShip = generator.generate(settings);
-        PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
-        const PixelShipGenerator::GeneratedShip diagnosticShip = generator.generate(settings, &debugInfo);
+        const SpectralShipGen::GeneratedShip normalShip = generator.generate(settings);
+        SpectralShipGen::ShipGenerationDebugInfo debugInfo;
+        const SpectralShipGen::GeneratedShip diagnosticShip = generator.generate(settings, &debugInfo);
 
         if (!imagesEqual(normalShip.FinalImage, diagnosticShip.FinalImage, settings.Dimensions.Width, settings.Dimensions.Height))
         {
@@ -90,7 +90,7 @@ int PixelShipGeneratorTests::runGenerationDiagnosticsRegression()
             return 1;
         }
 
-        for (const PixelShipGenerator::ShipGenerationDebugStage& stage : debugInfo.HullStages)
+        for (const SpectralShipGen::ShipGenerationDebugStage& stage : debugInfo.HullStages)
         {
             if (stage.HullMask.getWidth() != settings.Dimensions.Width || stage.HullMask.getHeight() != settings.Dimensions.Height)
             {

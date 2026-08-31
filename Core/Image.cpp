@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/Image.h>
+#include <SpectralShipGen/Image.h>
 
 #include <algorithm>
 #include <cassert>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     Image::Image(uint32_t width, uint32_t height, const Color& fillColor)
     {
@@ -67,4 +67,4 @@ namespace PixelShipGenerator
     {
         return static_cast<std::size_t>(y) * static_cast<std::size_t>(m_Width) + static_cast<std::size_t>(x);
     }
-} // namespace PixelShipGenerator
+} // namespace SpectralShipGen

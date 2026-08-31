@@ -5,12 +5,12 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/PixelMask.h>
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/SilhouetteQualityMetrics.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/SilhouetteQualityMetrics.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class HullGenerator
     {

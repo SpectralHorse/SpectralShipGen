@@ -6,7 +6,7 @@
 #include "MaterialCompositionData.h"
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class MaterialCompositionGenerator
     {

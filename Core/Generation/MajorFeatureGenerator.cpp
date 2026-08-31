@@ -8,7 +8,7 @@
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

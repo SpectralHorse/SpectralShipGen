@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
+#include <SpectralShipGen/ShipSurfaceDetailProfile.h>
 
-#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     uint32_t ShipDetailMotifWeights::getWeight(ShipDetailMotifType type) const
     {

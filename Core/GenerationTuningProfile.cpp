@@ -1,10 +1,10 @@
-#include <PixelShipGenerator/GenerationTuningProfile.h>
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/GenerationTuningProfile.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
 
 #include <algorithm>
 #include <stdexcept>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

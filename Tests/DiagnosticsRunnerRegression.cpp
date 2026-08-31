@@ -7,18 +7,18 @@
 #include <sstream>
 #include <vector>
 
-#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
-#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
-#include <PixelShipGenerator/ShipFactionProfile.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsResultSerializer.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    uint64_t imageSignature(const PixelShipGenerator::Image& image)
+    uint64_t imageSignature(const SpectralShipGen::Image& image)
     {
         uint64_t hash = 1469598103934665603ull;
-        for (const PixelShipGenerator::Color& color : image.getPixels())
+        for (const SpectralShipGen::Color& color : image.getPixels())
         {
             const uint8_t bytes[] = { color.R, color.G, color.B, color.A };
             for (const uint8_t value : bytes) { hash = (hash ^ value) * 1099511628211ull; }
@@ -26,21 +26,21 @@ namespace
         return hash;
     }
 
-    bool finiteSummary(const PixelShipGeneratorDiagnostics::DiagnosticsDistributionSummary& summary)
+    bool finiteSummary(const SpectralShipGenDiagnostics::DiagnosticsDistributionSummary& summary)
     {
         return std::isfinite(summary.Mean) && std::isfinite(summary.Median) && std::isfinite(summary.Minimum) &&
             std::isfinite(summary.Maximum) && std::isfinite(summary.P95) && std::isfinite(summary.StandardDeviation);
     }
 }
 
-int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
+int SpectralShipGenTests::runDiagnosticsRunnerRegression()
 {
-    using namespace PixelShipGeneratorDiagnostics;
+    using namespace SpectralShipGenDiagnostics;
 
     DiagnosticsRunConfiguration configuration;
     configuration.Dimensions = { { 32u, 32u }, { 48u, 64u } };
-    configuration.Styles = { PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipStyle::DELTA };
-    configuration.Factions = { PixelShipGenerator::ShipFactionType::MILITARY };
+    configuration.Styles = { SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipStyle::DELTA };
+    configuration.Factions = { SpectralShipGen::ShipFactionType::MILITARY };
     configuration.SamplesPerConfiguration = 2u;
     configuration.DiagnosticSeed = 0x6411223344556677ull;
     configuration.DetailedPerformanceInstrumentation = true;
@@ -89,7 +89,7 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
         return 1;
     }
 
-    PixelShipGenerator::ShipGenerationSettings directSettings;
+    SpectralShipGen::ShipGenerationSettings directSettings;
     directSettings.Seed = firstSchedule.front().Seed;
     directSettings.Dimensions = firstSchedule.front().Dimensions;
     directSettings.Style = firstSchedule.front().Style;
@@ -97,8 +97,8 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     directSettings.DetailDensity = configuration.DetailDensity;
     directSettings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
     directSettings.AttachmentsEnabled = configuration.AttachmentsEnabled;
-    PixelShipGenerator::ShipGenerator generator;
-    const PixelShipGenerator::GeneratedShip directShip = generator.generate(directSettings);
+    SpectralShipGen::ShipGenerator generator;
+    const SpectralShipGen::GeneratedShip directShip = generator.generate(directSettings);
     if (imageSignature(directShip.FinalImage) != result.Samples.front().FinalImageSignature)
     {
         std::cerr << "Diagnostics runner regression failed: reusable runner generated a different sample.\n";
@@ -112,36 +112,36 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     explicitConfiguration.DetailDensity = 47u;
     explicitConfiguration.AsymmetricDetailChance = 13u;
 
-    PixelShipGenerator::ShipGenerationProfile customProfile =
-        PixelShipGenerator::getShipGenerationProfile(PixelShipGenerator::ShipStyle::INDUSTRIAL);
-    PixelShipGenerator::ShipFactionProfile customFaction =
-        PixelShipGenerator::getShipFactionProfile(PixelShipGenerator::ShipFactionType::CORPORATE);
+    SpectralShipGen::ShipGenerationProfile customProfile =
+        SpectralShipGen::getShipGenerationProfile(SpectralShipGen::ShipStyle::INDUSTRIAL);
+    SpectralShipGen::ShipFactionProfile customFaction =
+        SpectralShipGen::getShipFactionProfile(SpectralShipGen::ShipFactionType::CORPORATE);
     customProfile.LargeWeaponChance = std::min<uint32_t>(100u, customProfile.LargeWeaponChance + 1u);
     customFaction.SurfaceDetails.DetailDensityPercent += 1u;
 
     const DiagnosticsResult explicitResult = DiagnosticsRunner().run(explicitConfiguration, customProfile, customFaction);
     if (!explicitResult.Completed || explicitResult.CompletedWorkItems != 1u || explicitResult.Samples.size() != 1u ||
         explicitResult.Configuration.Styles.size() != 1u ||
-        explicitResult.Configuration.Styles.front() != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
+        explicitResult.Configuration.Styles.front() != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
         explicitResult.Configuration.Factions.size() != 1u ||
-        explicitResult.Configuration.Factions.front() != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END ||
-        explicitResult.Samples.front().WorkItem.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
-        explicitResult.Samples.front().WorkItem.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+        explicitResult.Configuration.Factions.front() != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END ||
+        explicitResult.Samples.front().WorkItem.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
+        explicitResult.Samples.front().WorkItem.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
     {
         std::cerr << "Diagnostics runner regression failed: explicit profiles required fabricated built-in provenance.\n";
         return 1;
     }
 
-    PixelShipGenerator::ExplicitShipGenerationConfiguration explicitSettings;
+    SpectralShipGen::ExplicitShipGenerationConfiguration explicitSettings;
     explicitSettings.Seed = explicitResult.Samples.front().WorkItem.Seed;
     explicitSettings.Dimensions = explicitResult.Samples.front().WorkItem.Dimensions;
     explicitSettings.DetailDensity = explicitConfiguration.DetailDensity;
     explicitSettings.AsymmetricDetailChance = explicitConfiguration.AsymmetricDetailChance;
     explicitSettings.AttachmentsEnabled = explicitConfiguration.AttachmentsEnabled;
-    const PixelShipGenerator::GeneratedShip explicitShip = generator.generate(explicitSettings, customProfile, customFaction);
+    const SpectralShipGen::GeneratedShip explicitShip = generator.generate(explicitSettings, customProfile, customFaction);
     if (imageSignature(explicitShip.FinalImage) != explicitResult.Samples.front().FinalImageSignature ||
-        explicitShip.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
-        explicitShip.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+        explicitShip.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
+        explicitShip.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
     {
         std::cerr << "Diagnostics runner regression failed: explicit-profile diagnostics diverged from direct generation.\n";
         return 1;
@@ -159,18 +159,18 @@ int PixelShipGeneratorTests::runDiagnosticsRunnerRegression()
     const DiagnosticsResultLoadResult explicitReload = deserializeDiagnosticsResultJson(explicitJson);
     if (!explicitReload.Success ||
         explicitReload.Result.Samples.size() != 1u ||
-        explicitReload.Result.Samples.front().WorkItem.Style != PixelShipGenerator::ShipStyle::SHIP_STYLE_END ||
-        explicitReload.Result.Samples.front().WorkItem.Faction != PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)
+        explicitReload.Result.Samples.front().WorkItem.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
+        explicitReload.Result.Samples.front().WorkItem.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
     {
         std::cerr << "Diagnostics runner regression failed: custom provenance did not survive result serialization.\n";
         return 1;
     }
 
-    PixelShipGenerator::ShipGenerationDebugInfo plainDebug;
-    PixelShipGenerator::ShipGenerationDebugInfo timedDebug;
-    PixelShipGenerator::ShipGenerationPerformanceInfo performance;
-    const PixelShipGenerator::GeneratedShip plainShip = generator.generate(directSettings, &plainDebug);
-    const PixelShipGenerator::GeneratedShip timedShip = generator.generate(directSettings, &timedDebug, &performance);
+    SpectralShipGen::ShipGenerationDebugInfo plainDebug;
+    SpectralShipGen::ShipGenerationDebugInfo timedDebug;
+    SpectralShipGen::ShipGenerationPerformanceInfo performance;
+    const SpectralShipGen::GeneratedShip plainShip = generator.generate(directSettings, &plainDebug);
+    const SpectralShipGen::GeneratedShip timedShip = generator.generate(directSettings, &timedDebug, &performance);
     if (imageSignature(plainShip.FinalImage) != imageSignature(timedShip.FinalImage) || performance.TotalDurationNanoseconds == 0u)
     {
         std::cerr << "Diagnostics runner regression failed: timing instrumentation altered generation or recorded no total duration.\n";

@@ -4,16 +4,16 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerator.h>
 #include "VisualHierarchyPlanner.h"
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     constexpr std::array<ShipStyle, 6u> Styles = {
         ShipStyle::SLEEK, ShipStyle::FIGHTER, ShipStyle::HEAVY,
@@ -291,7 +291,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runVisualHierarchyRegression()
+int SpectralShipGenTests::runVisualHierarchyRegression()
 {
     bool success = true;
     success = checkDeterminismAndDomainIsolation() && success;

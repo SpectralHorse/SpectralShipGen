@@ -1,12 +1,12 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include <PixelShipGenerator/ShipFactionProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipFactionProfileValidation.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 GeneratedShip generateBuiltInFighter()
 {

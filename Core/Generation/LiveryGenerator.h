@@ -8,7 +8,7 @@
 #include "LiveryData.h"
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class LiveryGenerator
     {

@@ -5,14 +5,14 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
-#include <PixelShipGenerator/ShipFactionProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
-#include <PixelShipGenerator/Serialization/ShipGenerationRecipeJson.h>
-#include <PixelShipGenerator/Serialization/ShipGenerationRecipeProfileSerialization.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/ShipFactionProfileValidation.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/Serialization/ShipGenerationRecipeJson.h>
+#include <SpectralShipGen/Serialization/ShipGenerationRecipeProfileSerialization.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

@@ -1,33 +1,33 @@
-#include <PixelShipGenerator/Diagnostics/DiagnosticsAnalysis.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsAnalysis.h>
 
 #include <algorithm>
 #include <cmath>
 #include <set>
 
-#include <PixelShipGenerator/ShipGenerationPerformance.h>
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
-#include <PixelShipGenerator/ShipVisualAnchorType.h>
+#include <SpectralShipGen/ShipGenerationPerformance.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/ShipVisualAnchorType.h>
 
-namespace PixelShipGeneratorDiagnostics
+namespace SpectralShipGenDiagnostics
 {
     namespace
     {
-        std::string dimensionsLabel(PixelShipGenerator::ShipDimensions dimensions)
+        std::string dimensionsLabel(SpectralShipGen::ShipDimensions dimensions)
         {
             return std::to_string(dimensions.Width) + "X" + std::to_string(dimensions.Height);
         }
 
-        const char* styleLabel(PixelShipGenerator::ShipStyle style)
+        const char* styleLabel(SpectralShipGen::ShipStyle style)
         {
-            if (style == PixelShipGenerator::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
-            for (const auto& entry : PixelShipGenerator::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
+            if (style == SpectralShipGen::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
+            for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
             return "UNKNOWN";
         }
 
-        const char* factionLabel(PixelShipGenerator::ShipFactionType faction)
+        const char* factionLabel(SpectralShipGen::ShipFactionType faction)
         {
-            if (faction == PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
-            for (const auto& entry : PixelShipGenerator::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
+            if (faction == SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
+            for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
             return "UNKNOWN";
         }
 
@@ -159,7 +159,7 @@ namespace PixelShipGeneratorDiagnostics
         DiagnosticsChartSeries series;
         series.Label = "RESOLUTION";
         series.Metric = metric;
-        std::vector<PixelShipGenerator::ShipDimensions> dimensions;
+        std::vector<SpectralShipGen::ShipDimensions> dimensions;
         for (const DiagnosticsRawSampleResult& sample : result.Samples)
         {
             if (filter.Style.has_value() && sample.WorkItem.Style != *filter.Style) { continue; }
@@ -187,9 +187,9 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsChartSeries prepareStyleSeries(const DiagnosticsResult& result, const DiagnosticsFilter& filter, DiagnosticsMetric metric)
     {
-        DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
+        DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
             {
-                const auto style = static_cast<PixelShipGenerator::ShipStyle>(index);
+                const auto style = static_cast<SpectralShipGen::ShipStyle>(index);
                 selected.Style = style;
                 point.Label = styleLabel(style);
                 point.Style = style;
@@ -202,9 +202,9 @@ namespace PixelShipGeneratorDiagnostics
 
     DiagnosticsChartSeries prepareFactionSeries(const DiagnosticsResult& result, const DiagnosticsFilter& filter, DiagnosticsMetric metric)
     {
-        DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
+        DiagnosticsChartSeries series = prepareEnumSeries(result, filter, metric, static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END), [](uint32_t index, DiagnosticsFilter& selected, DiagnosticsChartPoint& point)
             {
-                const auto faction = static_cast<PixelShipGenerator::ShipFactionType>(index);
+                const auto faction = static_cast<SpectralShipGen::ShipFactionType>(index);
                 selected.Faction = faction;
                 point.Label = factionLabel(faction);
                 point.Faction = faction;
@@ -224,7 +224,7 @@ namespace PixelShipGeneratorDiagnostics
         {
             const auto& summary = filtered.Summary.StageTimeMilliseconds[stage];
             if (summary.Count == 0u) { continue; }
-            series.Points.push_back({ PixelShipGenerator::getShipGenerationPerformanceStageName(static_cast<PixelShipGenerator::ShipGenerationPerformanceStage>(stage)), summary.Mean, summary.Count, filter.Dimensions, filter.Style, filter.Faction });
+            series.Points.push_back({ SpectralShipGen::getShipGenerationPerformanceStageName(static_cast<SpectralShipGen::ShipGenerationPerformanceStage>(stage)), summary.Mean, summary.Count, filter.Dimensions, filter.Style, filter.Faction });
         }
         return series;
     }
@@ -238,7 +238,7 @@ namespace PixelShipGeneratorDiagnostics
         {
             const uint64_t count = filtered.Summary.SilhouetteRejectionCounts[reason];
             if (count == 0u) { continue; }
-            series.Points.push_back({ PixelShipGenerator::getSilhouetteValidationFailureReasonName(static_cast<PixelShipGenerator::SilhouetteValidationFailureReason>(reason)), static_cast<double>(count), filtered.Samples.size(), filter.Dimensions, filter.Style, filter.Faction });
+            series.Points.push_back({ SpectralShipGen::getSilhouetteValidationFailureReasonName(static_cast<SpectralShipGen::SilhouetteValidationFailureReason>(reason)), static_cast<double>(count), filtered.Samples.size(), filter.Dimensions, filter.Style, filter.Faction });
         }
         return series;
     }
@@ -253,7 +253,7 @@ namespace PixelShipGeneratorDiagnostics
         {
             const uint64_t count = filtered.Summary.PrimaryVisualAnchorCounts[anchor];
             if (count == 0u) { continue; }
-            series.Points.push_back({ PixelShipGenerator::getShipVisualAnchorTypeName(static_cast<PixelShipGenerator::ShipVisualAnchorType>(anchor)), 100.0 * static_cast<double>(count) / denominator, filtered.Samples.size(), filter.Dimensions, filter.Style, filter.Faction });
+            series.Points.push_back({ SpectralShipGen::getShipVisualAnchorTypeName(static_cast<SpectralShipGen::ShipVisualAnchorType>(anchor)), 100.0 * static_cast<double>(count) / denominator, filtered.Samples.size(), filter.Dimensions, filter.Style, filter.Faction });
         }
         return series;
     }

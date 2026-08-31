@@ -1,6 +1,6 @@
 #include "CoreRegressionSuites.h"
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     std::vector<RegressionSuite> createCoreRegressionSuites()
     {

@@ -7,18 +7,18 @@
 #include <string>
 #include <vector>
 
-#include <PixelShipGenerator/GenerationTuningProfile.h>
-#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
-#include <PixelShipGenerator/ShipFiringAnimator.h>
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/GenerationTuningProfile.h>
+#include <SpectralShipGen/ShipAnimationStateCoordinator.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -535,7 +535,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runCustomProfileApiRegression()
+int SpectralShipGenTests::runCustomProfileApiRegression()
 {
     bool success = true;
     success = checkValidationContracts() && success;

@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipAttachmentProfile.h>
+#include <SpectralShipGen/ShipAttachmentProfile.h>
 
-#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     uint32_t ShipAttachmentWeights::getWeight(ShipAttachmentType type) const
     {

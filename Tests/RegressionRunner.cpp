@@ -11,7 +11,7 @@
 #include <string>
 #include <utility>
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     namespace
     {

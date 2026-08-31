@@ -4,11 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipWeaponType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipWeaponType.h>
 #include "WeaponData.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace WeaponGenerationInternal
     {

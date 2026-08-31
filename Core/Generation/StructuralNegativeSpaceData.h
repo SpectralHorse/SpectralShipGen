@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipStructuralNegativeSpaceType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipStructuralNegativeSpaceType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct StructuralNegativeSpacePlacement
     {

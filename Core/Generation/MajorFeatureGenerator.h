@@ -5,10 +5,10 @@
 #include <cstdint>
 
 #include "MajorFeatureData.h"
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/PixelMask.h>
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class MajorFeatureGenerator
     {

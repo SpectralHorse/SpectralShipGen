@@ -5,18 +5,18 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
-#include <PixelShipGenerator/ShipCoreTreatmentType.h>
-#include <PixelShipGenerator/ShipFactionType.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
+#include <SpectralShipGen/ShipCoreTreatmentType.h>
+#include <SpectralShipGen/ShipFactionType.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using PixelShipGenerator::ShipStyle;
-    using PixelShipGeneratorDiagnostics::DiagnosticGenerationConfiguration;
-    using PixelShipGeneratorDiagnostics::GenerationStatistics;
+    using SpectralShipGen::ShipStyle;
+    using SpectralShipGenDiagnostics::DiagnosticGenerationConfiguration;
+    using SpectralShipGenDiagnostics::GenerationStatistics;
 
     constexpr std::array<ShipStyle, static_cast<std::size_t>(ShipStyle::SHIP_STYLE_END)> Styles = {
         ShipStyle::SLEEK,
@@ -27,7 +27,7 @@ namespace
         ShipStyle::DELTA
     };
 
-    constexpr std::array<PixelShipGenerator::ShipDimensions, 6u> NativeReviewDimensions = { {
+    constexpr std::array<SpectralShipGen::ShipDimensions, 6u> NativeReviewDimensions = { {
         { 32u, 32u },
         { 44u, 44u },
         { 48u, 64u },
@@ -36,37 +36,37 @@ namespace
         { 96u, 96u }
     } };
 
-    constexpr std::size_t index(PixelShipGenerator::ShipCoreTreatmentType type)
+    constexpr std::size_t index(SpectralShipGen::ShipCoreTreatmentType type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::WingShapeType type)
+    constexpr std::size_t index(SpectralShipGen::WingShapeType type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::CockpitShapeType type)
+    constexpr std::size_t index(SpectralShipGen::CockpitShapeType type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::ShipMajorFeatureType type)
+    constexpr std::size_t index(SpectralShipGen::ShipMajorFeatureType type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::ShipWeaponType type)
+    constexpr std::size_t index(SpectralShipGen::ShipWeaponType type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::ShipWeaponHardpointRegion type)
+    constexpr std::size_t index(SpectralShipGen::ShipWeaponHardpointRegion type)
     {
         return static_cast<std::size_t>(type);
     }
 
-    constexpr std::size_t index(PixelShipGenerator::EngineLayoutType type)
+    constexpr std::size_t index(SpectralShipGen::EngineLayoutType type)
     {
         return static_cast<std::size_t>(type);
     }
@@ -89,30 +89,30 @@ namespace
         configuration.Width = width;
         configuration.Height = height;
         configuration.Style = style;
-        configuration.Faction = PixelShipGenerator::ShipFactionType::MILITARY;
+        configuration.Faction = SpectralShipGen::ShipFactionType::MILITARY;
         configuration.Samples = samples;
         configuration.DiagnosticSeed = 0x54A11E5EEDBADC0Full;
-        return PixelShipGeneratorDiagnostics::collectGenerationStatistics(configuration);
+        return SpectralShipGenDiagnostics::collectGenerationStatistics(configuration);
     }
 
     bool validateNativeSameSeedDistinctness()
     {
-        PixelShipGenerator::ShipGenerator generator;
+        SpectralShipGen::ShipGenerator generator;
 
-        for (const PixelShipGenerator::ShipDimensions dimensions : NativeReviewDimensions)
+        for (const SpectralShipGen::ShipDimensions dimensions : NativeReviewDimensions)
         {
-            std::array<PixelShipGenerator::GeneratedShip, Styles.size()> ships;
+            std::array<SpectralShipGen::GeneratedShip, Styles.size()> ships;
 
             for (std::size_t styleIndex = 0u; styleIndex < Styles.size(); ++styleIndex)
             {
-                PixelShipGenerator::ShipGenerationSettings settings;
+                SpectralShipGen::ShipGenerationSettings settings;
                 settings.Seed = 0x54C0FFEE00000000ull + static_cast<uint64_t>(dimensions.Width) * 1000ull + dimensions.Height;
                 settings.Dimensions = dimensions;
                 settings.Style = Styles[styleIndex];
-                settings.Faction = PixelShipGenerator::ShipFactionType::MILITARY;
+                settings.Faction = SpectralShipGen::ShipFactionType::MILITARY;
                 ships[styleIndex] = generator.generate(settings);
 
-                const PixelShipGenerator::GeneratedShip repeat = generator.generate(settings);
+                const SpectralShipGen::GeneratedShip repeat = generator.generate(settings);
                 if (repeat.FinalImage.getPixels() != ships[styleIndex].FinalImage.getPixels())
                 {
                     std::cerr << "Style determinism failed at " << dimensions.Width << 'x' << dimensions.Height << ".\n";
@@ -141,12 +141,12 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runStyleExpansionRegression()
+int SpectralShipGenTests::runStyleExpansionRegression()
 {
     static_assert(static_cast<std::size_t>(ShipStyle::SHIP_STYLE_END) == 6u, "Task 54 expects six styles.");
 
-    const auto& spearProfile = PixelShipGenerator::getShipGenerationProfile(ShipStyle::SPEARHEAD);
-    const auto& deltaProfile = PixelShipGenerator::getShipGenerationProfile(ShipStyle::DELTA);
+    const auto& spearProfile = SpectralShipGen::getShipGenerationProfile(ShipStyle::SPEARHEAD);
+    const auto& deltaProfile = SpectralShipGen::getShipGenerationProfile(ShipStyle::DELTA);
     if (spearProfile.SweptWingWeight <= spearProfile.BroadWingWeight || spearProfile.WingLongitudinalOffsetPercent <= 0 ||
         deltaProfile.BroadWingWeight <= deltaProfile.SweptWingWeight || deltaProfile.WingLongitudinalOffsetPercent >= 0)
     {
@@ -180,7 +180,7 @@ int PixelShipGeneratorTests::runStyleExpansionRegression()
     }
 
     if (!(spear.WingStartNormalizedY.average() > sleek.WingStartNormalizedY.average() + 0.08 &&
-        percent(spear.WingShapeCounts[index(PixelShipGenerator::WingShapeType::SWEPT)], spear.SuccessfulGenerations) > 55.0))
+        percent(spear.WingShapeCounts[index(SpectralShipGen::WingShapeType::SWEPT)], spear.SuccessfulGenerations) > 55.0))
     {
         std::cerr << "SPEARHEAD wing identity is too close to the existing styles.\n";
         return 1;
@@ -189,39 +189,39 @@ int PixelShipGeneratorTests::runStyleExpansionRegression()
     if (!(delta.HullNormalizedWidth.average() > heavy.HullNormalizedWidth.average() + 0.045 &&
         delta.HullNormalizedHeight.average() < heavy.HullNormalizedHeight.average() - 0.035 &&
         delta.WingMaximumSpan.average() > heavy.WingMaximumSpan.average() + 4.0 &&
-        percent(delta.WingShapeCounts[index(PixelShipGenerator::WingShapeType::BROAD)], delta.SuccessfulGenerations) > 60.0))
+        percent(delta.WingShapeCounts[index(SpectralShipGen::WingShapeType::BROAD)], delta.SuccessfulGenerations) > 60.0))
     {
         std::cerr << "DELTA did not establish a broad wing-dominant silhouette.\n";
         return 1;
     }
 
-    const double spearElongatedCockpit = percent(spear.CockpitShapeCounts[index(PixelShipGenerator::CockpitShapeType::ELONGATED_CANOPY)], spear.CockpitPlacementSuccessCount);
-    const double deltaWideCockpit = percent(delta.CockpitShapeCounts[index(PixelShipGenerator::CockpitShapeType::WIDE_COMMAND_DECK)], delta.CockpitPlacementSuccessCount) +
-        percent(delta.CockpitShapeCounts[index(PixelShipGenerator::CockpitShapeType::SPLIT_CANOPY)], delta.CockpitPlacementSuccessCount);
+    const double spearElongatedCockpit = percent(spear.CockpitShapeCounts[index(SpectralShipGen::CockpitShapeType::ELONGATED_CANOPY)], spear.CockpitPlacementSuccessCount);
+    const double deltaWideCockpit = percent(delta.CockpitShapeCounts[index(SpectralShipGen::CockpitShapeType::WIDE_COMMAND_DECK)], delta.CockpitPlacementSuccessCount) +
+        percent(delta.CockpitShapeCounts[index(SpectralShipGen::CockpitShapeType::SPLIT_CANOPY)], delta.CockpitPlacementSuccessCount);
     if (!(spearElongatedCockpit > 55.0 && deltaWideCockpit > 50.0 && delta.CockpitNormalizedWidth.average() > spear.CockpitNormalizedWidth.average() * 2.0))
     {
         std::cerr << "Task 52 cockpit vocabulary is not differentiating the new styles strongly enough.\n";
         return 1;
     }
 
-    const uint64_t spearAxialCore = spear.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::CENTRAL_SPINE)] +
-        spear.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::LONGITUDINAL_ARMOR_BAND)];
-    const uint64_t deltaAxialCore = delta.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::CENTRAL_SPINE)] +
-        delta.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::LONGITUDINAL_ARMOR_BAND)];
-    const uint64_t deltaBroadCore = delta.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::RAISED_CORE_PLATE)] +
-        delta.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::LATERAL_RECESSES)] +
-        delta.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::COCKPIT_SURROUND)];
-    const uint64_t spearBroadCore = spear.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::RAISED_CORE_PLATE)] +
-        spear.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::LATERAL_RECESSES)] +
-        spear.CoreTreatmentTypeCounts[index(PixelShipGenerator::ShipCoreTreatmentType::COCKPIT_SURROUND)];
+    const uint64_t spearAxialCore = spear.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::CENTRAL_SPINE)] +
+        spear.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::LONGITUDINAL_ARMOR_BAND)];
+    const uint64_t deltaAxialCore = delta.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::CENTRAL_SPINE)] +
+        delta.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::LONGITUDINAL_ARMOR_BAND)];
+    const uint64_t deltaBroadCore = delta.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::RAISED_CORE_PLATE)] +
+        delta.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::LATERAL_RECESSES)] +
+        delta.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::COCKPIT_SURROUND)];
+    const uint64_t spearBroadCore = spear.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::RAISED_CORE_PLATE)] +
+        spear.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::LATERAL_RECESSES)] +
+        spear.CoreTreatmentTypeCounts[index(SpectralShipGen::ShipCoreTreatmentType::COCKPIT_SURROUND)];
     if (!(spearAxialCore > deltaAxialCore * 2u && deltaBroadCore > spearBroadCore * 2u))
     {
         std::cerr << "Task 53 core treatments are not style-distinct enough.\n";
         return 1;
     }
 
-    if (!(spear.MajorFeatureTypeCounts[index(PixelShipGenerator::ShipMajorFeatureType::CENTRAL_SPINE)] > delta.MajorFeatureTypeCounts[index(PixelShipGenerator::ShipMajorFeatureType::CENTRAL_SPINE)] &&
-        delta.MajorFeatureTypeCounts[index(PixelShipGenerator::ShipMajorFeatureType::WING_PLATE)] > spear.MajorFeatureTypeCounts[index(PixelShipGenerator::ShipMajorFeatureType::WING_PLATE)] * 3u))
+    if (!(spear.MajorFeatureTypeCounts[index(SpectralShipGen::ShipMajorFeatureType::CENTRAL_SPINE)] > delta.MajorFeatureTypeCounts[index(SpectralShipGen::ShipMajorFeatureType::CENTRAL_SPINE)] &&
+        delta.MajorFeatureTypeCounts[index(SpectralShipGen::ShipMajorFeatureType::WING_PLATE)] > spear.MajorFeatureTypeCounts[index(SpectralShipGen::ShipMajorFeatureType::WING_PLATE)] * 3u))
     {
         std::cerr << "Major Feature distributions do not reinforce the new structural identities.\n";
         return 1;
@@ -229,22 +229,22 @@ int PixelShipGeneratorTests::runStyleExpansionRegression()
 
     const uint64_t spearWeaponUnits = totalWeaponUnits(spear);
     const uint64_t deltaWeaponUnits = totalWeaponUnits(delta);
-    const double spearRail = percent(spear.WeaponTypeCounts[index(PixelShipGenerator::ShipWeaponType::RAIL_WEAPON)], spearWeaponUnits);
-    const double deltaRail = percent(delta.WeaponTypeCounts[index(PixelShipGenerator::ShipWeaponType::RAIL_WEAPON)], deltaWeaponUnits);
-    const uint64_t spearLateralCount = spear.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::WING_ROOT)] +
-        spear.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::OUTER_WING)] +
-        spear.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::FORWARD_SHOULDER)];
-    const uint64_t deltaLateralCount = delta.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::WING_ROOT)] +
-        delta.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::OUTER_WING)] +
-        delta.WeaponRegionCounts[index(PixelShipGenerator::ShipWeaponHardpointRegion::FORWARD_SHOULDER)];
+    const double spearRail = percent(spear.WeaponTypeCounts[index(SpectralShipGen::ShipWeaponType::RAIL_WEAPON)], spearWeaponUnits);
+    const double deltaRail = percent(delta.WeaponTypeCounts[index(SpectralShipGen::ShipWeaponType::RAIL_WEAPON)], deltaWeaponUnits);
+    const uint64_t spearLateralCount = spear.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::WING_ROOT)] +
+        spear.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::OUTER_WING)] +
+        spear.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::FORWARD_SHOULDER)];
+    const uint64_t deltaLateralCount = delta.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::WING_ROOT)] +
+        delta.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::OUTER_WING)] +
+        delta.WeaponRegionCounts[index(SpectralShipGen::ShipWeaponHardpointRegion::FORWARD_SHOULDER)];
     if (!(spearRail > deltaRail + 15.0 && percent(deltaLateralCount, deltaWeaponUnits) > percent(spearLateralCount, spearWeaponUnits) + 15.0))
     {
         std::cerr << "Weapon type/region distributions do not reinforce SPEARHEAD vs DELTA.\n";
         return 1;
     }
 
-    const double spearBroadPropulsion = percent(spear.EngineLayoutCounts[index(PixelShipGenerator::EngineLayoutType::QUAD)] + spear.EngineLayoutCounts[index(PixelShipGenerator::EngineLayoutType::WIDE_BANK)], spear.SuccessfulGenerations);
-    const double deltaBroadPropulsion = percent(delta.EngineLayoutCounts[index(PixelShipGenerator::EngineLayoutType::QUAD)] + delta.EngineLayoutCounts[index(PixelShipGenerator::EngineLayoutType::WIDE_BANK)], delta.SuccessfulGenerations);
+    const double spearBroadPropulsion = percent(spear.EngineLayoutCounts[index(SpectralShipGen::EngineLayoutType::QUAD)] + spear.EngineLayoutCounts[index(SpectralShipGen::EngineLayoutType::WIDE_BANK)], spear.SuccessfulGenerations);
+    const double deltaBroadPropulsion = percent(delta.EngineLayoutCounts[index(SpectralShipGen::EngineLayoutType::QUAD)] + delta.EngineLayoutCounts[index(SpectralShipGen::EngineLayoutType::WIDE_BANK)], delta.SuccessfulGenerations);
     if (!(deltaBroadPropulsion > spearBroadPropulsion + 35.0))
     {
         std::cerr << "Engine layout distributions do not distinguish axial and broad propulsion.\n";

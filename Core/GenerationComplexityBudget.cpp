@@ -1,10 +1,10 @@
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

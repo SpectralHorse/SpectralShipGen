@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipLiveryType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipLiveryType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct LiveryPlacement
     {

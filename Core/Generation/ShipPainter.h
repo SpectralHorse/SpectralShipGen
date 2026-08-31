@@ -2,14 +2,14 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/Color.h>
-#include <PixelShipGenerator/GeneratedShip.h>
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/Color.h>
+#include <SpectralShipGen/GeneratedShip.h>
+#include <SpectralShipGen/PixelMask.h>
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipPalette.h>
+#include <SpectralShipGen/ShipPalette.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class ShipPainter
     {

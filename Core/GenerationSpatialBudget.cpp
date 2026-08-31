@@ -1,11 +1,11 @@
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
 
 #include <algorithm>
 #include <cstdint>
 
-#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

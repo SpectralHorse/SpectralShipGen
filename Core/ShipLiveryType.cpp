@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipLiveryType.h>
+#include <SpectralShipGen/ShipLiveryType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipLiveryTypeName(ShipLiveryType type)
     {

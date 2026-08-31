@@ -7,7 +7,7 @@
 #include "HullLayerData.h"
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class HullLayerGenerator
     {

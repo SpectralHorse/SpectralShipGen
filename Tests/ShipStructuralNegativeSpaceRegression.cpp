@@ -8,17 +8,17 @@
 #include <queue>
 #include <vector>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
-#include <PixelShipGenerator/ShipFactionType.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipStructuralNegativeSpaceType.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
+#include <SpectralShipGen/ShipFactionType.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipStructuralNegativeSpaceType.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     struct NegativeSpaceFixture
     {
@@ -153,9 +153,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runStructuralNegativeSpaceRegression()
+int SpectralShipGenTests::runStructuralNegativeSpaceRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
     if (!profileTendenciesAreDistinct())
     {
         std::cerr << "Task 57 regression failed: style-specific negative-space profile tendencies collapsed.\n";

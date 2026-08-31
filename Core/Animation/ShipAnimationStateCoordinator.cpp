@@ -1,38 +1,38 @@
-#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
+#include <SpectralShipGen/ShipAnimationStateCoordinator.h>
 
 #include <stdexcept>
 
-#include <PixelShipGenerator/ShipFiringAnimator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {
-    bool isLateralMovement(PixelShipGenerator::ShipAnimationType type)
+    bool isLateralMovement(SpectralShipGen::ShipAnimationType type)
     {
-        return type == PixelShipGenerator::ShipAnimationType::MOVE_LEFT || type == PixelShipGenerator::ShipAnimationType::MOVE_RIGHT;
+        return type == SpectralShipGen::ShipAnimationType::MOVE_LEFT || type == SpectralShipGen::ShipAnimationType::MOVE_RIGHT;
     }
 
-    bool isLongitudinalMovement(PixelShipGenerator::ShipAnimationType type)
+    bool isLongitudinalMovement(SpectralShipGen::ShipAnimationType type)
     {
-        return type == PixelShipGenerator::ShipAnimationType::MOVE_UP || type == PixelShipGenerator::ShipAnimationType::MOVE_DOWN;
+        return type == SpectralShipGen::ShipAnimationType::MOVE_UP || type == SpectralShipGen::ShipAnimationType::MOVE_DOWN;
     }
 
-    bool isMovement(PixelShipGenerator::ShipAnimationType type)
+    bool isMovement(SpectralShipGen::ShipAnimationType type)
     {
         return isLateralMovement(type) || isLongitudinalMovement(type);
     }
 
-    PixelShipGenerator::ShipAnimationPose createNeutralPose(const PixelShipGenerator::GeneratedShip& ship)
+    SpectralShipGen::ShipAnimationPose createNeutralPose(const SpectralShipGen::GeneratedShip& ship)
     {
-        PixelShipGenerator::ShipAnimationPose pose;
+        SpectralShipGen::ShipAnimationPose pose;
         pose.Frame = ship.FinalImage;
-        pose.Layer = PixelShipGenerator::ShipAnimationPoseLayer::STATIC_NEUTRAL;
-        pose.UnderlyingAnimationType = PixelShipGenerator::ShipAnimationType::IDLE;
+        pose.Layer = SpectralShipGen::ShipAnimationPoseLayer::STATIC_NEUTRAL;
+        pose.UnderlyingAnimationType = SpectralShipGen::ShipAnimationType::IDLE;
         return pose;
     }
 
-    std::vector<uint32_t> resolveFiringOverrides(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipFiringAnimationTarget& target)
+    std::vector<uint32_t> resolveFiringOverrides(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipFiringAnimationTarget& target)
     {
         std::vector<uint32_t> indices;
         const auto& components = ship.IdleAnimationMetadata.WeaponComponents;
@@ -53,7 +53,7 @@ namespace
     }
 }
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     ShipMovementTransitionPlan ShipAnimationStateCoordinator::planMovementTransition(ShipAnimationType from, ShipAnimationType to, const ShipMovementAnimationSettings& settings) const
     {
@@ -133,4 +133,4 @@ namespace PixelShipGenerator
         result.Diagnostics.EventOverriddenWeaponComponents = resolveFiringOverrides(ship, request.FiringTarget);
         return result;
     }
-} // namespace PixelShipGenerator
+} // namespace SpectralShipGen

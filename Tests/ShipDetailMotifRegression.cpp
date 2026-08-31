@@ -6,13 +6,13 @@
 #include <iostream>
 
 #include "PixelMaskUtils.h"
-#include <PixelShipGenerator/ShipDetailMotifType.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipDetailMotifType.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 namespace
 {
@@ -237,7 +237,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runDetailMotifRegression()
+int SpectralShipGenTests::runDetailMotifRegression()
 {
     bool success = true;
     success = checkDeterminismAndRerollOwnership() && success;

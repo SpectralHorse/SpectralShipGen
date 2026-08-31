@@ -6,10 +6,10 @@
 #include <optional>
 #include <vector>
 
-#include <PixelShipGenerator/GeneratedShip.h>
-#include <PixelShipGenerator/ShipIdleAnimation.h>
+#include <SpectralShipGen/GeneratedShip.h>
+#include <SpectralShipGen/ShipIdleAnimation.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
 namespace IdleAnimationInternal
 {

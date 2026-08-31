@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipVisualAnchorType.h>
+#include <SpectralShipGen/ShipVisualAnchorType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipVisualAnchorTypeName(ShipVisualAnchorType type)
     {

@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
 
 #include <stdexcept>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

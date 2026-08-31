@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <limits>
 
-#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
 namespace FactionAnimationInternal
 {

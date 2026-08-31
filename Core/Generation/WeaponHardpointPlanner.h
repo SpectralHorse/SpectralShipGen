@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
 #include "ShipGenerationContext.h"
 #include "WeaponGenerationInternal.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace WeaponGenerationInternal
     {

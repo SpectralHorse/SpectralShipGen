@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipHullLayerType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipHullLayerType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct HullLayerPlacement
     {

@@ -1,15 +1,15 @@
-#include <PixelShipGenerator/ShipPaletteGenerator.h>
+#include <SpectralShipGen/ShipPaletteGenerator.h>
 
-#include <PixelShipGenerator/Color.h>
-#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
+#include <SpectralShipGen/Color.h>
+#include <SpectralShipGen/ShipFactionPaletteProfile.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfile.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <random>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

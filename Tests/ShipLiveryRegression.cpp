@@ -6,16 +6,16 @@
 #include <iostream>
 
 #include "PixelMaskUtils.h"
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipLiveryType.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipLiveryType.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 namespace
 {
@@ -391,7 +391,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runLiveryRegression()
+int SpectralShipGenTests::runLiveryRegression()
 {
     bool success = true;
     success = checkDeterminismAndPaletteIsolation() && success;

@@ -6,16 +6,16 @@
 #include <exception>
 #include <iostream>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 #include "VisualHierarchyPlanner.h"
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     struct SyntheticSpatialMasks
     {
@@ -92,9 +92,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runStaticProfileRoutingRegression()
+int SpectralShipGenTests::runStaticProfileRoutingRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     try
     {

@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     int runGeneratorRegression();
     int runIdleAnimationRegression();

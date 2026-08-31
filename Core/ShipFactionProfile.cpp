@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
 
 #include <stdexcept>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     uint32_t ShipFactionWeaponWeightMultipliers::getWeightPercent(ShipWeaponType type) const
     {

@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipWingShapeType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipWingShapeType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct WingRegionData
     {

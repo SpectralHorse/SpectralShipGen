@@ -6,9 +6,9 @@
 #include <cstdint>
 
 #include "PixelMaskUtils.h"
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

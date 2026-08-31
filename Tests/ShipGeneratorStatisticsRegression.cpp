@@ -7,11 +7,11 @@
 #include <sstream>
 #include <string>
 
-#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
+#include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
 
 namespace
 {
-    bool isNormalizedStatisticValid(const PixelShipGeneratorDiagnostics::NumericStatistics& statistics)
+    bool isNormalizedStatisticValid(const SpectralShipGenDiagnostics::NumericStatistics& statistics)
     {
         if (statistics.Count == 0u)
         {
@@ -22,15 +22,15 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGeneratorStatisticsRegression()
+int SpectralShipGenTests::runGeneratorStatisticsRegression()
 {
-    using namespace PixelShipGeneratorDiagnostics;
+    using namespace SpectralShipGenDiagnostics;
 
     DiagnosticGenerationConfiguration deterministicConfiguration;
     deterministicConfiguration.Width = 44u;
     deterministicConfiguration.Height = 44u;
-    deterministicConfiguration.Style = PixelShipGenerator::ShipStyle::HEAVY;
-    deterministicConfiguration.Faction = PixelShipGenerator::ShipFactionType::XENO;
+    deterministicConfiguration.Style = SpectralShipGen::ShipStyle::HEAVY;
+    deterministicConfiguration.Faction = SpectralShipGen::ShipFactionType::XENO;
     deterministicConfiguration.Samples = 64u;
     deterministicConfiguration.DiagnosticSeed = 0x123456789ABCDEF0ull;
 
@@ -60,8 +60,8 @@ int PixelShipGeneratorTests::runGeneratorStatisticsRegression()
         DiagnosticGenerationConfiguration configuration;
         configuration.Width = resolution;
         configuration.Height = resolution;
-        configuration.Style = PixelShipGenerator::ShipStyle::FIGHTER;
-        configuration.Faction = PixelShipGenerator::ShipFactionType::MILITARY;
+        configuration.Style = SpectralShipGen::ShipStyle::FIGHTER;
+        configuration.Faction = SpectralShipGen::ShipFactionType::MILITARY;
         configuration.Samples = 8u;
         configuration.DiagnosticSeed = 0xCAFEBABE12345678ull;
         const GenerationStatistics statistics = collectGenerationStatistics(configuration);
@@ -83,8 +83,8 @@ int PixelShipGeneratorTests::runGeneratorStatisticsRegression()
     DiagnosticGenerationConfiguration rectangularConfiguration;
     rectangularConfiguration.Width = 64u;
     rectangularConfiguration.Height = 32u;
-    rectangularConfiguration.Style = PixelShipGenerator::ShipStyle::INDUSTRIAL;
-    rectangularConfiguration.Faction = PixelShipGenerator::ShipFactionType::FRONTIER;
+    rectangularConfiguration.Style = SpectralShipGen::ShipStyle::INDUSTRIAL;
+    rectangularConfiguration.Faction = SpectralShipGen::ShipFactionType::FRONTIER;
     rectangularConfiguration.Samples = 4u;
     rectangularConfiguration.DiagnosticSeed = 0xA4093822299F31D0ull;
     const GenerationStatistics rectangularStatistics = collectGenerationStatistics(rectangularConfiguration);

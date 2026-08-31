@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipAnimationPose.h>
+#include <SpectralShipGen/ShipAnimationPose.h>
 
 #include <algorithm>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const ShipAnimationComponentTransform* findAnimationComponentTransform(const ShipAnimationPose& pose, ShipAnimationSemanticComponentType type, uint32_t componentIndex)
     {
@@ -12,4 +12,4 @@ namespace PixelShipGenerator
         });
         return iterator == pose.ComponentTransforms.end() ? nullptr : &(*iterator);
     }
-} // namespace PixelShipGenerator
+} // namespace SpectralShipGen

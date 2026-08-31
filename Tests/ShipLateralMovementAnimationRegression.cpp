@@ -8,13 +8,13 @@
 #include <tuple>
 #include <vector>
 
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipSpritesheetUtils.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipSpritesheetUtils.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -138,9 +138,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runLateralMovementAnimationRegression()
+int SpectralShipGenTests::runLateralMovementAnimationRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     ShipGenerator generator;
     ShipLateralMovementAnimator animator;

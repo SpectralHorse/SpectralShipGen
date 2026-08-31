@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/AnimationSamplingPlanner.h>
+#include <SpectralShipGen/AnimationSamplingPlanner.h>
 
 #include <algorithm>
 #include <cstdint>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     AnimationSamplingPlan AnimationSamplingPlanner::plan(const AnimationSamplingRequirements& requirements) const
     {

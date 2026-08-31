@@ -2,11 +2,11 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
-#include <PixelShipGenerator/ShipVisualAnchorType.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
+#include <SpectralShipGen/ShipVisualAnchorType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct VisualHierarchyPlan
     {

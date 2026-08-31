@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipMaterialZoneType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipMaterialZoneType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct MaterialZonePlacement
     {

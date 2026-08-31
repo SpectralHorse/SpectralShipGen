@@ -8,18 +8,18 @@
 #include <vector>
 
 #include "CockpitGenerator.h"
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
 #include "HullGenerator.h"
 #include "MacroAsymmetryPlanner.h"
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -161,9 +161,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runCockpitGeometryRegression()
+int SpectralShipGenTests::runCockpitGeometryRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     const std::array<ShipDimensions, 7u> representative = { ShipDimensions{24u, 24u}, {32u, 32u}, {44u, 44u}, {48u, 64u}, {64u, 48u}, {64u, 64u}, {96u, 96u} };
     for (std::size_t index = 0u; index < representative.size(); ++index)

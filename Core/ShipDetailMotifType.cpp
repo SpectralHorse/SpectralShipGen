@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipDetailMotifType.h>
+#include <SpectralShipGen/ShipDetailMotifType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipDetailMotifTypeName(ShipDetailMotifType type)
     {

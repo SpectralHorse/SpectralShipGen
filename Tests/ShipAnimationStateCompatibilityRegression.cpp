@@ -6,16 +6,16 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
-#include <PixelShipGenerator/ShipFiringAnimator.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/ShipAnimationStateCoordinator.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -77,9 +77,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runAnimationStateCompatibilityRegression()
+int SpectralShipGenTests::runAnimationStateCompatibilityRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     constexpr std::array<ShipAnimationType, 4u> MovementTypes =
     {

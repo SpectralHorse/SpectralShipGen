@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
 
 #include <array>
 #include <cstdint>
@@ -6,7 +6,7 @@
 #include <limits>
 #include <string>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

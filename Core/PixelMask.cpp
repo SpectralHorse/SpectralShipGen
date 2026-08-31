@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/PixelMask.h>
 
 #include <algorithm>
 #include <cassert>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     PixelMask::PixelMask(uint32_t width, uint32_t height, bool fillValue)
     {
@@ -62,4 +62,4 @@ namespace PixelShipGenerator
     {
         return static_cast<std::size_t>(y) * static_cast<std::size_t>(m_Width) + static_cast<std::size_t>(x);
     }
-} // namespace PixelShipGenerator
+} // namespace SpectralShipGen

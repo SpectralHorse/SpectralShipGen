@@ -2,11 +2,11 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipDetailMotifType.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipDetailMotifType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct DetailMotifPlan
     {

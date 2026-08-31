@@ -6,13 +6,13 @@
 #include <iostream>
 #include <string>
 
-#include <PixelShipGenerator/Diagnostics/DiagnosticsAnalysis.h>
-#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsAnalysis.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsResultSerializer.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
-    using namespace PixelShipGeneratorDiagnostics;
+    using namespace SpectralShipGen;
+    using namespace SpectralShipGenDiagnostics;
 
     bool nearlyEqual(double a, double b, double epsilon = 1e-9)
     {
@@ -94,12 +94,12 @@ namespace
     }
 }
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     int runDiagnosticsDashboardRegression()
     {
-        using namespace PixelShipGenerator;
-        using namespace PixelShipGeneratorDiagnostics;
+        using namespace SpectralShipGen;
+        using namespace SpectralShipGenDiagnostics;
 
         const DiagnosticsResult result = makeResult();
         if (!nearlyEqual(result.OverallSummary.GenerationTimeMilliseconds.Mean, 3.75) ||
@@ -230,7 +230,7 @@ namespace PixelShipGeneratorTests
             return 1;
         }
 
-        const std::filesystem::path tempPath = std::filesystem::temp_directory_path() / "pixel_ship_generator_task66_regression.shipdiag.json";
+        const std::filesystem::path tempPath = std::filesystem::temp_directory_path() / "spectral_ship_gen_task66_regression.shipdiag.json";
         std::string saveError;
         if (!saveDiagnosticsResultJson(tempPath, partial, saveError))
         {

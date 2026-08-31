@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/ShipDimensions.h>
+#include <SpectralShipGen/ShipDimensions.h>
 
-namespace PixelShipGenerator::GenerationMath
+namespace SpectralShipGen::GenerationMath
 {
     constexpr uint32_t ReferenceResolution = 64u;
 

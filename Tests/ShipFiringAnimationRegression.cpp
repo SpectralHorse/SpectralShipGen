@@ -8,13 +8,13 @@
 #include <optional>
 #include <set>
 
-#include <PixelShipGenerator/ShipFiringAnimator.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipSpritesheetUtils.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipSpritesheetUtils.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -138,9 +138,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runFiringAnimationRegression()
+int SpectralShipGenTests::runFiringAnimationRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     ShipGenerator generator;
     ShipFiringAnimator animator;

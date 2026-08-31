@@ -12,33 +12,33 @@
 #include "MajorFeatureGenerator.h"
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
 #include "ShipPainter.h"
-#include <PixelShipGenerator/ShipPaletteGenerator.h>
+#include <SpectralShipGen/ShipPaletteGenerator.h>
 #include "WeaponGenerator.h"
 
 namespace
 {
     constexpr std::array<uint32_t, 7u> Resolutions = { 24u, 32u, 44u, 64u, 96u, 128u, 160u };
-    constexpr std::array<PixelShipGenerator::ShipStyle, static_cast<std::size_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)> Styles = { PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipStyle::SPEARHEAD, PixelShipGenerator::ShipStyle::DELTA };
-    constexpr std::array<PixelShipGenerator::ShipFactionType, static_cast<std::size_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = { PixelShipGenerator::ShipFactionType::FRONTIER, PixelShipGenerator::ShipFactionType::MILITARY, PixelShipGenerator::ShipFactionType::ASCENDANT, PixelShipGenerator::ShipFactionType::XENO, PixelShipGenerator::ShipFactionType::CORPORATE, PixelShipGenerator::ShipFactionType::RELIC };
+    constexpr std::array<SpectralShipGen::ShipStyle, static_cast<std::size_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)> Styles = { SpectralShipGen::ShipStyle::SLEEK, SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipStyle::HEAVY, SpectralShipGen::ShipStyle::INDUSTRIAL, SpectralShipGen::ShipStyle::SPEARHEAD, SpectralShipGen::ShipStyle::DELTA };
+    constexpr std::array<SpectralShipGen::ShipFactionType, static_cast<std::size_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = { SpectralShipGen::ShipFactionType::FRONTIER, SpectralShipGen::ShipFactionType::MILITARY, SpectralShipGen::ShipFactionType::ASCENDANT, SpectralShipGen::ShipFactionType::XENO, SpectralShipGen::ShipFactionType::CORPORATE, SpectralShipGen::ShipFactionType::RELIC };
     constexpr uint32_t SamplesPerConfiguration = 2u;
     constexpr uint32_t MaximumHullAttempts = 8u;
 
-    bool generatePipeline(PixelShipGenerator::ShipGenerationContext& context)
+    bool generatePipeline(SpectralShipGen::ShipGenerationContext& context)
     {
-        PixelShipGenerator::HullGenerator hullGenerator;
-        PixelShipGenerator::CockpitGenerator cockpitGenerator;
-        PixelShipGenerator::EngineGenerator engineGenerator;
-        PixelShipGenerator::MajorFeatureGenerator majorFeatureGenerator;
-        PixelShipGenerator::WeaponGenerator weaponGenerator;
-        PixelShipGenerator::AttachmentGenerator attachmentGenerator;
-        PixelShipGenerator::DetailGenerator detailGenerator;
-        PixelShipGenerator::ShipPainter shipPainter;
+        SpectralShipGen::HullGenerator hullGenerator;
+        SpectralShipGen::CockpitGenerator cockpitGenerator;
+        SpectralShipGen::EngineGenerator engineGenerator;
+        SpectralShipGen::MajorFeatureGenerator majorFeatureGenerator;
+        SpectralShipGen::WeaponGenerator weaponGenerator;
+        SpectralShipGen::AttachmentGenerator attachmentGenerator;
+        SpectralShipGen::DetailGenerator detailGenerator;
+        SpectralShipGen::ShipPainter shipPainter;
 
-        context.Ship.Palette = PixelShipGenerator::ShipPaletteGenerator::generate(context.Seeds.Palette, context.FactionProfile, context.Profile);
+        context.Ship.Palette = SpectralShipGen::ShipPaletteGenerator::generate(context.Seeds.Palette, context.FactionProfile, context.Profile);
 
         for (uint32_t attempt = 0u; attempt < MaximumHullAttempts; ++attempt)
         {
@@ -68,18 +68,18 @@ namespace
         return false;
     }
 
-    bool imagesEqual(const PixelShipGenerator::Image& first, const PixelShipGenerator::Image& second)
+    bool imagesEqual(const SpectralShipGen::Image& first, const SpectralShipGen::Image& second)
     {
         return first.getWidth() == second.getWidth() && first.getHeight() == second.getHeight() && first.getPixels() == second.getPixels();
     }
 
-    bool isSemanticPixel(const PixelShipGenerator::ShipGenerationContext& context, uint32_t x, uint32_t y)
+    bool isSemanticPixel(const SpectralShipGen::ShipGenerationContext& context, uint32_t x, uint32_t y)
     {
-        const PixelShipGenerator::GeneratedShip& ship = context.Ship;
+        const SpectralShipGen::GeneratedShip& ship = context.Ship;
         return ship.HullMask.get(x, y) || ship.CockpitMask.get(x, y) || ship.EngineMask.get(x, y) || ship.EngineExhaustMask.get(x, y) || ship.AttachmentMask.get(x, y) || context.Weapons.OccupiedMask.get(x, y);
     }
 
-    bool hasNeighbouringSemanticPixel(const PixelShipGenerator::ShipGenerationContext& context, int32_t x, int32_t y)
+    bool hasNeighbouringSemanticPixel(const SpectralShipGen::ShipGenerationContext& context, int32_t x, int32_t y)
     {
         for (int32_t offsetY = -1; offsetY <= 1; ++offsetY)
         {
@@ -108,15 +108,15 @@ namespace
         return false;
     }
 
-    bool validatePaintedPixels(const PixelShipGenerator::ShipGenerationContext& context)
+    bool validatePaintedPixels(const SpectralShipGen::ShipGenerationContext& context)
     {
-        const PixelShipGenerator::Image& image = context.Ship.FinalImage;
+        const SpectralShipGen::Image& image = context.Ship.FinalImage;
 
         for (uint32_t y = 0u; y < image.getHeight(); ++y)
         {
             for (uint32_t x = 0u; x < image.getWidth(); ++x)
             {
-                const PixelShipGenerator::Color& color = image.getPixel(x, y);
+                const SpectralShipGen::Color& color = image.getPixel(x, y);
 
                 if (color.A != 0u && color.A != 255u)
                 {
@@ -138,7 +138,7 @@ namespace
         return true;
     }
 
-    bool maskHasVisiblePixels(const PixelShipGenerator::PixelMask& mask, const PixelShipGenerator::Image& image)
+    bool maskHasVisiblePixels(const SpectralShipGen::PixelMask& mask, const SpectralShipGen::Image& image)
     {
         for (uint32_t y = 0u; y < mask.getHeight(); ++y)
         {
@@ -155,26 +155,26 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runPainterShadingRegression()
+int SpectralShipGenTests::runPainterShadingRegression()
 {
     for (uint32_t resolution : Resolutions)
     {
-        for (PixelShipGenerator::ShipStyle style : Styles)
+        for (SpectralShipGen::ShipStyle style : Styles)
         {
-            for (PixelShipGenerator::ShipFactionType faction : Factions)
+            for (SpectralShipGen::ShipFactionType faction : Factions)
             {
                 for (uint32_t sample = 0u; sample < SamplesPerConfiguration; ++sample)
                 {
-                    PixelShipGenerator::ShipGenerationSettings settings;
+                    SpectralShipGen::ShipGenerationSettings settings;
                     settings.Dimensions.Width = resolution;
                     settings.Dimensions.Height = resolution;
                     settings.Style = style;
                     settings.Faction = faction;
                     settings.Seed = 0x38000000ull + static_cast<uint64_t>(resolution) * 100000ull + static_cast<uint64_t>(static_cast<uint32_t>(style)) * 10000ull + static_cast<uint64_t>(static_cast<uint32_t>(faction)) * 1000ull + sample;
-                    const PixelShipGenerator::ShipGenerationSeeds seeds = PixelShipGenerator::deriveShipGenerationSeeds(settings.Seed);
-                    const PixelShipGenerator::ShipGenerationProfile& profile = PixelShipGenerator::getShipGenerationProfile(style);
-                    PixelShipGenerator::ShipGenerationContext firstContext(settings, profile, seeds, nullptr);
-                    PixelShipGenerator::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
+                    const SpectralShipGen::ShipGenerationSeeds seeds = SpectralShipGen::deriveShipGenerationSeeds(settings.Seed);
+                    const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(style);
+                    SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, nullptr);
+                    SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
 
                     if (!generatePipeline(firstContext) || !generatePipeline(secondContext))
                     {
@@ -194,8 +194,8 @@ int PixelShipGeneratorTests::runPainterShadingRegression()
                         return 1;
                     }
 
-                    const uint32_t cockpitPixels = PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(firstContext.Ship.CockpitMask);
-                    const uint32_t enginePixels = PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(firstContext.Ship.EngineMask);
+                    const uint32_t cockpitPixels = SpectralShipGen::PixelMaskUtils::getMaskPixelCount(firstContext.Ship.CockpitMask);
+                    const uint32_t enginePixels = SpectralShipGen::PixelMaskUtils::getMaskPixelCount(firstContext.Ship.EngineMask);
 
                     if ((cockpitPixels > 0u && !maskHasVisiblePixels(firstContext.Ship.CockpitMask, firstContext.Ship.FinalImage)) || (enginePixels > 0u && !maskHasVisiblePixels(firstContext.Ship.EngineMask, firstContext.Ship.FinalImage)))
                     {
@@ -203,7 +203,7 @@ int PixelShipGeneratorTests::runPainterShadingRegression()
                         return 1;
                     }
 
-                    if (PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(firstContext.Weapons.OccupiedMask) > 0u && !maskHasVisiblePixels(firstContext.Weapons.OccupiedMask, firstContext.Ship.FinalImage))
+                    if (SpectralShipGen::PixelMaskUtils::getMaskPixelCount(firstContext.Weapons.OccupiedMask) > 0u && !maskHasVisiblePixels(firstContext.Weapons.OccupiedMask, firstContext.Ship.FinalImage))
                     {
                         std::cerr << "Weapon readability validation failed at resolution " << resolution << ".\n";
                         return 1;

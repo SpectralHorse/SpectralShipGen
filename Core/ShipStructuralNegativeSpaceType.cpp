@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipStructuralNegativeSpaceType.h>
+#include <SpectralShipGen/ShipStructuralNegativeSpaceType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipStructuralNegativeSpaceTypeName(ShipStructuralNegativeSpaceType type)
     {

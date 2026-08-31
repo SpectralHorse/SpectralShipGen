@@ -5,15 +5,15 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <PixelShipGenerator/GenerationDomain.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/GenerationDomain.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfile.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -326,7 +326,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runPaletteConfigurationRegression()
+int SpectralShipGenTests::runPaletteConfigurationRegression()
 {
     bool success = true;
     success = checkBuiltInGeneratedEquivalence() && success;

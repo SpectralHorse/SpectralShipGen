@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/GenerationDomain.h>
+#include <SpectralShipGen/GenerationDomain.h>
 
 #include <stdexcept>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     GenerationSeedChannel getGenerationDomainParentChannel(GenerationDomain domain)
     {

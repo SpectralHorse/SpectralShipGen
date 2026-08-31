@@ -7,11 +7,11 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/GeneratedShip.h>
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/GeneratedShip.h>
+#include <SpectralShipGen/PixelMask.h>
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class AttachmentGenerator
     {

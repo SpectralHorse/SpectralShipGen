@@ -1,8 +1,8 @@
-#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
+#include <SpectralShipGen/ShipFactionPaletteProfile.h>
 
-#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const ShipFactionPaletteProfile& getShipFactionPaletteProfile(ShipFactionType faction)
     {

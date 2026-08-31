@@ -7,10 +7,10 @@
 
 #include "GenerationMath.h"
 #include "PixelMaskUtils.h"
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipVisualAnchorType.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipVisualAnchorType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

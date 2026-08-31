@@ -1,5 +1,5 @@
-#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
+#include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
 
 #include <algorithm>
 #include <cmath>
@@ -13,26 +13,26 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
 
-    const char* styleName(PixelShipGenerator::ShipStyle style)
+    const char* styleName(SpectralShipGen::ShipStyle style)
     {
-        if (style == PixelShipGenerator::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
-        for (const auto& entry : PixelShipGenerator::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
+        if (style == SpectralShipGen::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
+        for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
         return "UNKNOWN";
     }
 
-    const char* factionName(PixelShipGenerator::ShipFactionType faction)
+    const char* factionName(SpectralShipGen::ShipFactionType faction)
     {
-        if (faction == PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
-        for (const auto& entry : PixelShipGenerator::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
+        if (faction == SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
+        for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
         return "UNKNOWN";
     }
     struct MaskMetrics
@@ -44,7 +44,7 @@ namespace
         bool Valid = false;
     };
 
-    MaskMetrics calculateMaskMetrics(const PixelShipGenerator::PixelMask& mask)
+    MaskMetrics calculateMaskMetrics(const SpectralShipGen::PixelMask& mask)
     {
         MaskMetrics result;
         uint32_t minimumX = mask.getWidth();
@@ -81,7 +81,7 @@ namespace
         return result;
     }
 
-    uint32_t countMaskPixels(const PixelShipGenerator::PixelMask& mask)
+    uint32_t countMaskPixels(const SpectralShipGen::PixelMask& mask)
     {
         uint32_t count = 0u;
 
@@ -99,9 +99,9 @@ namespace
         return count;
     }
 
-    const char* getHullModifierName(PixelShipGenerator::HullModifierType type)
+    const char* getHullModifierName(SpectralShipGen::HullModifierType type)
     {
-        using PixelShipGenerator::HullModifierType;
+        using SpectralShipGen::HullModifierType;
         switch (type)
         {
         case HullModifierType::BROADER_SHOULDERS: return "BROADER_SHOULDERS";
@@ -115,14 +115,14 @@ namespace
     }
 
 
-    const char* getHullLayerName(PixelShipGenerator::ShipHullLayerType type)
+    const char* getHullLayerName(SpectralShipGen::ShipHullLayerType type)
     {
-        return PixelShipGenerator::getShipHullLayerTypeName(type);
+        return SpectralShipGen::getShipHullLayerTypeName(type);
     }
 
-    const char* getWingShapeName(PixelShipGenerator::WingShapeType type)
+    const char* getWingShapeName(SpectralShipGen::WingShapeType type)
     {
-        using PixelShipGenerator::WingShapeType;
+        using SpectralShipGen::WingShapeType;
         switch (type)
         {
         case WingShapeType::NONE: return "NONE";
@@ -133,9 +133,9 @@ namespace
         }
     }
 
-    const char* getMajorFeatureName(PixelShipGenerator::ShipMajorFeatureType type)
+    const char* getMajorFeatureName(SpectralShipGen::ShipMajorFeatureType type)
     {
-        using PixelShipGenerator::ShipMajorFeatureType;
+        using SpectralShipGen::ShipMajorFeatureType;
         switch (type)
         {
         case ShipMajorFeatureType::CENTRAL_SPINE: return "CENTRAL_SPINE";
@@ -148,9 +148,9 @@ namespace
         }
     }
 
-    const char* getWeaponTypeName(PixelShipGenerator::ShipWeaponType type)
+    const char* getWeaponTypeName(SpectralShipGen::ShipWeaponType type)
     {
-        using PixelShipGenerator::ShipWeaponType;
+        using SpectralShipGen::ShipWeaponType;
         switch (type)
         {
         case ShipWeaponType::SINGLE_CANNON: return "SINGLE_CANNON";
@@ -162,9 +162,9 @@ namespace
         }
     }
 
-    const char* getWeaponRegionName(PixelShipGenerator::ShipWeaponHardpointRegion region)
+    const char* getWeaponRegionName(SpectralShipGen::ShipWeaponHardpointRegion region)
     {
-        using PixelShipGenerator::ShipWeaponHardpointRegion;
+        using SpectralShipGen::ShipWeaponHardpointRegion;
         switch (region)
         {
         case ShipWeaponHardpointRegion::CENTRAL_NOSE: return "CENTRAL_NOSE";
@@ -177,9 +177,9 @@ namespace
         }
     }
 
-    const char* getEngineLayoutName(PixelShipGenerator::EngineLayoutType type)
+    const char* getEngineLayoutName(SpectralShipGen::EngineLayoutType type)
     {
-        using PixelShipGenerator::EngineLayoutType;
+        using SpectralShipGen::EngineLayoutType;
         switch (type)
         {
         case EngineLayoutType::CENTRAL: return "CENTRAL";
@@ -191,9 +191,9 @@ namespace
         }
     }
 
-    const char* getEngineSizeName(PixelShipGenerator::EngineSizeClass type)
+    const char* getEngineSizeName(SpectralShipGen::EngineSizeClass type)
     {
-        using PixelShipGenerator::EngineSizeClass;
+        using SpectralShipGen::EngineSizeClass;
         switch (type)
         {
         case EngineSizeClass::SMALL: return "SMALL";
@@ -203,9 +203,9 @@ namespace
         }
     }
 
-    const char* getAttachmentTypeName(PixelShipGenerator::ShipAttachmentType type)
+    const char* getAttachmentTypeName(SpectralShipGen::ShipAttachmentType type)
     {
-        using PixelShipGenerator::ShipAttachmentType;
+        using SpectralShipGen::ShipAttachmentType;
         switch (type)
         {
         case ShipAttachmentType::WEAPON_MOUNT: return "WEAPON_MOUNT";
@@ -218,9 +218,9 @@ namespace
         }
     }
 
-    const char* getSupplementalDetailTypeName(PixelShipGenerator::SupplementalSurfaceDetailType type)
+    const char* getSupplementalDetailTypeName(SpectralShipGen::SupplementalSurfaceDetailType type)
     {
-        using PixelShipGenerator::SupplementalSurfaceDetailType;
+        using SpectralShipGen::SupplementalSurfaceDetailType;
         switch (type)
         {
         case SupplementalSurfaceDetailType::PANEL_SEAM: return "PANEL_SEAM";
@@ -238,7 +238,7 @@ namespace
         return denominator == 0u ? 0.0 : (static_cast<double>(numerator) * 100.0) / static_cast<double>(denominator);
     }
 
-    std::string createModifierCombinationKey(const std::vector<PixelShipGenerator::HullModifierType>& modifiers)
+    std::string createModifierCombinationKey(const std::vector<SpectralShipGen::HullModifierType>& modifiers)
     {
         if (modifiers.empty())
         {
@@ -277,7 +277,7 @@ namespace
         hashBytes(hash, &value, sizeof(T));
     }
 
-    void hashNumericStatistics(uint64_t& hash, const PixelShipGeneratorDiagnostics::NumericStatistics& statistics)
+    void hashNumericStatistics(uint64_t& hash, const SpectralShipGenDiagnostics::NumericStatistics& statistics)
     {
         hashValue(hash, statistics.Count);
         hashValue(hash, statistics.Sum);
@@ -285,7 +285,7 @@ namespace
         hashValue(hash, statistics.Maximum);
     }
 
-    void addDebugAttemptStatistics(PixelShipGeneratorDiagnostics::GenerationStatistics& statistics, const PixelShipGenerator::ShipGenerationDebugInfo& debugInfo)
+    void addDebugAttemptStatistics(SpectralShipGenDiagnostics::GenerationStatistics& statistics, const SpectralShipGen::ShipGenerationDebugInfo& debugInfo)
     {
         statistics.HullAttempts.add(static_cast<double>(debugInfo.HullGenerationAttemptCount));
         statistics.HullValidationRejectionCount += debugInfo.HullValidationRejectionCount;
@@ -294,7 +294,7 @@ namespace
             statistics.SilhouetteValidationFailureCounts[index] += debugInfo.SilhouetteValidationFailureCounts[index];
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
         {
             statistics.HullModifierAttemptCounts[index] += debugInfo.HullModifierAttemptCounts[index];
             statistics.HullModifierRejectionCounts[index] += debugInfo.HullModifierRejectionCounts[index];
@@ -302,7 +302,7 @@ namespace
     }
 }
 
-namespace PixelShipGeneratorDiagnostics
+namespace SpectralShipGenDiagnostics
 {
     void NumericStatistics::add(double value)
     {
@@ -326,7 +326,7 @@ namespace PixelShipGeneratorDiagnostics
         return Count == 0u ? 0.0 : Sum / static_cast<double>(Count);
     }
 
-    void GenerationStatistics::recordSuccess(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipGenerationDebugInfo& debugInfo, const DiagnosticGenerationConfiguration& configuration)
+    void GenerationStatistics::recordSuccess(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipGenerationDebugInfo& debugInfo, const DiagnosticGenerationConfiguration& configuration)
     {
         ++RequestedGenerations;
         ++SuccessfulGenerations;
@@ -346,20 +346,20 @@ namespace PixelShipGeneratorDiagnostics
         ComplexityUtilizationPercent.add(debugInfo.ComplexityInitialBudget == 0u ? 0.0 : (static_cast<double>(debugInfo.ComplexityConsumedBudget) * 100.0) / static_cast<double>(debugInfo.ComplexityInitialBudget));
         VisualHierarchyReservedComplexity.add(static_cast<double>(debugInfo.VisualHierarchyReservedComplexity));
         if (debugInfo.VisualHierarchyFallbackOccurred) { ++VisualHierarchyFallbackCount; }
-        if (debugInfo.PrimaryVisualAnchor != PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)
+        if (debugInfo.PrimaryVisualAnchor != SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)
         {
             ++PrimaryVisualAnchorCounts[static_cast<std::size_t>(debugInfo.PrimaryVisualAnchor)];
-            if (debugInfo.SecondaryVisualAnchor != PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)
+            if (debugInfo.SecondaryVisualAnchor != SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END)
             {
                 ++SecondaryVisualAnchorCounts[static_cast<std::size_t>(debugInfo.SecondaryVisualAnchor)];
-                ++VisualAnchorCombinationFrequencies[std::string(PixelShipGenerator::getShipVisualAnchorTypeName(debugInfo.PrimaryVisualAnchor)) + "+" + PixelShipGenerator::getShipVisualAnchorTypeName(debugInfo.SecondaryVisualAnchor)];
+                ++VisualAnchorCombinationFrequencies[std::string(SpectralShipGen::getShipVisualAnchorTypeName(debugInfo.PrimaryVisualAnchor)) + "+" + SpectralShipGen::getShipVisualAnchorTypeName(debugInfo.SecondaryVisualAnchor)];
             }
             else
             {
-                ++VisualAnchorCombinationFrequencies[std::string(PixelShipGenerator::getShipVisualAnchorTypeName(debugInfo.PrimaryVisualAnchor)) + "+NONE"];
+                ++VisualAnchorCombinationFrequencies[std::string(SpectralShipGen::getShipVisualAnchorTypeName(debugInfo.PrimaryVisualAnchor)) + "+NONE"];
             }
         }
-        for (std::size_t index = 0u; index < PixelShipGenerator::GenerationComplexityBudget::CategoryCount; ++index)
+        for (std::size_t index = 0u; index < SpectralShipGen::GenerationComplexityBudget::CategoryCount; ++index)
         {
             ComplexityCategoryAllocations[index].add(static_cast<double>(debugInfo.ComplexityCategoryAllocations[index]));
             ComplexityCategoryConsumed[index].add(static_cast<double>(debugInfo.ComplexityCategoryConsumed[index]));
@@ -367,7 +367,7 @@ namespace PixelShipGeneratorDiagnostics
 
         uint32_t spatialUtilizationTotal = 0u;
         uint32_t spatialRegionCount = 0u;
-        for (std::size_t index = 0u; index < PixelShipGenerator::GenerationSpatialBudget::RegionCount; ++index)
+        for (std::size_t index = 0u; index < SpectralShipGen::GenerationSpatialBudget::RegionCount; ++index)
         {
             const uint32_t capacity = debugInfo.SpatialRegionCapacities[index];
             const uint32_t utilization = capacity == 0u ? 0u : (debugInfo.SpatialRegionLoads[index] * 100u) / capacity;
@@ -383,8 +383,8 @@ namespace PixelShipGeneratorDiagnostics
             ++MacroAsymmetryPlannedCount;
             if (debugInfo.MacroAsymmetryFulfilled) { ++MacroAsymmetryFulfilledCount; }
             if (debugInfo.MacroAsymmetryRejected) { ++MacroAsymmetryRejectedCount; }
-            if (debugInfo.MacroAsymmetryFeatureCategory != PixelShipGenerator::MacroAsymmetryCategory::MACRO_ASYMMETRY_CATEGORY_END) { ++MacroAsymmetryCategoryCounts[static_cast<std::size_t>(debugInfo.MacroAsymmetryFeatureCategory)]; }
-            if (debugInfo.MacroAsymmetryDominantSide != PixelShipGenerator::MacroAsymmetrySide::MACRO_ASYMMETRY_SIDE_END) { ++MacroAsymmetrySideCounts[static_cast<std::size_t>(debugInfo.MacroAsymmetryDominantSide)]; }
+            if (debugInfo.MacroAsymmetryFeatureCategory != SpectralShipGen::MacroAsymmetryCategory::MACRO_ASYMMETRY_CATEGORY_END) { ++MacroAsymmetryCategoryCounts[static_cast<std::size_t>(debugInfo.MacroAsymmetryFeatureCategory)]; }
+            if (debugInfo.MacroAsymmetryDominantSide != SpectralShipGen::MacroAsymmetrySide::MACRO_ASYMMETRY_SIDE_END) { ++MacroAsymmetrySideCounts[static_cast<std::size_t>(debugInfo.MacroAsymmetryDominantSide)]; }
             if (debugInfo.MacroAsymmetryFulfilled) { MacroAsymmetryBalanceScore.add(static_cast<double>(debugInfo.MacroAsymmetryBalanceScore)); }
         }
 
@@ -414,8 +414,8 @@ namespace PixelShipGeneratorDiagnostics
         DetailMotifPrimaryOccurrences.add(static_cast<double>(debugInfo.PrimaryDetailMotifOccurrenceCount));
         DetailMotifSecondaryOccurrences.add(static_cast<double>(debugInfo.SecondaryDetailMotifOccurrenceCount));
         DetailMotifRejectedPlacements.add(static_cast<double>(debugInfo.DetailMotifRejectedPlacementCount));
-        if (debugInfo.PrimaryDetailMotif != PixelShipGenerator::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END) { ++PrimaryDetailMotifCounts[static_cast<std::size_t>(debugInfo.PrimaryDetailMotif)]; }
-        if (debugInfo.SecondaryDetailMotif != PixelShipGenerator::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END) { ++SecondaryDetailMotifCounts[static_cast<std::size_t>(debugInfo.SecondaryDetailMotif)]; }
+        if (debugInfo.PrimaryDetailMotif != SpectralShipGen::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END) { ++PrimaryDetailMotifCounts[static_cast<std::size_t>(debugInfo.PrimaryDetailMotif)]; }
+        if (debugInfo.SecondaryDetailMotif != SpectralShipGen::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END) { ++SecondaryDetailMotifCounts[static_cast<std::size_t>(debugInfo.SecondaryDetailMotif)]; }
 
         if (hullMetrics.Valid)
         {
@@ -437,7 +437,7 @@ namespace PixelShipGeneratorDiagnostics
         OuterWingPixelCount.add(static_cast<double>(debugInfo.OuterWingPixelCount));
         WingStartNormalizedY.add(configuration.Height == 0u ? 0.0 : static_cast<double>(debugInfo.WingStartY) / configuration.Height);
         WingEndNormalizedY.add(configuration.Height == 0u ? 0.0 : static_cast<double>(debugInfo.WingEndY) / configuration.Height);
-        if (debugInfo.WingShape != PixelShipGenerator::WingShapeType::WING_SHAPE_TYPE_END) { ++WingShapeCounts[static_cast<std::size_t>(debugInfo.WingShape)]; }
+        if (debugInfo.WingShape != SpectralShipGen::WingShapeType::WING_SHAPE_TYPE_END) { ++WingShapeCounts[static_cast<std::size_t>(debugInfo.WingShape)]; }
 
         HullLayerCount.add(static_cast<double>(debugInfo.HullLayerCount));
         HullLayerPixelCount.add(static_cast<double>(debugInfo.HullLayerPixelCount));
@@ -457,9 +457,9 @@ namespace PixelShipGeneratorDiagnostics
         ++HullModifierCountFrequencies[static_cast<uint32_t>(debugInfo.AppliedHullModifiers.size())];
         ++HullModifierCombinationFrequencies[createModifierCombinationKey(debugInfo.AppliedHullModifiers)];
 
-        for (const PixelShipGenerator::HullModifierType type : debugInfo.AppliedHullModifiers)
+        for (const SpectralShipGen::HullModifierType type : debugInfo.AppliedHullModifiers)
         {
-            if (type != PixelShipGenerator::HullModifierType::HULL_MODIFIER_TYPE_END)
+            if (type != SpectralShipGen::HullModifierType::HULL_MODIFIER_TYPE_END)
             {
                 ++HullModifierOccurrenceCounts[static_cast<std::size_t>(type)];
             }
@@ -482,8 +482,8 @@ namespace PixelShipGeneratorDiagnostics
             CockpitBasePixelCount.add(static_cast<double>(debugInfo.CockpitBasePixelCount));
             CockpitUpperSectionPixelCount.add(static_cast<double>(debugInfo.CockpitUpperSectionPixelCount));
             CockpitComplexityCost.add(static_cast<double>(debugInfo.CockpitComplexityCost));
-            if (debugInfo.CockpitSize != PixelShipGenerator::CockpitSizeClass::COCKPIT_SIZE_CLASS_END) { ++CockpitSizeCounts[static_cast<std::size_t>(debugInfo.CockpitSize)]; }
-            if (debugInfo.CockpitShape != PixelShipGenerator::CockpitShapeType::COCKPIT_SHAPE_TYPE_END) { ++CockpitShapeCounts[static_cast<std::size_t>(debugInfo.CockpitShape)]; }
+            if (debugInfo.CockpitSize != SpectralShipGen::CockpitSizeClass::COCKPIT_SIZE_CLASS_END) { ++CockpitSizeCounts[static_cast<std::size_t>(debugInfo.CockpitSize)]; }
+            if (debugInfo.CockpitShape != SpectralShipGen::CockpitShapeType::COCKPIT_SHAPE_TYPE_END) { ++CockpitShapeCounts[static_cast<std::size_t>(debugInfo.CockpitShape)]; }
         }
         else
         {
@@ -500,9 +500,9 @@ namespace PixelShipGeneratorDiagnostics
         WeaponPixelCount.add(static_cast<double>(debugInfo.WeaponPixelCount));
         WeaponPlacementRejections.add(static_cast<double>(debugInfo.WeaponPlacementRejectionCount));
         for (std::size_t index = 0u; index < WeaponTypeCounts.size(); ++index) { WeaponTypeCounts[index] += debugInfo.WeaponTypeCounts[index]; }
-        for (const PixelShipGenerator::WeaponUnitDebugInfo& weaponUnit : debugInfo.WeaponUnits)
+        for (const SpectralShipGen::WeaponUnitDebugInfo& weaponUnit : debugInfo.WeaponUnits)
         {
-            if (weaponUnit.Region != PixelShipGenerator::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END)
+            if (weaponUnit.Region != SpectralShipGen::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END)
             {
                 ++WeaponRegionCounts[static_cast<std::size_t>(weaponUnit.Region)];
             }
@@ -515,18 +515,18 @@ namespace PixelShipGeneratorDiagnostics
             ++ZeroEngineCount;
         }
 
-        if (debugInfo.EngineCount > 0u && debugInfo.EngineLayout != PixelShipGenerator::EngineLayoutType::ENGINE_LAYOUT_TYPE_END)
+        if (debugInfo.EngineCount > 0u && debugInfo.EngineLayout != SpectralShipGen::EngineLayoutType::ENGINE_LAYOUT_TYPE_END)
         {
             ++EngineLayoutCounts[static_cast<std::size_t>(debugInfo.EngineLayout)];
         }
 
-        for (const PixelShipGenerator::EngineUnitDebugInfo& engineUnit : debugInfo.EngineUnits)
+        for (const SpectralShipGen::EngineUnitDebugInfo& engineUnit : debugInfo.EngineUnits)
         {
             EngineHousingWidth.add(static_cast<double>(engineUnit.HousingWidth));
             EngineNozzleWidth.add(static_cast<double>(engineUnit.NozzleWidth));
             EngineExhaustLength.add(static_cast<double>(engineUnit.ExhaustLength));
             if (engineUnit.Nacelle) { ++NacelleEngineCount; }
-            if (engineUnit.SizeClass != PixelShipGenerator::EngineSizeClass::ENGINE_SIZE_CLASS_END) { ++EngineSizeCounts[static_cast<std::size_t>(engineUnit.SizeClass)]; }
+            if (engineUnit.SizeClass != SpectralShipGen::EngineSizeClass::ENGINE_SIZE_CLASS_END) { ++EngineSizeCounts[static_cast<std::size_t>(engineUnit.SizeClass)]; }
         }
 
         const uint64_t attachmentCount = static_cast<uint64_t>(ship.AttachmentPlacements.size());
@@ -542,9 +542,9 @@ namespace PixelShipGeneratorDiagnostics
             ++ZeroAttachmentCount;
         }
 
-        for (const PixelShipGenerator::ShipAttachmentPlacement& placement : ship.AttachmentPlacements)
+        for (const SpectralShipGen::ShipAttachmentPlacement& placement : ship.AttachmentPlacements)
         {
-            if (placement.Type != PixelShipGenerator::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END)
+            if (placement.Type != SpectralShipGen::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END)
             {
                 ++AttachmentTypeCounts[static_cast<std::size_t>(placement.Type)];
             }
@@ -563,7 +563,7 @@ namespace PixelShipGeneratorDiagnostics
         MechanicalPatternCount.add(static_cast<double>(debugInfo.MechanicalPatternCount));
         LightPatternCount.add(static_cast<double>(debugInfo.LightPatternCount));
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::SupplementalSurfaceDetailType::SUPPLEMENTAL_SURFACE_DETAIL_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::SupplementalSurfaceDetailType::SUPPLEMENTAL_SURFACE_DETAIL_TYPE_END); ++index)
         {
             SupplementalSurfaceDetailCounts[index] += debugInfo.SupplementalSurfaceDetailCounts[index];
         }
@@ -573,7 +573,7 @@ namespace PixelShipGeneratorDiagnostics
         DetailMaskCanvasDensity.add(canvasArea == 0u ? 0.0 : static_cast<double>(detailPixels) / static_cast<double>(canvasArea));
     }
 
-    void GenerationStatistics::recordFailure(const PixelShipGenerator::ShipGenerationDebugInfo& debugInfo)
+    void GenerationStatistics::recordFailure(const SpectralShipGen::ShipGenerationDebugInfo& debugInfo)
     {
         ++RequestedGenerations;
         ++FailedGenerations;
@@ -740,7 +740,7 @@ namespace PixelShipGeneratorDiagnostics
     uint64_t deriveDiagnosticSampleSeed(uint64_t diagnosticSeed, uint64_t sampleIndex)
     {
         const uint64_t indexValue = sampleIndex * 0x9E3779B97F4A7C15ull;
-        return PixelShipGenerator::mixGenerationSeed64(diagnosticSeed ^ 0xD1B54A32D192ED03ull ^ indexValue);
+        return SpectralShipGen::mixGenerationSeed64(diagnosticSeed ^ 0xD1B54A32D192ED03ull ^ indexValue);
     }
 
     GenerationStatistics collectGenerationStatistics(const DiagnosticGenerationConfiguration& configuration)
@@ -762,12 +762,12 @@ namespace PixelShipGeneratorDiagnostics
     void printGenerationStatistics(std::ostream& output, const DiagnosticGenerationConfiguration& configuration, const GenerationStatistics& statistics)
     {
         output << std::fixed << std::setprecision(3);
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ configuration.Width, configuration.Height });
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ configuration.Width, configuration.Height });
         output << "\n## Configuration\n";
         output << "Width: " << configuration.Width << '\n';
         output << "Height: " << configuration.Height << '\n';
         output << "Aspect ratio: " << scaleTraits.AspectRatio << '\n';
-        output << "Scale tier: " << PixelShipGenerator::getGenerationScaleTierName(scaleTraits.Tier) << '\n';
+        output << "Scale tier: " << SpectralShipGen::getGenerationScaleTierName(scaleTraits.Tier) << '\n';
         output << "Horizontal capacity: " << scaleTraits.HorizontalCapacity << "%\n";
         output << "Longitudinal capacity: " << scaleTraits.LongitudinalCapacity << "%\n";
         output << "Major-feature capacity: " << scaleTraits.MajorFeatureCapacity << "%\n";
@@ -801,10 +801,10 @@ namespace PixelShipGeneratorDiagnostics
         output << "\n## Visual Hierarchy\n";
         output << "Average reserved complexity: " << statistics.VisualHierarchyReservedComplexity.average() << '\n';
         output << "Fallback rate: " << percentage(statistics.VisualHierarchyFallbackCount, statistics.SuccessfulGenerations) << "%\n";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
         {
-            const auto anchor = static_cast<PixelShipGenerator::ShipVisualAnchorType>(index);
-            output << "  Primary " << PixelShipGenerator::getShipVisualAnchorTypeName(anchor) << ": " << percentage(statistics.PrimaryVisualAnchorCounts[index], statistics.SuccessfulGenerations) << "%";
+            const auto anchor = static_cast<SpectralShipGen::ShipVisualAnchorType>(index);
+            output << "  Primary " << SpectralShipGen::getShipVisualAnchorTypeName(anchor) << ": " << percentage(statistics.PrimaryVisualAnchorCounts[index], statistics.SuccessfulGenerations) << "%";
             output << ", secondary " << percentage(statistics.SecondaryVisualAnchorCounts[index], statistics.SuccessfulGenerations) << "%\n";
         }
         for (const auto& entry : statistics.VisualAnchorCombinationFrequencies)
@@ -816,18 +816,18 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average material zones: " << statistics.MaterialZoneCount.average() << '\n';
         output << "Average secondary-structure pixels: " << statistics.MaterialSecondaryHullPixelCount.average() << '\n';
         output << "Average mechanical-zone pixels: " << statistics.MaterialMechanicalPixelCount.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
         {
-            output << "  Zone " << PixelShipGenerator::getShipMaterialZoneTypeName(static_cast<PixelShipGenerator::ShipMaterialZoneType>(index)) << ": " << percentage(statistics.MaterialZoneTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            output << "  Zone " << SpectralShipGen::getShipMaterialZoneTypeName(static_cast<SpectralShipGen::ShipMaterialZoneType>(index)) << ": " << percentage(statistics.MaterialZoneTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
 
         output << "\n## Procedural Livery\n";
         output << "Average livery markings: " << statistics.LiveryMarkingCount.average() << '\n';
         output << "Average primary-marking pixels: " << statistics.LiveryPrimaryPixelCount.average() << '\n';
         output << "Average supporting-marking pixels: " << statistics.LiverySecondaryPixelCount.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
         {
-            output << "  Marking " << PixelShipGenerator::getShipLiveryTypeName(static_cast<PixelShipGenerator::ShipLiveryType>(index)) << ": " << percentage(statistics.LiveryTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            output << "  Marking " << SpectralShipGen::getShipLiveryTypeName(static_cast<SpectralShipGen::ShipLiveryType>(index)) << ": " << percentage(statistics.LiveryTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
 
         output << "\n## Detail Motif Grammar\n";
@@ -835,11 +835,11 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average secondary motif occurrences: " << statistics.DetailMotifSecondaryOccurrences.average() << '\n';
         const double motifAttempts = statistics.DetailMotifPrimaryOccurrences.Sum + statistics.DetailMotifSecondaryOccurrences.Sum + statistics.DetailMotifRejectedPlacements.Sum;
         output << "Motif placement rejection rate: " << (motifAttempts <= 0.0 ? 0.0 : statistics.DetailMotifRejectedPlacements.Sum * 100.0 / motifAttempts) << "%\n";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::ShipDetailMotifType>(index);
-            output << "  Primary " << PixelShipGenerator::getShipDetailMotifTypeName(type) << ": " << percentage(statistics.PrimaryDetailMotifCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
-            output << "  Secondary " << PixelShipGenerator::getShipDetailMotifTypeName(type) << ": " << percentage(statistics.SecondaryDetailMotifCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            const auto type = static_cast<SpectralShipGen::ShipDetailMotifType>(index);
+            output << "  Primary " << SpectralShipGen::getShipDetailMotifTypeName(type) << ": " << percentage(statistics.PrimaryDetailMotifCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            output << "  Secondary " << SpectralShipGen::getShipDetailMotifTypeName(type) << ": " << percentage(statistics.SecondaryDetailMotifCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
 
         output << "\n## Complexity Budget\n";
@@ -847,10 +847,10 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average consumed budget: " << statistics.ComplexityConsumedBudget.average() << '\n';
         output << "Average unused budget: " << statistics.ComplexityUnusedBudget.average() << '\n';
         output << "Average utilization: " << statistics.ComplexityUtilizationPercent.average() << "%\n";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
         {
-            const auto category = static_cast<PixelShipGenerator::GenerationComplexityCategory>(index);
-            output << std::left << std::setw(18) << PixelShipGenerator::getGenerationComplexityCategoryName(category) << std::right
+            const auto category = static_cast<SpectralShipGen::GenerationComplexityCategory>(index);
+            output << std::left << std::setw(18) << SpectralShipGen::getGenerationComplexityCategoryName(category) << std::right
                 << " allocation " << statistics.ComplexityCategoryAllocations[index].average()
                 << ", consumed " << statistics.ComplexityCategoryConsumed[index].average() << '\n';
         }
@@ -858,10 +858,10 @@ namespace PixelShipGeneratorDiagnostics
         output << "\n## Semantic Spatial Load\n";
         output << "Average regional utilization: " << statistics.SpatialAverageUtilizationPercent.average() << "%\n";
         output << "Average spatial rejections: " << statistics.SpatialOverloadRejections.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
         {
-            const auto region = static_cast<PixelShipGenerator::GenerationSpatialRegion>(index);
-            output << std::left << std::setw(20) << PixelShipGenerator::getGenerationSpatialRegionName(region) << std::right
+            const auto region = static_cast<SpectralShipGen::GenerationSpatialRegion>(index);
+            output << std::left << std::setw(20) << SpectralShipGen::getGenerationSpatialRegionName(region) << std::right
                 << " load " << statistics.SpatialRegionLoadPercent[index].average() << "%"
                 << ", dominant " << statistics.SpatialRegionDominantCount[index].average()
                 << ", rejects " << statistics.SpatialRegionRejectionCount[index].average() << '\n';
@@ -884,14 +884,14 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average silhouette guidance applications: " << statistics.SilhouetteGuidanceAppliedCount.average() << '\n';
         output << "Average structural negative-space features: " << statistics.StructuralNegativeSpaceCount.average() << '\n';
         output << "Average reserved negative-space pixels: " << statistics.StructuralNegativeSpacePixelCount.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
         {
-            output << "  Void " << PixelShipGenerator::getShipStructuralNegativeSpaceTypeName(static_cast<PixelShipGenerator::ShipStructuralNegativeSpaceType>(index)) << ": " << percentage(statistics.StructuralNegativeSpaceTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            output << "  Void " << SpectralShipGen::getShipStructuralNegativeSpaceTypeName(static_cast<SpectralShipGen::ShipStructuralNegativeSpaceType>(index)) << ": " << percentage(statistics.StructuralNegativeSpaceTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
-        for (uint32_t index = 1u; index < static_cast<uint32_t>(PixelShipGenerator::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
+        for (uint32_t index = 1u; index < static_cast<uint32_t>(SpectralShipGen::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
         {
-            const auto reason = static_cast<PixelShipGenerator::SilhouetteValidationFailureReason>(index);
-            output << "  Retry " << PixelShipGenerator::getSilhouetteValidationFailureReasonName(reason) << ": " << statistics.SilhouetteValidationFailureCounts[index] << '\n';
+            const auto reason = static_cast<SpectralShipGen::SilhouetteValidationFailureReason>(index);
+            output << "  Retry " << SpectralShipGen::getSilhouetteValidationFailureReasonName(reason) << ": " << statistics.SilhouetteValidationFailureCounts[index] << '\n';
         }
 
         output << "\n## Wings\n";
@@ -900,18 +900,18 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average root thickness: " << statistics.WingRootThickness.average() << " px\n";
         output << "Average wing/root/outer pixels: " << statistics.WingPixelCount.average() << " / " << statistics.WingRootPixelCount.average() << " / " << statistics.OuterWingPixelCount.average() << '\n';
         output << "Average longitudinal start/end: " << statistics.WingStartNormalizedY.average() * 100.0 << "% / " << statistics.WingEndNormalizedY.average() * 100.0 << "% of canvas height\n";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::WingShapeType::WING_SHAPE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::WingShapeType::WING_SHAPE_TYPE_END); ++index)
         {
-            output << "  Wing shape " << getWingShapeName(static_cast<PixelShipGenerator::WingShapeType>(index)) << ": " << percentage(statistics.WingShapeCounts[index], statistics.SuccessfulGenerations) << "%\n";
+            output << "  Wing shape " << getWingShapeName(static_cast<SpectralShipGen::WingShapeType>(index)) << ": " << percentage(statistics.WingShapeCounts[index], statistics.SuccessfulGenerations) << "%\n";
         }
 
         output << "\n## Hull Layers\n";
         output << "Average layers per ship: " << statistics.HullLayerCount.average() << '\n';
         output << "Average layer pixels: " << statistics.HullLayerPixelCount.average() << '\n';
         output << "Average layer placement rejections: " << statistics.HullLayerPlacementRejections.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipHullLayerType::SHIP_HULL_LAYER_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::ShipHullLayerType>(index);
+            const auto type = static_cast<SpectralShipGen::ShipHullLayerType>(index);
             output << std::left << std::setw(25) << getHullLayerName(type) << std::right << statistics.HullLayerTypeCounts[index] << " (" << percentage(statistics.HullLayerTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships)\n";
         }
 
@@ -922,10 +922,10 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average material/luminous pixels: " << statistics.CoreSecondaryMaterialPixelCount.average() << " / " << statistics.CoreLuminousPixelCount.average() << '\n';
         output << "Average core complexity cost: " << statistics.CoreTreatmentComplexityCost.average() << '\n';
         output << "Average core placement rejections: " << statistics.CoreTreatmentPlacementRejections.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipCoreTreatmentType::SHIP_CORE_TREATMENT_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::ShipCoreTreatmentType>(index);
-            output << "  " << PixelShipGenerator::getShipCoreTreatmentTypeName(type) << ": " << percentage(statistics.CoreTreatmentTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            const auto type = static_cast<SpectralShipGen::ShipCoreTreatmentType>(index);
+            output << "  " << SpectralShipGen::getShipCoreTreatmentTypeName(type) << ": " << percentage(statistics.CoreTreatmentTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
 
         output << "\n## Advanced Silhouette Modifiers\n";
@@ -934,9 +934,9 @@ namespace PixelShipGeneratorDiagnostics
         const uint64_t zeroModifierCount = zeroModifierIterator == statistics.HullModifierCountFrequencies.end() ? 0u : zeroModifierIterator->second;
         output << "Ships with zero modifiers: " << percentage(zeroModifierCount, statistics.SuccessfulGenerations) << "%\n";
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::HullModifierType>(index);
+            const auto type = static_cast<SpectralShipGen::HullModifierType>(index);
             output << std::left << std::setw(25) << getHullModifierName(type) << std::right << " accepted " << percentage(statistics.HullModifierOccurrenceCounts[index], statistics.SuccessfulGenerations) << "% | attempts " << statistics.HullModifierAttemptCounts[index] << " | rejected " << statistics.HullModifierRejectionCounts[index] << " (" << percentage(statistics.HullModifierRejectionCounts[index], statistics.HullModifierAttemptCounts[index]) << "%)\n";
         }
 
@@ -956,29 +956,29 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average cockpit width/height: " << statistics.CockpitNormalizedWidth.average() * 100.0 << "% / " << statistics.CockpitNormalizedHeight.average() * 100.0 << "% of canvas\n";
         output << "Average cockpit upper-stage pixels: " << statistics.CockpitUpperSectionPixelCount.average() << '\n';
         output << "Average cockpit complexity cost: " << statistics.CockpitComplexityCost.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
         {
-            output << "  Cockpit size " << PixelShipGenerator::getCockpitSizeClassName(static_cast<PixelShipGenerator::CockpitSizeClass>(index)) << ": " << percentage(statistics.CockpitSizeCounts[index], statistics.CockpitPlacementSuccessCount) << "%\n";
+            output << "  Cockpit size " << SpectralShipGen::getCockpitSizeClassName(static_cast<SpectralShipGen::CockpitSizeClass>(index)) << ": " << percentage(statistics.CockpitSizeCounts[index], statistics.CockpitPlacementSuccessCount) << "%\n";
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
         {
-            output << "  Cockpit shape " << PixelShipGenerator::getCockpitShapeTypeName(static_cast<PixelShipGenerator::CockpitShapeType>(index)) << ": " << percentage(statistics.CockpitShapeCounts[index], statistics.CockpitPlacementSuccessCount) << "%\n";
+            output << "  Cockpit shape " << SpectralShipGen::getCockpitShapeTypeName(static_cast<SpectralShipGen::CockpitShapeType>(index)) << ": " << percentage(statistics.CockpitShapeCounts[index], statistics.CockpitPlacementSuccessCount) << "%\n";
         }
         output << "\n## Major Features / Weapons\n";
         output << "Average major features/pixels/rejections: " << statistics.MajorFeatureCount.average() << " / " << statistics.MajorFeaturePixelCount.average() << " / " << statistics.MajorFeaturePlacementRejections.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
         {
-            output << "  Major feature " << getMajorFeatureName(static_cast<PixelShipGenerator::ShipMajorFeatureType>(index)) << ": " << percentage(statistics.MajorFeatureTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
+            output << "  Major feature " << getMajorFeatureName(static_cast<SpectralShipGen::ShipMajorFeatureType>(index)) << ": " << percentage(statistics.MajorFeatureTypeCounts[index], statistics.SuccessfulGenerations) << "% of ships\n";
         }
         const uint64_t totalWeaponUnits = std::accumulate(statistics.WeaponTypeCounts.begin(), statistics.WeaponTypeCounts.end(), uint64_t(0u));
         output << "Average weapon hardpoints/weapons/pixels/rejections: " << statistics.WeaponHardpointCount.average() << " / " << statistics.WeaponCount.average() << " / " << statistics.WeaponPixelCount.average() << " / " << statistics.WeaponPlacementRejections.average() << '\n';
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
         {
-            output << "  Weapon type " << getWeaponTypeName(static_cast<PixelShipGenerator::ShipWeaponType>(index)) << ": " << percentage(statistics.WeaponTypeCounts[index], totalWeaponUnits) << "% of weapon units\n";
+            output << "  Weapon type " << getWeaponTypeName(static_cast<SpectralShipGen::ShipWeaponType>(index)) << ": " << percentage(statistics.WeaponTypeCounts[index], totalWeaponUnits) << "% of weapon units\n";
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
         {
-            output << "  Weapon region " << getWeaponRegionName(static_cast<PixelShipGenerator::ShipWeaponHardpointRegion>(index)) << ": " << percentage(statistics.WeaponRegionCounts[index], totalWeaponUnits) << "% of weapon units\n";
+            output << "  Weapon region " << getWeaponRegionName(static_cast<SpectralShipGen::ShipWeaponHardpointRegion>(index)) << ": " << percentage(statistics.WeaponRegionCounts[index], totalWeaponUnits) << "% of weapon units\n";
         }
 
         output << "Average engine count: " << statistics.EngineCount.average() << '\n';
@@ -989,15 +989,15 @@ namespace PixelShipGeneratorDiagnostics
         const uint64_t totalEngineUnits = std::accumulate(statistics.EngineSizeCounts.begin(), statistics.EngineSizeCounts.end(), uint64_t(0u));
         output << "Nacelle-style engine units: " << percentage(statistics.NacelleEngineCount, totalEngineUnits) << "%\n";
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::EngineLayoutType>(index);
+            const auto type = static_cast<SpectralShipGen::EngineLayoutType>(index);
             output << std::left << std::setw(25) << getEngineLayoutName(type) << std::right << statistics.EngineLayoutCounts[index] << " (" << percentage(statistics.EngineLayoutCounts[index], statistics.SuccessfulGenerations) << "% of ships)\n";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::EngineSizeClass>(index);
+            const auto type = static_cast<SpectralShipGen::EngineSizeClass>(index);
             output << std::left << std::setw(25) << getEngineSizeName(type) << std::right << statistics.EngineSizeCounts[index] << " (" << percentage(statistics.EngineSizeCounts[index], totalEngineUnits) << "% of engine units)\n";
         }
 
@@ -1012,9 +1012,9 @@ namespace PixelShipGeneratorDiagnostics
         const uint64_t totalAttachmentPlacements = statistics.SymmetricAttachmentPlacementCount + statistics.AsymmetricAttachmentPlacementCount;
         output << "Symmetric attachment placements: " << percentage(statistics.SymmetricAttachmentPlacementCount, totalAttachmentPlacements) << "%\n";
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::ShipAttachmentType>(index);
+            const auto type = static_cast<SpectralShipGen::ShipAttachmentType>(index);
             output << std::left << std::setw(20) << getAttachmentTypeName(type) << std::right << statistics.AttachmentTypeCounts[index] << " (" << percentage(statistics.AttachmentTypeCounts[index], totalAttachmentPlacements) << "% of placements)\n";
         }
 
@@ -1026,9 +1026,9 @@ namespace PixelShipGeneratorDiagnostics
         output << "Average detail-mask canvas density: " << statistics.DetailMaskCanvasDensity.average() * 100.0 << "%\n";
         const uint64_t totalSupplementalDetails = std::accumulate(statistics.SupplementalSurfaceDetailCounts.begin(), statistics.SupplementalSurfaceDetailCounts.end(), uint64_t(0u));
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::SupplementalSurfaceDetailType::SUPPLEMENTAL_SURFACE_DETAIL_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::SupplementalSurfaceDetailType::SUPPLEMENTAL_SURFACE_DETAIL_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::SupplementalSurfaceDetailType>(index);
+            const auto type = static_cast<SpectralShipGen::SupplementalSurfaceDetailType>(index);
             output << std::left << std::setw(22) << getSupplementalDetailTypeName(type) << std::right << statistics.SupplementalSurfaceDetailCounts[index] << " (" << percentage(statistics.SupplementalSurfaceDetailCounts[index], totalSupplementalDetails) << "% of supplemental details)\n";
         }
     }
@@ -1041,97 +1041,97 @@ namespace PixelShipGeneratorDiagnostics
         output << ",average_spatial_utilization_percent,average_spatial_rejections,macro_asymmetry_planned_percent,macro_asymmetry_fulfilled_percent,macro_asymmetry_balance_score";
         output << ",average_visual_hierarchy_reserved_complexity,visual_hierarchy_fallback_percent";
         output << ",average_material_zone_count,average_material_secondary_pixels,average_material_mechanical_pixels";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
         {
-            output << ",material_zone_" << PixelShipGenerator::getShipMaterialZoneTypeName(static_cast<PixelShipGenerator::ShipMaterialZoneType>(index)) << "_ship_percent";
+            output << ",material_zone_" << SpectralShipGen::getShipMaterialZoneTypeName(static_cast<SpectralShipGen::ShipMaterialZoneType>(index)) << "_ship_percent";
         }
         output << ",average_livery_marking_count,average_livery_primary_pixels,average_livery_secondary_pixels";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
         {
-            output << ",livery_" << PixelShipGenerator::getShipLiveryTypeName(static_cast<PixelShipGenerator::ShipLiveryType>(index)) << "_ship_percent";
+            output << ",livery_" << SpectralShipGen::getShipLiveryTypeName(static_cast<SpectralShipGen::ShipLiveryType>(index)) << "_ship_percent";
         }
         output << ",average_primary_detail_motif_occurrences,average_secondary_detail_motif_occurrences,average_detail_motif_rejected_placements";
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
         {
-            const auto type = static_cast<PixelShipGenerator::ShipDetailMotifType>(index);
-            output << ",primary_detail_motif_" << PixelShipGenerator::getShipDetailMotifTypeName(type) << "_percent";
-            output << ",secondary_detail_motif_" << PixelShipGenerator::getShipDetailMotifTypeName(type) << "_percent";
+            const auto type = static_cast<SpectralShipGen::ShipDetailMotifType>(index);
+            output << ",primary_detail_motif_" << SpectralShipGen::getShipDetailMotifTypeName(type) << "_percent";
+            output << ",secondary_detail_motif_" << SpectralShipGen::getShipDetailMotifTypeName(type) << "_percent";
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
         {
-            const auto anchor = static_cast<PixelShipGenerator::ShipVisualAnchorType>(index);
-            output << ",primary_anchor_" << PixelShipGenerator::getShipVisualAnchorTypeName(anchor) << "_percent";
-            output << ",secondary_anchor_" << PixelShipGenerator::getShipVisualAnchorTypeName(anchor) << "_percent";
+            const auto anchor = static_cast<SpectralShipGen::ShipVisualAnchorType>(index);
+            output << ",primary_anchor_" << SpectralShipGen::getShipVisualAnchorTypeName(anchor) << "_percent";
+            output << ",secondary_anchor_" << SpectralShipGen::getShipVisualAnchorTypeName(anchor) << "_percent";
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
         {
-            output << ",negative_space_" << PixelShipGenerator::getShipStructuralNegativeSpaceTypeName(static_cast<PixelShipGenerator::ShipStructuralNegativeSpaceType>(index)) << "_ship_percent";
+            output << ",negative_space_" << SpectralShipGen::getShipStructuralNegativeSpaceTypeName(static_cast<SpectralShipGen::ShipStructuralNegativeSpaceType>(index)) << "_ship_percent";
         }
-        for (uint32_t index = 1u; index < static_cast<uint32_t>(PixelShipGenerator::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
+        for (uint32_t index = 1u; index < static_cast<uint32_t>(SpectralShipGen::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
         {
-            output << ",silhouette_retry_" << PixelShipGenerator::getSilhouetteValidationFailureReasonName(static_cast<PixelShipGenerator::SilhouetteValidationFailureReason>(index));
-        }
-
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
-        {
-            const auto region = static_cast<PixelShipGenerator::GenerationSpatialRegion>(index);
-            output << ",spatial_" << PixelShipGenerator::getGenerationSpatialRegionName(region) << "_load_percent";
-            output << ",spatial_" << PixelShipGenerator::getGenerationSpatialRegionName(region) << "_dominant";
-            output << ",spatial_" << PixelShipGenerator::getGenerationSpatialRegionName(region) << "_rejections";
+            output << ",silhouette_retry_" << SpectralShipGen::getSilhouetteValidationFailureReasonName(static_cast<SpectralShipGen::SilhouetteValidationFailureReason>(index));
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
         {
-            const auto category = static_cast<PixelShipGenerator::GenerationComplexityCategory>(index);
-            output << ",complexity_" << PixelShipGenerator::getGenerationComplexityCategoryName(category) << "_allocation";
-            output << ",complexity_" << PixelShipGenerator::getGenerationComplexityCategoryName(category) << "_consumed";
+            const auto region = static_cast<SpectralShipGen::GenerationSpatialRegion>(index);
+            output << ",spatial_" << SpectralShipGen::getGenerationSpatialRegionName(region) << "_load_percent";
+            output << ",spatial_" << SpectralShipGen::getGenerationSpatialRegionName(region) << "_dominant";
+            output << ",spatial_" << SpectralShipGen::getGenerationSpatialRegionName(region) << "_rejections";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
         {
-            output << ",modifier_" << getHullModifierName(static_cast<PixelShipGenerator::HullModifierType>(index)) << "_ship_percent";
+            const auto category = static_cast<SpectralShipGen::GenerationComplexityCategory>(index);
+            output << ",complexity_" << SpectralShipGen::getGenerationComplexityCategoryName(category) << "_allocation";
+            output << ",complexity_" << SpectralShipGen::getGenerationComplexityCategoryName(category) << "_consumed";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::WingShapeType::WING_SHAPE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
         {
-            output << ",wing_shape_" << getWingShapeName(static_cast<PixelShipGenerator::WingShapeType>(index)) << "_ship_percent";
+            output << ",modifier_" << getHullModifierName(static_cast<SpectralShipGen::HullModifierType>(index)) << "_ship_percent";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::WingShapeType::WING_SHAPE_TYPE_END); ++index)
         {
-            output << ",cockpit_size_" << PixelShipGenerator::getCockpitSizeClassName(static_cast<PixelShipGenerator::CockpitSizeClass>(index)) << "_ship_percent";
-        }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
-        {
-            output << ",cockpit_shape_" << PixelShipGenerator::getCockpitShapeTypeName(static_cast<PixelShipGenerator::CockpitShapeType>(index)) << "_ship_percent";
+            output << ",wing_shape_" << getWingShapeName(static_cast<SpectralShipGen::WingShapeType>(index)) << "_ship_percent";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
         {
-            output << ",major_feature_" << getMajorFeatureName(static_cast<PixelShipGenerator::ShipMajorFeatureType>(index)) << "_ship_percent";
+            output << ",cockpit_size_" << SpectralShipGen::getCockpitSizeClassName(static_cast<SpectralShipGen::CockpitSizeClass>(index)) << "_ship_percent";
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
         {
-            output << ",weapon_type_" << getWeaponTypeName(static_cast<PixelShipGenerator::ShipWeaponType>(index)) << "_unit_percent";
-        }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
-        {
-            output << ",weapon_region_" << getWeaponRegionName(static_cast<PixelShipGenerator::ShipWeaponHardpointRegion>(index)) << "_unit_percent";
+            output << ",cockpit_shape_" << SpectralShipGen::getCockpitShapeTypeName(static_cast<SpectralShipGen::CockpitShapeType>(index)) << "_ship_percent";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
         {
-            output << ",engine_layout_" << getEngineLayoutName(static_cast<PixelShipGenerator::EngineLayoutType>(index)) << "_ship_percent";
+            output << ",major_feature_" << getMajorFeatureName(static_cast<SpectralShipGen::ShipMajorFeatureType>(index)) << "_ship_percent";
+        }
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
+        {
+            output << ",weapon_type_" << getWeaponTypeName(static_cast<SpectralShipGen::ShipWeaponType>(index)) << "_unit_percent";
+        }
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
+        {
+            output << ",weapon_region_" << getWeaponRegionName(static_cast<SpectralShipGen::ShipWeaponHardpointRegion>(index)) << "_unit_percent";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
         {
-            output << ",engine_size_" << getEngineSizeName(static_cast<PixelShipGenerator::EngineSizeClass>(index)) << "_unit_percent";
+            output << ",engine_layout_" << getEngineLayoutName(static_cast<SpectralShipGen::EngineLayoutType>(index)) << "_ship_percent";
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
         {
-            output << ",attachment_" << getAttachmentTypeName(static_cast<PixelShipGenerator::ShipAttachmentType>(index)) << "_percent";
+            output << ",engine_size_" << getEngineSizeName(static_cast<SpectralShipGen::EngineSizeClass>(index)) << "_unit_percent";
+        }
+
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
+        {
+            output << ",attachment_" << getAttachmentTypeName(static_cast<SpectralShipGen::ShipAttachmentType>(index)) << "_percent";
         }
 
         output << '\n';
@@ -1145,99 +1145,99 @@ namespace PixelShipGeneratorDiagnostics
         const uint64_t totalEngineUnits = std::accumulate(statistics.EngineSizeCounts.begin(), statistics.EngineSizeCounts.end(), uint64_t(0u));
         const double averageDetailPatterns = statistics.AccentPatternCount.average() + statistics.MechanicalPatternCount.average() + statistics.LightPatternCount.average();
         output << std::fixed << std::setprecision(6);
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ configuration.Width, configuration.Height });
-        output << configuration.Width << ',' << configuration.Height << ',' << scaleTraits.AspectRatio << ',' << PixelShipGenerator::getGenerationScaleTierName(scaleTraits.Tier) << ',' << scaleTraits.HorizontalCapacity << ',' << scaleTraits.LongitudinalCapacity << ',' << scaleTraits.MajorFeatureCapacity << ',' << scaleTraits.DetailComplexity << ',' << scaleTraits.ShadingComplexity << ',' << scaleTraits.AttachmentComplexity << ',' << scaleTraits.AnimationComplexity << ',' << statistics.ComplexityInitialBudget.average() << ',' << statistics.ComplexityConsumedBudget.average() << ',' << statistics.ComplexityUnusedBudget.average() << ',' << statistics.ComplexityUtilizationPercent.average() << ',' << styleName(configuration.Style) << ',' << factionName(configuration.Faction) << ',' << (configuration.AttachmentsEnabled ? 1 : 0) << ',' << configuration.Samples << ',' << statistics.SuccessfulGenerations << ',' << statistics.FailedGenerations << ',' << statistics.HullAttempts.average() << ',' << percentage(statistics.FirstAttemptSuccessCount, statistics.RequestedGenerations) << ',' << statistics.HullValidationRejectionCount << ',' << statistics.HullNormalizedWidth.average() << ',' << statistics.HullNormalizedHeight.average() << ',' << statistics.HullCanvasDensity.average() << ',' << statistics.HullPixelCount.average() << ',' << statistics.SilhouetteArticulationCount.average() << ',' << statistics.SilhouetteShoulderProminencePercent.average() << ',' << statistics.SilhouetteInteriorContractionPercent.average() << ',' << statistics.SilhouetteNoseTaperPercent.average() << ',' << statistics.SilhouetteRearTaperPercent.average() << ',' << statistics.SilhouetteLongestStableRunPercent.average() << ',' << statistics.SilhouetteNearMaximumRowPercent.average() << ',' << statistics.SilhouetteTopUnusedMargin.average() << ',' << statistics.SilhouetteBottomUnusedMargin.average() << ',' << statistics.SilhouetteLeftUnusedMargin.average() << ',' << statistics.SilhouetteRightUnusedMargin.average() << ',' << statistics.SilhouetteGuidanceAppliedCount.average() << ',' << statistics.StructuralNegativeSpaceCount.average() << ',' << statistics.StructuralNegativeSpacePixelCount.average() << ',' << statistics.WingMaximumSpan.average() << ',' << statistics.WingMaximumExtension.average() << ',' << statistics.WingRootThickness.average() << ',' << statistics.WingPixelCount.average() << ',' << statistics.WingRootPixelCount.average() << ',' << statistics.OuterWingPixelCount.average() << ',' << statistics.WingStartNormalizedY.average() << ',' << statistics.WingEndNormalizedY.average() << ',' << statistics.HullModifierCount.average() << ',' << percentage(totalModifierRejections, totalModifierAttempts) << ',' << statistics.CockpitPlacementAttempts.average() << ',' << percentage(statistics.CockpitPlacementFailureCount, statistics.SuccessfulGenerations) << ',' << statistics.CockpitPixelCount.average() << ',' << statistics.CockpitNormalizedWidth.average() << ',' << statistics.CockpitNormalizedHeight.average() << ',' << statistics.CockpitGlassPixelCount.average() << ',' << statistics.CockpitFramePixelCount.average() << ',' << statistics.CockpitBasePixelCount.average() << ',' << statistics.CockpitUpperSectionPixelCount.average() << ',' << statistics.CockpitComplexityCost.average() << ',' << statistics.MajorFeatureCount.average() << ',' << statistics.MajorFeaturePixelCount.average() << ',' << statistics.MajorFeaturePlacementRejections.average() << ',' << statistics.WeaponHardpointCount.average() << ',' << statistics.WeaponCount.average() << ',' << statistics.WeaponPixelCount.average() << ',' << statistics.WeaponPlacementRejections.average() << ',' << statistics.EngineCount.average() << ',' << percentage(statistics.ZeroEngineCount, statistics.SuccessfulGenerations) << ',' << statistics.EngineHousingWidth.average() << ',' << statistics.EngineNozzleWidth.average() << ',' << statistics.EngineExhaustLength.average() << ',' << percentage(statistics.NacelleEngineCount, totalEngineUnits) << ',' << statistics.AttachmentCount.average() << ',' << percentage(statistics.ZeroAttachmentCount, statistics.SuccessfulGenerations) << ',' << percentage(statistics.AttachmentPlacementFailureCount, statistics.AttachmentPlacementAttemptCount) << ',' << percentage(statistics.SymmetricAttachmentPlacementCount, totalAttachmentPlacements) << ',' << averageDetailPatterns << ',' << statistics.DetailMaskCanvasDensity.average();
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ configuration.Width, configuration.Height });
+        output << configuration.Width << ',' << configuration.Height << ',' << scaleTraits.AspectRatio << ',' << SpectralShipGen::getGenerationScaleTierName(scaleTraits.Tier) << ',' << scaleTraits.HorizontalCapacity << ',' << scaleTraits.LongitudinalCapacity << ',' << scaleTraits.MajorFeatureCapacity << ',' << scaleTraits.DetailComplexity << ',' << scaleTraits.ShadingComplexity << ',' << scaleTraits.AttachmentComplexity << ',' << scaleTraits.AnimationComplexity << ',' << statistics.ComplexityInitialBudget.average() << ',' << statistics.ComplexityConsumedBudget.average() << ',' << statistics.ComplexityUnusedBudget.average() << ',' << statistics.ComplexityUtilizationPercent.average() << ',' << styleName(configuration.Style) << ',' << factionName(configuration.Faction) << ',' << (configuration.AttachmentsEnabled ? 1 : 0) << ',' << configuration.Samples << ',' << statistics.SuccessfulGenerations << ',' << statistics.FailedGenerations << ',' << statistics.HullAttempts.average() << ',' << percentage(statistics.FirstAttemptSuccessCount, statistics.RequestedGenerations) << ',' << statistics.HullValidationRejectionCount << ',' << statistics.HullNormalizedWidth.average() << ',' << statistics.HullNormalizedHeight.average() << ',' << statistics.HullCanvasDensity.average() << ',' << statistics.HullPixelCount.average() << ',' << statistics.SilhouetteArticulationCount.average() << ',' << statistics.SilhouetteShoulderProminencePercent.average() << ',' << statistics.SilhouetteInteriorContractionPercent.average() << ',' << statistics.SilhouetteNoseTaperPercent.average() << ',' << statistics.SilhouetteRearTaperPercent.average() << ',' << statistics.SilhouetteLongestStableRunPercent.average() << ',' << statistics.SilhouetteNearMaximumRowPercent.average() << ',' << statistics.SilhouetteTopUnusedMargin.average() << ',' << statistics.SilhouetteBottomUnusedMargin.average() << ',' << statistics.SilhouetteLeftUnusedMargin.average() << ',' << statistics.SilhouetteRightUnusedMargin.average() << ',' << statistics.SilhouetteGuidanceAppliedCount.average() << ',' << statistics.StructuralNegativeSpaceCount.average() << ',' << statistics.StructuralNegativeSpacePixelCount.average() << ',' << statistics.WingMaximumSpan.average() << ',' << statistics.WingMaximumExtension.average() << ',' << statistics.WingRootThickness.average() << ',' << statistics.WingPixelCount.average() << ',' << statistics.WingRootPixelCount.average() << ',' << statistics.OuterWingPixelCount.average() << ',' << statistics.WingStartNormalizedY.average() << ',' << statistics.WingEndNormalizedY.average() << ',' << statistics.HullModifierCount.average() << ',' << percentage(totalModifierRejections, totalModifierAttempts) << ',' << statistics.CockpitPlacementAttempts.average() << ',' << percentage(statistics.CockpitPlacementFailureCount, statistics.SuccessfulGenerations) << ',' << statistics.CockpitPixelCount.average() << ',' << statistics.CockpitNormalizedWidth.average() << ',' << statistics.CockpitNormalizedHeight.average() << ',' << statistics.CockpitGlassPixelCount.average() << ',' << statistics.CockpitFramePixelCount.average() << ',' << statistics.CockpitBasePixelCount.average() << ',' << statistics.CockpitUpperSectionPixelCount.average() << ',' << statistics.CockpitComplexityCost.average() << ',' << statistics.MajorFeatureCount.average() << ',' << statistics.MajorFeaturePixelCount.average() << ',' << statistics.MajorFeaturePlacementRejections.average() << ',' << statistics.WeaponHardpointCount.average() << ',' << statistics.WeaponCount.average() << ',' << statistics.WeaponPixelCount.average() << ',' << statistics.WeaponPlacementRejections.average() << ',' << statistics.EngineCount.average() << ',' << percentage(statistics.ZeroEngineCount, statistics.SuccessfulGenerations) << ',' << statistics.EngineHousingWidth.average() << ',' << statistics.EngineNozzleWidth.average() << ',' << statistics.EngineExhaustLength.average() << ',' << percentage(statistics.NacelleEngineCount, totalEngineUnits) << ',' << statistics.AttachmentCount.average() << ',' << percentage(statistics.ZeroAttachmentCount, statistics.SuccessfulGenerations) << ',' << percentage(statistics.AttachmentPlacementFailureCount, statistics.AttachmentPlacementAttemptCount) << ',' << percentage(statistics.SymmetricAttachmentPlacementCount, totalAttachmentPlacements) << ',' << averageDetailPatterns << ',' << statistics.DetailMaskCanvasDensity.average();
 
         output << ',' << statistics.HullLayerCount.average() << ',' << statistics.HullLayerPixelCount.average() << ',' << statistics.HullLayerPlacementRejections.average();
         output << ',' << statistics.CoreTreatmentCount.average() << ',' << statistics.CoreRegionPixelCount.average() << ',' << statistics.CoreRaisedPixelCount.average() << ',' << statistics.CoreRecessedPixelCount.average() << ',' << statistics.CoreSecondaryMaterialPixelCount.average() << ',' << statistics.CoreLuminousPixelCount.average() << ',' << statistics.CoreTreatmentComplexityCost.average() << ',' << statistics.CoreTreatmentPlacementRejections.average();
         output << ',' << statistics.SpatialAverageUtilizationPercent.average() << ',' << statistics.SpatialOverloadRejections.average() << ',' << percentage(statistics.MacroAsymmetryPlannedCount, statistics.SuccessfulGenerations) << ',' << percentage(statistics.MacroAsymmetryFulfilledCount, statistics.MacroAsymmetryPlannedCount) << ',' << statistics.MacroAsymmetryBalanceScore.average();
         output << ',' << statistics.VisualHierarchyReservedComplexity.average() << ',' << percentage(statistics.VisualHierarchyFallbackCount, statistics.SuccessfulGenerations);
         output << ',' << statistics.MaterialZoneCount.average() << ',' << statistics.MaterialSecondaryHullPixelCount.average() << ',' << statistics.MaterialMechanicalPixelCount.average();
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMaterialZoneType::SHIP_MATERIAL_ZONE_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.MaterialZoneTypeCounts[index], statistics.SuccessfulGenerations);
         }
         output << ',' << statistics.LiveryMarkingCount.average() << ',' << statistics.LiveryPrimaryPixelCount.average() << ',' << statistics.LiverySecondaryPixelCount.average();
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipLiveryType::SHIP_LIVERY_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.LiveryTypeCounts[index], statistics.SuccessfulGenerations);
         }
         output << ',' << statistics.DetailMotifPrimaryOccurrences.average() << ',' << statistics.DetailMotifSecondaryOccurrences.average() << ',' << statistics.DetailMotifRejectedPlacements.average();
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipDetailMotifType::SHIP_DETAIL_MOTIF_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.PrimaryDetailMotifCounts[index], statistics.SuccessfulGenerations);
             output << ',' << percentage(statistics.SecondaryDetailMotifCounts[index], statistics.SuccessfulGenerations);
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipVisualAnchorType::SHIP_VISUAL_ANCHOR_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.PrimaryVisualAnchorCounts[index], statistics.SuccessfulGenerations);
             output << ',' << percentage(statistics.SecondaryVisualAnchorCounts[index], statistics.SuccessfulGenerations);
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipStructuralNegativeSpaceType::SHIP_STRUCTURAL_NEGATIVE_SPACE_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.StructuralNegativeSpaceTypeCounts[index], statistics.SuccessfulGenerations);
         }
-        for (uint32_t index = 1u; index < static_cast<uint32_t>(PixelShipGenerator::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
+        for (uint32_t index = 1u; index < static_cast<uint32_t>(SpectralShipGen::SilhouetteValidationFailureReason::SILHOUETTE_VALIDATION_FAILURE_REASON_END); ++index)
         {
             output << ',' << statistics.SilhouetteValidationFailureCounts[index];
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationSpatialRegion::GENERATION_SPATIAL_REGION_END); ++index)
         {
             output << ',' << statistics.SpatialRegionLoadPercent[index].average();
             output << ',' << statistics.SpatialRegionDominantCount[index].average();
             output << ',' << statistics.SpatialRegionRejectionCount[index].average();
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END); ++index)
         {
             output << ',' << statistics.ComplexityCategoryAllocations[index].average();
             output << ',' << statistics.ComplexityCategoryConsumed[index].average();
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::HullModifierType::HULL_MODIFIER_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.HullModifierOccurrenceCounts[index], statistics.SuccessfulGenerations);
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::WingShapeType::WING_SHAPE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::WingShapeType::WING_SHAPE_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.WingShapeCounts[index], statistics.SuccessfulGenerations);
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitSizeClass::COCKPIT_SIZE_CLASS_END); ++index)
         {
             output << ',' << percentage(statistics.CockpitSizeCounts[index], statistics.CockpitPlacementSuccessCount);
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::CockpitShapeType::COCKPIT_SHAPE_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.CockpitShapeCounts[index], statistics.CockpitPlacementSuccessCount);
         }
 
         const uint64_t totalWeaponUnitsForCsv = std::accumulate(statistics.WeaponTypeCounts.begin(), statistics.WeaponTypeCounts.end(), uint64_t(0u));
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipMajorFeatureType::SHIP_MAJOR_FEATURE_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.MajorFeatureTypeCounts[index], statistics.SuccessfulGenerations);
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponType::SHIP_WEAPON_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.WeaponTypeCounts[index], totalWeaponUnitsForCsv);
         }
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipWeaponHardpointRegion::SHIP_WEAPON_HARDPOINT_REGION_END); ++index)
         {
             output << ',' << percentage(statistics.WeaponRegionCounts[index], totalWeaponUnitsForCsv);
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineLayoutType::ENGINE_LAYOUT_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.EngineLayoutCounts[index], statistics.SuccessfulGenerations);
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::EngineSizeClass::ENGINE_SIZE_CLASS_END); ++index)
         {
             output << ',' << percentage(statistics.EngineSizeCounts[index], totalEngineUnits);
         }
 
-        for (uint32_t index = 0u; index < static_cast<uint32_t>(PixelShipGenerator::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
+        for (uint32_t index = 0u; index < static_cast<uint32_t>(SpectralShipGen::ShipAttachmentType::SHIP_ATTACHMENT_TYPE_END); ++index)
         {
             output << ',' << percentage(statistics.AttachmentTypeCounts[index], totalAttachmentPlacements);
         }

@@ -6,12 +6,12 @@
 #include <iostream>
 #include <vector>
 
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -58,9 +58,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGenerationScaleTraitsRegression()
+int SpectralShipGenTests::runGenerationScaleTraitsRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     try
     {

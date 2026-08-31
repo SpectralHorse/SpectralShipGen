@@ -6,15 +6,15 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/ShipFactionType.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/SilhouetteQualityMetrics.h>
+#include <SpectralShipGen/ShipFactionType.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/SilhouetteQualityMetrics.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     constexpr std::array<ShipDimensions, 7u> Dimensions = { { {24u,24u}, {32u,32u}, {44u,44u}, {48u,64u}, {64u,48u}, {64u,64u}, {96u,96u} } };
     void setSymmetricRow(PixelMask& mask, uint32_t y, uint32_t width)
@@ -58,9 +58,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runSilhouetteArticulationRegression()
+int SpectralShipGenTests::runSilhouetteArticulationRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
     if (!metricsRegression()) { std::cerr << "Silhouette metric articulation regression failed.\n"; return 1; }
 
     ShipGenerator generator;

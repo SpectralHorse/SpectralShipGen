@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 #include <algorithm>
 #include <chrono>
@@ -21,17 +21,17 @@
 #include "Generation/ShipPainter.h"
 #include "Generation/WeaponGenerator.h"
 #include "Generation/VisualHierarchyPlanner.h"
-#include <PixelShipGenerator/GenerationTuningProfile.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipFactionProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationPerformance.h>
-#include <PixelShipGenerator/ShipPaletteGenerator.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
+#include <SpectralShipGen/GenerationTuningProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipFactionProfileValidation.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationPerformance.h>
+#include <SpectralShipGen/ShipPaletteGenerator.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

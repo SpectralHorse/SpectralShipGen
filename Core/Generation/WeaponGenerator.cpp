@@ -13,7 +13,7 @@
 #include "WeaponGenerationInternal.h"
 #include "WeaponHardpointPlanner.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     using WeaponGenerationInternal::CandidateWeapon;
     using WeaponGenerationInternal::FactionWeaponProfile;

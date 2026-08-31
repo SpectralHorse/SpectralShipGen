@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     enum class RegressionCategory
     {

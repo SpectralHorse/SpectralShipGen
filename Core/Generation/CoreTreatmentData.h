@@ -4,10 +4,10 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipCoreTreatmentType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipCoreTreatmentType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct CoreTreatmentData
     {

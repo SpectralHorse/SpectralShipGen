@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace PixelShipGenerator::PixelMaskUtils
+namespace SpectralShipGen::PixelMaskUtils
 {
     bool isMaskPixel(const PixelMask& mask, int32_t x, int32_t y)
     {

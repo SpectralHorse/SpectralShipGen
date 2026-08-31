@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
 
 #include <algorithm>
 #include <cmath>
@@ -8,15 +8,15 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/AnimationSamplingPlanner.h>
-#include <PixelShipGenerator/GenerationDomain.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/AnimationSamplingPlanner.h>
+#include <SpectralShipGen/GenerationDomain.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 #include "ShipFactionAnimationUtils.h"
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     constexpr uint64_t FiringSeedSalt = 0x4E86C291AD735BF0ull;
 
@@ -451,7 +451,7 @@ namespace
     }
 }
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     ShipFiringAnimationPhase getFiringAnimationPhase(double normalizedTime)
     {

@@ -2,11 +2,11 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/MacroAsymmetry.h>
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/MacroAsymmetry.h>
+#include <SpectralShipGen/PixelMask.h>
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class MacroAsymmetryPlanner
     {

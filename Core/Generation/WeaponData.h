@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipAttachment.h>
-#include <PixelShipGenerator/ShipWeaponType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipAttachment.h>
+#include <SpectralShipGen/ShipWeaponType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct WeaponPlacement
     {

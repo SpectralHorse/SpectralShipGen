@@ -7,13 +7,13 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipSpritesheetUtils.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipSpritesheetUtils.h>
 
 namespace
 {
-    using PixelShipGenerator::ShipDimensions;
+    using SpectralShipGen::ShipDimensions;
 
     constexpr std::array<ShipDimensions, 14u> Dimensions = { {
         { 32u, 44u },
@@ -32,25 +32,25 @@ namespace
         { 64u, 48u }
     } };
 
-    constexpr std::array<PixelShipGenerator::ShipStyle, static_cast<std::size_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)> Styles = {
-        PixelShipGenerator::ShipStyle::SLEEK,
-        PixelShipGenerator::ShipStyle::FIGHTER,
-        PixelShipGenerator::ShipStyle::HEAVY,
-        PixelShipGenerator::ShipStyle::INDUSTRIAL,
-        PixelShipGenerator::ShipStyle::SPEARHEAD,
-        PixelShipGenerator::ShipStyle::DELTA
+    constexpr std::array<SpectralShipGen::ShipStyle, static_cast<std::size_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)> Styles = {
+        SpectralShipGen::ShipStyle::SLEEK,
+        SpectralShipGen::ShipStyle::FIGHTER,
+        SpectralShipGen::ShipStyle::HEAVY,
+        SpectralShipGen::ShipStyle::INDUSTRIAL,
+        SpectralShipGen::ShipStyle::SPEARHEAD,
+        SpectralShipGen::ShipStyle::DELTA
     };
 
-    constexpr std::array<PixelShipGenerator::ShipFactionType, static_cast<std::size_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = {
-        PixelShipGenerator::ShipFactionType::FRONTIER,
-        PixelShipGenerator::ShipFactionType::MILITARY,
-        PixelShipGenerator::ShipFactionType::ASCENDANT,
-        PixelShipGenerator::ShipFactionType::XENO,
-        PixelShipGenerator::ShipFactionType::CORPORATE,
-        PixelShipGenerator::ShipFactionType::RELIC
+    constexpr std::array<SpectralShipGen::ShipFactionType, static_cast<std::size_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = {
+        SpectralShipGen::ShipFactionType::FRONTIER,
+        SpectralShipGen::ShipFactionType::MILITARY,
+        SpectralShipGen::ShipFactionType::ASCENDANT,
+        SpectralShipGen::ShipFactionType::XENO,
+        SpectralShipGen::ShipFactionType::CORPORATE,
+        SpectralShipGen::ShipFactionType::RELIC
     };
 
-    bool isHullHorizontallySymmetric(const PixelShipGenerator::PixelMask& mask)
+    bool isHullHorizontallySymmetric(const SpectralShipGen::PixelMask& mask)
     {
         for (uint32_t y = 0u; y < mask.getHeight(); ++y)
         {
@@ -62,7 +62,7 @@ namespace
         return true;
     }
 
-    bool isHullConnected(const PixelShipGenerator::PixelMask& mask)
+    bool isHullConnected(const SpectralShipGen::PixelMask& mask)
     {
         const uint32_t width = mask.getWidth();
         const uint32_t height = mask.getHeight();
@@ -108,19 +108,19 @@ namespace
         return visitedCount == totalCount;
     }
 
-    bool hasExpectedDimensions(const PixelShipGenerator::GeneratedShip& ship, const ShipDimensions& dimensions)
+    bool hasExpectedDimensions(const SpectralShipGen::GeneratedShip& ship, const ShipDimensions& dimensions)
     {
-        const auto matches = [&](const PixelShipGenerator::PixelMask& mask) { return mask.getWidth() == dimensions.Width && mask.getHeight() == dimensions.Height; };
+        const auto matches = [&](const SpectralShipGen::PixelMask& mask) { return mask.getWidth() == dimensions.Width && mask.getHeight() == dimensions.Height; };
         return ship.FinalImage.getWidth() == dimensions.Width && ship.FinalImage.getHeight() == dimensions.Height &&
             matches(ship.HullMask) && matches(ship.CockpitMask) && matches(ship.EngineMask) && matches(ship.EngineExhaustMask) &&
             matches(ship.AttachmentMask) && matches(ship.AccentMask) && matches(ship.MechanicalDetailMask) && matches(ship.LightMask);
     }
 }
 
-int PixelShipGeneratorTests::runRectangularResolutionRegression()
+int SpectralShipGenTests::runRectangularResolutionRegression()
 {
-    PixelShipGenerator::ShipGenerator generator;
-    PixelShipGenerator::ShipIdleAnimator animator;
+    SpectralShipGen::ShipGenerator generator;
+    SpectralShipGen::ShipIdleAnimator animator;
     bool success = true;
 
     for (std::size_t dimensionIndex = 0u; dimensionIndex < Dimensions.size(); ++dimensionIndex)
@@ -128,7 +128,7 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
         const ShipDimensions dimensions = Dimensions[dimensionIndex];
         for (uint32_t sample = 0u; sample < 2u; ++sample)
         {
-            PixelShipGenerator::ShipGenerationSettings settings;
+            SpectralShipGen::ShipGenerationSettings settings;
             settings.Dimensions = dimensions;
             settings.Seed = 0x4200000000000000ull ^ (static_cast<uint64_t>(dimensions.Width) << 32u) ^ (static_cast<uint64_t>(dimensions.Height) << 16u) ^ sample;
             settings.Style = Styles[(dimensionIndex + sample) % Styles.size()];
@@ -136,8 +136,8 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
 
             try
             {
-                const PixelShipGenerator::GeneratedShip first = generator.generate(settings);
-                const PixelShipGenerator::GeneratedShip second = generator.generate(settings);
+                const SpectralShipGen::GeneratedShip first = generator.generate(settings);
+                const SpectralShipGen::GeneratedShip second = generator.generate(settings);
 
                 if (!hasExpectedDimensions(first, dimensions))
                 {
@@ -156,10 +156,10 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
                     std::cerr << dimensions.Width << 'x' << dimensions.Height << " produced invalid hull symmetry/connectivity.\n";
                 }
 
-                PixelShipGenerator::ShipIdleAnimationSettings animationSettings;
+                SpectralShipGen::ShipIdleAnimationSettings animationSettings;
                 animationSettings.FrameCount = 6u;
                 animationSettings.Seed = settings.Seed ^ 0xA24BAED4963EE407ull;
-                const PixelShipGenerator::ShipIdleAnimation animation = animator.generate(first, animationSettings);
+                const SpectralShipGen::ShipIdleAnimation animation = animator.generate(first, animationSettings);
                 if (animation.FrameWidth != dimensions.Width || animation.FrameHeight != dimensions.Height || animation.Frames.size() != animation.Sampling.ActualFrameCount)
                 {
                     success = false;
@@ -171,7 +171,7 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
                     success = false;
                     std::cerr << dimensions.Width << 'x' << dimensions.Height << " animation Frame 0 differs from static output.\n";
                 }
-                for (const PixelShipGenerator::Image& frame : animation.Frames)
+                for (const SpectralShipGen::Image& frame : animation.Frames)
                 {
                     if (frame.getWidth() != dimensions.Width || frame.getHeight() != dimensions.Height)
                     {
@@ -181,7 +181,7 @@ int PixelShipGeneratorTests::runRectangularResolutionRegression()
                     }
                 }
 
-                const PixelShipGenerator::Image spritesheet = PixelShipGenerator::createHorizontalSpritesheet(animation);
+                const SpectralShipGen::Image spritesheet = SpectralShipGen::createHorizontalSpritesheet(animation);
                 if (spritesheet.getWidth() != dimensions.Width * animation.Sampling.ActualFrameCount || spritesheet.getHeight() != dimensions.Height)
                 {
                     success = false;

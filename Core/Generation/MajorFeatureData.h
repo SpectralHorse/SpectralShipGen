@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <vector>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipMajorFeatureType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipMajorFeatureType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     enum class MajorFeatureRegion : uint32_t
     {

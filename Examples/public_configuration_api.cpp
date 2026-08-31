@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
-#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
-#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/ShipGenerationRecipeSerializer.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
-using namespace PixelShipGenerator;
+using namespace SpectralShipGen;
 
 void builtInConvenience()
 {

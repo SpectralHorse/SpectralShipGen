@@ -7,27 +7,27 @@
 #include <iostream>
 #include <utility>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationDomain.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationDomain.h>
 #include "CockpitGenerator.h"
 #include "CoreTreatmentGenerator.h"
 #include "EngineGenerator.h"
 #include "HullGenerator.h"
 #include "MacroAsymmetryPlanner.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
 #include "ShipPainter.h"
-#include <PixelShipGenerator/ShipPaletteGenerator.h>
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipCoreTreatmentType.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipPaletteGenerator.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipCoreTreatmentType.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     uint32_t countPixels(const PixelMask& mask)
     {
@@ -146,9 +146,9 @@ namespace
 
 }
 
-int PixelShipGeneratorTests::runCoreTreatmentRegression()
+int SpectralShipGenTests::runCoreTreatmentRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
     ShipGenerator generator;
     bool success = true;
 

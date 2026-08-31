@@ -8,18 +8,18 @@
 #include "HullGenerator.h"
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
 
 namespace
 {
     constexpr std::array<uint32_t, 7u> Resolutions = { 24u, 32u, 44u, 64u, 96u, 128u, 160u };
-    constexpr std::array<PixelShipGenerator::ShipStyle, static_cast<std::size_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END)> Styles = { PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipStyle::SPEARHEAD, PixelShipGenerator::ShipStyle::DELTA };
+    constexpr std::array<SpectralShipGen::ShipStyle, static_cast<std::size_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)> Styles = { SpectralShipGen::ShipStyle::SLEEK, SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipStyle::HEAVY, SpectralShipGen::ShipStyle::INDUSTRIAL, SpectralShipGen::ShipStyle::SPEARHEAD, SpectralShipGen::ShipStyle::DELTA };
     constexpr uint32_t SamplesPerConfiguration = 40u;
     constexpr uint32_t MaximumHullAttempts = 8u;
 
-    bool masksAreSymmetric(const PixelShipGenerator::PixelMask& mask)
+    bool masksAreSymmetric(const SpectralShipGen::PixelMask& mask)
     {
         for (uint32_t y = 0u; y < mask.getHeight(); ++y)
         {
@@ -35,7 +35,7 @@ namespace
         return true;
     }
 
-    bool isMaskSubset(const PixelShipGenerator::PixelMask& subset, const PixelShipGenerator::PixelMask& superset)
+    bool isMaskSubset(const SpectralShipGen::PixelMask& subset, const SpectralShipGen::PixelMask& superset)
     {
         for (uint32_t y = 0u; y < subset.getHeight(); ++y)
         {
@@ -51,7 +51,7 @@ namespace
         return true;
     }
 
-    bool generateValidatedHull(PixelShipGenerator::ShipGenerationContext& context, const PixelShipGenerator::HullGenerator& hullGenerator)
+    bool generateValidatedHull(SpectralShipGen::ShipGenerationContext& context, const SpectralShipGen::HullGenerator& hullGenerator)
     {
         for (uint32_t attempt = 0u; attempt < MaximumHullAttempts; ++attempt)
         {
@@ -68,29 +68,29 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runWingGeometryRegression()
+int SpectralShipGenTests::runWingGeometryRegression()
 {
-    PixelShipGenerator::HullGenerator hullGenerator;
+    SpectralShipGen::HullGenerator hullGenerator;
 
     for (uint32_t resolution : Resolutions)
     {
         uint32_t wingedShipCount = 0u;
         uint32_t maximumObservedExtension = 0u;
 
-        for (PixelShipGenerator::ShipStyle style : Styles)
+        for (SpectralShipGen::ShipStyle style : Styles)
         {
             for (uint32_t sample = 0u; sample < SamplesPerConfiguration; ++sample)
             {
-                PixelShipGenerator::ShipGenerationSettings settings;
+                SpectralShipGen::ShipGenerationSettings settings;
                 settings.Dimensions.Width = resolution;
                 settings.Dimensions.Height = resolution;
                 settings.Style = style;
                 settings.Seed = 0x35A00000ull + static_cast<uint64_t>(resolution) * 10000ull + static_cast<uint64_t>(static_cast<uint32_t>(style)) * 1000ull + sample;
-                const PixelShipGenerator::ShipGenerationSeeds seeds = PixelShipGenerator::deriveShipGenerationSeeds(settings.Seed);
-                const PixelShipGenerator::ShipGenerationProfile& profile = PixelShipGenerator::getShipGenerationProfile(style);
-                PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
-                PixelShipGenerator::ShipGenerationContext firstContext(settings, profile, seeds, &debugInfo);
-                PixelShipGenerator::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
+                const SpectralShipGen::ShipGenerationSeeds seeds = SpectralShipGen::deriveShipGenerationSeeds(settings.Seed);
+                const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(style);
+                SpectralShipGen::ShipGenerationDebugInfo debugInfo;
+                SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, &debugInfo);
+                SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
 
                 if (!generateValidatedHull(firstContext, hullGenerator) || !generateValidatedHull(secondContext, hullGenerator))
                 {
@@ -110,7 +110,7 @@ int PixelShipGeneratorTests::runWingGeometryRegression()
                     }
                 }
 
-                const PixelShipGenerator::WingRegionData& regions = firstContext.WingRegions;
+                const SpectralShipGen::WingRegionData& regions = firstContext.WingRegions;
 
                 if (!isMaskSubset(regions.WingMask, firstContext.Ship.HullMask) || !isMaskSubset(regions.WingRootMask, regions.WingMask) || !isMaskSubset(regions.OuterWingMask, regions.WingMask))
                 {

@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
 
-#include <PixelShipGenerator/AnimationSamplingPlanner.h>
+#include <SpectralShipGen/AnimationSamplingPlanner.h>
 #include "ShipIdleAnimationInternal.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     ShipIdleAnimation ShipIdleAnimator::generate(const GeneratedShip& ship, const ShipIdleAnimationSettings& settings) const
     {

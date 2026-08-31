@@ -6,16 +6,16 @@
 #include <iostream>
 #include <vector>
 
-#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
-#include <PixelShipGenerator/ShipFiringAnimator.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/ShipAnimationStateCoordinator.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     struct AnimationProfileRoutingFixture
     {
@@ -171,9 +171,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runAnimationProfileRoutingRegression()
+int SpectralShipGenTests::runAnimationProfileRoutingRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     ShipGenerator generator;
     ShipIdleAnimator idleAnimator;

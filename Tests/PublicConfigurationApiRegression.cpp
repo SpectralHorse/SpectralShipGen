@@ -1,25 +1,25 @@
 #include "CoreRegressionSuites.h"
 
-#include <PixelShipGenerator/AnimationSamplingPlanner.h>
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
-#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
-#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
-#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipIdleAnimator.h>
-#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipFiringAnimator.h>
+#include <SpectralShipGen/AnimationSamplingPlanner.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/ShipAnimationStateCoordinator.h>
+#include <SpectralShipGen/ShipGenerationRecipeSerializer.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipIdleAnimator.h>
+#include <SpectralShipGen/ShipLateralMovementAnimator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipFiringAnimator.h>
 
-#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
 
 #include <iostream>
 #include <stdexcept>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool sameImage(const Image& a, const Image& b)
     {
@@ -57,7 +57,7 @@ namespace
     }
 }
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     int runPublicConfigurationApiRegression()
     {
@@ -184,12 +184,12 @@ namespace PixelShipGeneratorTests
             require(loaded.Success, "Portable custom recipe round-trip failed.");
             require(sameImage(generator.generate(loaded.Document.Recipe).FinalImage, customShip.FinalImage), "Portable custom recipe did not reproduce canonical custom ship.");
 
-            PixelShipGeneratorDiagnostics::DiagnosticsRunConfiguration diagnostics;
+            SpectralShipGenDiagnostics::DiagnosticsRunConfiguration diagnostics;
             diagnostics.Dimensions = { custom.Generation.Dimensions };
             diagnostics.SamplesPerConfiguration = 2u;
             diagnostics.DiagnosticSeed = 0x8899AABBCCDDEEFFull;
             diagnostics.ConfigurationLabel = "task88-custom";
-            const auto diagnosticsResult = PixelShipGeneratorDiagnostics::DiagnosticsRunner().run(diagnostics, custom);
+            const auto diagnosticsResult = SpectralShipGenDiagnostics::DiagnosticsRunner().run(diagnostics, custom);
             require(diagnosticsResult.Completed && diagnosticsResult.OverallSummary.SuccessfulSamples == 2u, "Custom resolved diagnostics run failed.");
             require(diagnosticsResult.Configuration.PaletteSourceMode == ShipPaletteSourceMode::EXPLICIT_GENERATED, "Diagnostics palette identity was not preserved.");
             require(diagnosticsResult.Configuration.Styles.size() == 1u && diagnosticsResult.Configuration.Styles.front() == ShipStyle::SHIP_STYLE_END, "Diagnostics fabricated structural preset identity.");

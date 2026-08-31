@@ -7,7 +7,7 @@
 #include "CoreTreatmentData.h"
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class CoreTreatmentGenerator
     {

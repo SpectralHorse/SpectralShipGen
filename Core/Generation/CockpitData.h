@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipCockpitType.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipCockpitType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct CockpitData
     {

@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <cmath>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
 namespace IdleAnimationInternal
 {
-    bool isMaskPixel(const PixelShipGenerator::PixelMask& mask, int32_t x, int32_t y)
+    bool isMaskPixel(const SpectralShipGen::PixelMask& mask, int32_t x, int32_t y)
     {
         if (x < 0 || y < 0 || x >= static_cast<int32_t>(mask.getWidth()) || y >= static_cast<int32_t>(mask.getHeight()))
         {
@@ -28,19 +28,19 @@ namespace IdleAnimationInternal
         return std::min(available, static_cast<uint32_t>(std::floor(static_cast<double>(available) * scaledSignal + 0.5)));
     }
 
-    uint32_t getAttachmentMaximumOutwardDistance(const PixelShipGenerator::ShipAttachmentPlacement& placement)
+    uint32_t getAttachmentMaximumOutwardDistance(const SpectralShipGen::ShipAttachmentPlacement& placement)
     {
         switch (placement.Direction)
         {
-        case PixelShipGenerator::ShipAttachmentDirection::LEFT: return placement.AnchorX - placement.MinimumX;
-        case PixelShipGenerator::ShipAttachmentDirection::RIGHT: return placement.MaximumX - placement.AnchorX;
-        case PixelShipGenerator::ShipAttachmentDirection::UP: return placement.AnchorY - placement.MinimumY;
-        case PixelShipGenerator::ShipAttachmentDirection::DOWN: return placement.MaximumY - placement.AnchorY;
+        case SpectralShipGen::ShipAttachmentDirection::LEFT: return placement.AnchorX - placement.MinimumX;
+        case SpectralShipGen::ShipAttachmentDirection::RIGHT: return placement.MaximumX - placement.AnchorX;
+        case SpectralShipGen::ShipAttachmentDirection::UP: return placement.AnchorY - placement.MinimumY;
+        case SpectralShipGen::ShipAttachmentDirection::DOWN: return placement.MaximumY - placement.AnchorY;
         default: return 0u;
         }
     }
 
-    OpaqueBounds calculateOpaqueBounds(const PixelShipGenerator::Image& image, uint32_t width, uint32_t height)
+    OpaqueBounds calculateOpaqueBounds(const SpectralShipGen::Image& image, uint32_t width, uint32_t height)
     {
         OpaqueBounds bounds;
         bounds.MinX = width;

@@ -5,7 +5,7 @@
 
 #include "PixelMaskUtils.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

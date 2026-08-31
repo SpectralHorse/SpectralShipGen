@@ -17,7 +17,7 @@ namespace
         uint32_t Width = 0u;
     };
 
-    HorizontalMaskSpan getHorizontalMaskSpan(const PixelShipGenerator::PixelMask& mask, uint32_t x, uint32_t y)
+    HorizontalMaskSpan getHorizontalMaskSpan(const SpectralShipGen::PixelMask& mask, uint32_t x, uint32_t y)
     {
         HorizontalMaskSpan span;
         span.StartX = x;
@@ -30,39 +30,39 @@ namespace
         return span;
     }
 
-    PixelShipGenerator::Color getHullSurfaceToneColor(PixelShipGenerator::ShipHullSurfaceTone tone, const PixelShipGenerator::ShipPalette& palette)
+    SpectralShipGen::Color getHullSurfaceToneColor(SpectralShipGen::ShipHullSurfaceTone tone, const SpectralShipGen::ShipPalette& palette)
     {
         switch (tone)
         {
-        case PixelShipGenerator::ShipHullSurfaceTone::BASE: return palette.HullBase;
-        case PixelShipGenerator::ShipHullSurfaceTone::HIGHLIGHT: return palette.HullHighlight;
-        case PixelShipGenerator::ShipHullSurfaceTone::SECONDARY:
+        case SpectralShipGen::ShipHullSurfaceTone::BASE: return palette.HullBase;
+        case SpectralShipGen::ShipHullSurfaceTone::HIGHLIGHT: return palette.HullHighlight;
+        case SpectralShipGen::ShipHullSurfaceTone::SECONDARY:
         default: return palette.HullSecondary;
         }
     }
 
-    PixelShipGenerator::Color resolveFactionPaintColor(PixelShipGenerator::ShipFactionPaintColorRole role, const PixelShipGenerator::Color& defaultColor, const PixelShipGenerator::ShipPalette& palette)
+    SpectralShipGen::Color resolveFactionPaintColor(SpectralShipGen::ShipFactionPaintColorRole role, const SpectralShipGen::Color& defaultColor, const SpectralShipGen::ShipPalette& palette)
     {
         switch (role)
         {
-        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_BASE: return palette.HullBase;
-        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_SECONDARY: return palette.HullSecondary;
-        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_HIGHLIGHT: return palette.HullHighlight;
-        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_ACCENT: return palette.HullAccent;
-        case PixelShipGenerator::ShipFactionPaintColorRole::HULL_ACCENT_HIGHLIGHT: return palette.HullAccentHighlight;
-        case PixelShipGenerator::ShipFactionPaintColorRole::MECHANICAL_BASE: return palette.MechanicalBase;
-        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_BASE: return palette.EngineBase;
-        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_HIGHLIGHT: return palette.EngineHighlight;
-        case PixelShipGenerator::ShipFactionPaintColorRole::ENGINE_HOT_CORE: return palette.EngineHotCore;
-        case PixelShipGenerator::ShipFactionPaintColorRole::LIGHT_BASE: return palette.LightBase;
-        case PixelShipGenerator::ShipFactionPaintColorRole::LIGHT_HIGHLIGHT: return palette.LightHighlight;
-        case PixelShipGenerator::ShipFactionPaintColorRole::PROFILE_DEFAULT:
+        case SpectralShipGen::ShipFactionPaintColorRole::HULL_BASE: return palette.HullBase;
+        case SpectralShipGen::ShipFactionPaintColorRole::HULL_SECONDARY: return palette.HullSecondary;
+        case SpectralShipGen::ShipFactionPaintColorRole::HULL_HIGHLIGHT: return palette.HullHighlight;
+        case SpectralShipGen::ShipFactionPaintColorRole::HULL_ACCENT: return palette.HullAccent;
+        case SpectralShipGen::ShipFactionPaintColorRole::HULL_ACCENT_HIGHLIGHT: return palette.HullAccentHighlight;
+        case SpectralShipGen::ShipFactionPaintColorRole::MECHANICAL_BASE: return palette.MechanicalBase;
+        case SpectralShipGen::ShipFactionPaintColorRole::ENGINE_BASE: return palette.EngineBase;
+        case SpectralShipGen::ShipFactionPaintColorRole::ENGINE_HIGHLIGHT: return palette.EngineHighlight;
+        case SpectralShipGen::ShipFactionPaintColorRole::ENGINE_HOT_CORE: return palette.EngineHotCore;
+        case SpectralShipGen::ShipFactionPaintColorRole::LIGHT_BASE: return palette.LightBase;
+        case SpectralShipGen::ShipFactionPaintColorRole::LIGHT_HIGHLIGHT: return palette.LightHighlight;
+        case SpectralShipGen::ShipFactionPaintColorRole::PROFILE_DEFAULT:
         default: return defaultColor;
         }
     }
 }
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     void ShipPainter::paint(ShipGenerationContext& context) const
     {

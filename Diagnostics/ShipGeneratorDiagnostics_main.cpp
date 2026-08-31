@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
-#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
-#include <PixelShipGenerator/BuiltInPresetCatalog.h>
+#include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
+#include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
+#include <SpectralShipGen/BuiltInPresetCatalog.h>
 
 namespace
 {
@@ -18,7 +18,7 @@ namespace
 
     struct CommandLineOptions
     {
-        PixelShipGeneratorDiagnostics::DiagnosticGenerationConfiguration BaseConfiguration;
+        SpectralShipGenDiagnostics::DiagnosticGenerationConfiguration BaseConfiguration;
         bool AllResolutions = false;
         bool AllStyles = false;
         bool AllFactions = false;
@@ -27,14 +27,14 @@ namespace
     };
 
 
-    bool parseStyle(const std::string& value, PixelShipGenerator::ShipStyle& style)
+    bool parseStyle(const std::string& value, SpectralShipGen::ShipStyle& style)
     {
-        return PixelShipGenerator::tryGetBuiltInStructuralPreset(value, style);
+        return SpectralShipGen::tryGetBuiltInStructuralPreset(value, style);
     }
 
-    bool parseFaction(const std::string& value, PixelShipGenerator::ShipFactionType& faction)
+    bool parseFaction(const std::string& value, SpectralShipGen::ShipFactionType& faction)
     {
-        return PixelShipGenerator::tryGetBuiltInFactionPreset(value, faction);
+        return SpectralShipGen::tryGetBuiltInFactionPreset(value, faction);
     }
     void printUsage(std::ostream& output)
     {
@@ -265,27 +265,27 @@ namespace
         return { options.BaseConfiguration.Width };
     }
 
-    std::vector<PixelShipGenerator::ShipStyle> getSelectedStyles(const CommandLineOptions& options)
+    std::vector<SpectralShipGen::ShipStyle> getSelectedStyles(const CommandLineOptions& options)
     {
         if (!options.AllStyles)
         {
             return { options.BaseConfiguration.Style };
         }
 
-        std::vector<PixelShipGenerator::ShipStyle> styles;
-        for (const auto& entry : PixelShipGenerator::getBuiltInStructuralPresetCatalog()) { styles.push_back(entry.Preset); }
+        std::vector<SpectralShipGen::ShipStyle> styles;
+        for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { styles.push_back(entry.Preset); }
         return styles;
     }
 
-    std::vector<PixelShipGenerator::ShipFactionType> getSelectedFactions(const CommandLineOptions& options)
+    std::vector<SpectralShipGen::ShipFactionType> getSelectedFactions(const CommandLineOptions& options)
     {
         if (!options.AllFactions)
         {
             return { options.BaseConfiguration.Faction };
         }
 
-        std::vector<PixelShipGenerator::ShipFactionType> factions;
-        for (const auto& entry : PixelShipGenerator::getBuiltInFactionPresetCatalog()) { factions.push_back(entry.Preset); }
+        std::vector<SpectralShipGen::ShipFactionType> factions;
+        for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { factions.push_back(entry.Preset); }
         return factions;
     }
 }
@@ -308,10 +308,10 @@ int main(int argc, char** argv)
     }
 
     const std::vector<uint32_t> resolutions = getSelectedResolutions(options);
-    const std::vector<PixelShipGenerator::ShipStyle> styles = getSelectedStyles(options);
-    const std::vector<PixelShipGenerator::ShipFactionType> factions = getSelectedFactions(options);
+    const std::vector<SpectralShipGen::ShipStyle> styles = getSelectedStyles(options);
+    const std::vector<SpectralShipGen::ShipFactionType> factions = getSelectedFactions(options);
 
-    PixelShipGeneratorDiagnostics::DiagnosticsRunConfiguration runConfiguration;
+    SpectralShipGenDiagnostics::DiagnosticsRunConfiguration runConfiguration;
     runConfiguration.Dimensions.clear();
     if (options.AllResolutions)
     {
@@ -329,13 +329,13 @@ int main(int argc, char** argv)
     runConfiguration.AsymmetricDetailChance = options.BaseConfiguration.AsymmetricDetailChance;
     runConfiguration.AttachmentsEnabled = options.BaseConfiguration.AttachmentsEnabled;
     runConfiguration.DetailedPerformanceInstrumentation = options.DetailedPerformance;
-#ifdef PIXEL_SHIP_GENERATOR_BUILD_CONFIGURATION
-    runConfiguration.BuildConfiguration = PIXEL_SHIP_GENERATOR_BUILD_CONFIGURATION;
+#ifdef SPECTRAL_SHIP_GEN_BUILD_CONFIGURATION
+    runConfiguration.BuildConfiguration = SPECTRAL_SHIP_GEN_BUILD_CONFIGURATION;
 #endif
 
     uint64_t lastPrinted = 0u;
-    const PixelShipGeneratorDiagnostics::DiagnosticsResult result = PixelShipGeneratorDiagnostics::DiagnosticsRunner().run(runConfiguration,
-        [&](const PixelShipGeneratorDiagnostics::DiagnosticsProgress& progress)
+    const SpectralShipGenDiagnostics::DiagnosticsResult result = SpectralShipGenDiagnostics::DiagnosticsRunner().run(runConfiguration,
+        [&](const SpectralShipGenDiagnostics::DiagnosticsProgress& progress)
         {
             const uint64_t interval = std::max<uint64_t>(1u, progress.TotalWorkItems / 20u);
             if (progress.CompletedWorkItems != progress.TotalWorkItems && progress.CompletedWorkItems - lastPrinted < interval) { return; }
@@ -348,9 +348,9 @@ int main(int argc, char** argv)
 
     for (const auto& configurationResult : result.ConfigurationResults)
     {
-        PixelShipGeneratorDiagnostics::printGenerationStatistics(std::cout, configurationResult.Configuration, configurationResult.Statistics);
+        SpectralShipGenDiagnostics::printGenerationStatistics(std::cout, configurationResult.Configuration, configurationResult.Statistics);
     }
-    PixelShipGeneratorDiagnostics::printDiagnosticsResultSummary(std::cout, result);
+    SpectralShipGenDiagnostics::printDiagnosticsResultSummary(std::cout, result);
 
     if (options.CsvPath.has_value())
     {
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
             std::cerr << "Error: failed to open CSV path: " << *options.CsvPath << '\n';
             return 1;
         }
-        PixelShipGeneratorDiagnostics::writeDiagnosticsResultCsv(csvFile, result);
+        SpectralShipGenDiagnostics::writeDiagnosticsResultCsv(csvFile, result);
         std::cout << "\nCSV summary written: " << *options.CsvPath << '\n';
     }
 

@@ -1,12 +1,12 @@
-#include <PixelShipGenerator/ShipGenerationRecipe.h>
+#include <SpectralShipGen/ShipGenerationRecipe.h>
 
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipFactionProfileValidation.h>
-#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
-#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipFactionProfileValidation.h>
+#include <SpectralShipGen/ShipGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

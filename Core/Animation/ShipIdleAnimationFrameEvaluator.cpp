@@ -8,10 +8,10 @@
 #include <vector>
 
 #include "ShipPainter.h"
-#include <PixelShipGenerator/GenerationScaleTraits.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
 #include "PixelMaskUtils.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
 namespace IdleAnimationInternal
 {
@@ -84,12 +84,12 @@ namespace IdleAnimationInternal
         return std::any_of(pixels.begin(), pixels.end(), [x, y](const PixelCoordinate& pixel) { return pixel.X == x && pixel.Y == y; });
     }
 
-    bool isBaseStructurePixel(const PixelShipGenerator::GeneratedShip& ship, int32_t x, int32_t y)
+    bool isBaseStructurePixel(const SpectralShipGen::GeneratedShip& ship, int32_t x, int32_t y)
     {
         return isMaskPixel(ship.HullMask, x, y) || isMaskPixel(ship.CockpitMask, x, y) || isMaskPixel(ship.EngineMask, x, y) || isMaskPixel(ship.EngineExhaustMask, x, y) || isMaskPixel(ship.IdleAnimationMetadata.WeaponOccupiedMask, x, y);
     }
 
-    PixelShipGenerator::Color brightenEngineColorOnce(const PixelShipGenerator::Color& color, const PixelShipGenerator::ShipPalette& palette)
+    SpectralShipGen::Color brightenEngineColorOnce(const SpectralShipGen::Color& color, const SpectralShipGen::ShipPalette& palette)
     {
         if (color == palette.EngineDark) { return palette.EngineBase; }
         if (color == palette.EngineBase) { return palette.EngineHighlight; }
@@ -99,7 +99,7 @@ namespace IdleAnimationInternal
         return color;
     }
 
-    PixelShipGenerator::Color dimEngineColorOnce(const PixelShipGenerator::Color& color, const PixelShipGenerator::ShipPalette& palette)
+    SpectralShipGen::Color dimEngineColorOnce(const SpectralShipGen::Color& color, const SpectralShipGen::ShipPalette& palette)
     {
         if (color == palette.EngineHotCore) { return palette.EngineHighlight; }
         if (color == palette.EngineHighlight) { return palette.EngineBase; }
@@ -109,7 +109,7 @@ namespace IdleAnimationInternal
         return color;
     }
 
-    PixelShipGenerator::Color shiftEngineColor(PixelShipGenerator::Color color, const PixelShipGenerator::ShipPalette& palette, int32_t intensity)
+    SpectralShipGen::Color shiftEngineColor(SpectralShipGen::Color color, const SpectralShipGen::ShipPalette& palette, int32_t intensity)
     {
         const uint32_t stepCount = static_cast<uint32_t>(intensity < 0 ? -intensity : intensity);
 
@@ -121,7 +121,7 @@ namespace IdleAnimationInternal
         return color;
     }
 
-    PixelShipGenerator::Color shiftExhaustColor(PixelShipGenerator::Color color, const PixelShipGenerator::ShipPalette& palette, int32_t intensity)
+    SpectralShipGen::Color shiftExhaustColor(SpectralShipGen::Color color, const SpectralShipGen::ShipPalette& palette, int32_t intensity)
     {
         const uint32_t stepCount = static_cast<uint32_t>(intensity < 0 ? -intensity : intensity);
 
@@ -278,7 +278,7 @@ namespace IdleAnimationInternal
         return outerWidth - inset * 2u;
     }
 
-    uint32_t getTargetExhaustLength(const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
+    uint32_t getTargetExhaustLength(const SpectralShipGen::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
     {
         uint32_t length = component.ExhaustLength;
 
@@ -296,12 +296,12 @@ namespace IdleAnimationInternal
         return std::clamp(length, component.MinimumExhaustLength, component.MaximumExhaustLength);
     }
 
-    bool isStaticComponentExhaustPixel(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t x, uint32_t y)
+    bool isStaticComponentExhaustPixel(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component, uint32_t x, uint32_t y)
     {
         return x >= component.HousingStartX && x < component.HousingStartX + component.HousingWidth && y >= component.ExhaustStartY && y < component.ExhaustStartY + component.ExhaustLength && ship.EngineExhaustMask.get(x, y);
     }
 
-    bool isAnimatedExhaustShapeSafe(const PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t length, int32_t taperBias)
+    bool isAnimatedExhaustShapeSafe(const SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component, uint32_t length, int32_t taperBias)
     {
         if (length == 0u || component.ExhaustStartY + length > ship.EngineExhaustMask.getHeight())
         {
@@ -333,7 +333,7 @@ namespace IdleAnimationInternal
         return true;
     }
 
-    uint32_t clampExhaustLengthToSafeEnvelope(const PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, uint32_t desiredLength, int32_t taperBias)
+    uint32_t clampExhaustLengthToSafeEnvelope(const SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component, uint32_t desiredLength, int32_t taperBias)
     {
         uint32_t length = std::min(desiredLength, component.MaximumExhaustLength);
 
@@ -361,11 +361,11 @@ namespace IdleAnimationInternal
         return index >= start && index < start + layerWidth;
     }
 
-    PixelShipGenerator::Color getAnimatedExhaustPixelColor(uint32_t index, uint32_t outerWidth, uint32_t row, uint32_t innerLength, uint32_t coreLength, int32_t intensity, const PixelShipGenerator::ShipPalette& palette)
+    SpectralShipGen::Color getAnimatedExhaustPixelColor(uint32_t index, uint32_t outerWidth, uint32_t row, uint32_t innerLength, uint32_t coreLength, int32_t intensity, const SpectralShipGen::ShipPalette& palette)
     {
         const uint32_t innerWidth = getLayerWidth(outerWidth, 1u);
         const uint32_t coreWidth = getLayerWidth(outerWidth, outerWidth >= 5u ? 2u : 1u);
-        PixelShipGenerator::Color color = palette.ExhaustBase;
+        SpectralShipGen::Color color = palette.ExhaustBase;
 
         if (row < coreLength && isCenteredLayerPixel(index, outerWidth, coreWidth))
         {
@@ -397,7 +397,7 @@ namespace IdleAnimationInternal
         return length;
     }
 
-    void clearStaticEngineExhaust(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component)
+    void clearStaticEngineExhaust(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component)
     {
         const uint32_t endX = std::min(ship.EngineExhaustMask.getWidth(), component.HousingStartX + component.HousingWidth);
         const uint32_t maximumY = std::min(ship.EngineExhaustMask.getHeight(), component.ExhaustStartY + component.ExhaustLength);
@@ -414,7 +414,7 @@ namespace IdleAnimationInternal
         }
     }
 
-    void redrawEngineExhaust(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
+    void redrawEngineExhaust(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component, const EnginePulseSample& pulse, uint32_t amplitudePercent)
     {
         if (component.ExhaustLength == 0u || component.ExhaustStartY >= ship.EngineExhaustMask.getHeight())
         {
@@ -443,9 +443,9 @@ namespace IdleAnimationInternal
         }
     }
 
-    void applyNozzleGlow(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipEngineAnimationComponent& component, int32_t intensity)
+    void applyNozzleGlow(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipEngineAnimationComponent& component, int32_t intensity)
     {
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.EngineMask.getWidth(), ship.EngineMask.getHeight() });
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.EngineMask.getWidth(), ship.EngineMask.getHeight() });
         if (scaleTraits.AnimationComplexity < 20u || component.NozzleY >= ship.EngineMask.getHeight())
         {
             return;
@@ -489,7 +489,7 @@ namespace IdleAnimationInternal
         return static_cast<uint32_t>(std::floor(envelope * static_cast<double>(maximumTravelPixels) + 0.5));
     }
 
-    void applyEngineAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    void applyEngineAnimation(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
         if (normalizedTime <= 0.0)
         {
@@ -500,7 +500,7 @@ namespace IdleAnimationInternal
 
         for (std::size_t engineIndex = 0u; engineIndex < engineCount; ++engineIndex)
         {
-            const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
+            const SpectralShipGen::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
             const EngineAnimationParameters& parameters = plan.EngineParameters[engineIndex];
             const EnginePulseSample pulse = getEnginePulseSample(normalizedTime, parameters, plan.Profile);
             redrawEngineExhaust(frame, ship, component, pulse, parameters.ExhaustAmplitudePercent);
@@ -508,9 +508,9 @@ namespace IdleAnimationInternal
         }
     }
 
-    void applyEngineMechanicalAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    void applyEngineMechanicalAnimation(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.EngineMask.getWidth(), ship.EngineMask.getHeight() });
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.EngineMask.getWidth(), ship.EngineMask.getHeight() });
 
         if (normalizedTime <= 0.0 || scaleTraits.AnimationComplexity < 20u)
         {
@@ -520,7 +520,7 @@ namespace IdleAnimationInternal
         const std::size_t engineCount = std::min(ship.IdleAnimationMetadata.EngineComponents.size(), plan.EngineParameters.size());
         for (std::size_t engineIndex = 0u; engineIndex < engineCount; ++engineIndex)
         {
-            const PixelShipGenerator::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
+            const SpectralShipGen::ShipEngineAnimationComponent& component = ship.IdleAnimationMetadata.EngineComponents[engineIndex];
             const EngineAnimationParameters& parameters = plan.EngineParameters[engineIndex];
 
             if (!parameters.MechanicalActive || getMechanicalTravelPixels(normalizedTime, parameters.MechanicalAlternatePhase, plan.Profile.SlowMechanicalCycle) == 0u)
@@ -551,7 +551,7 @@ namespace IdleAnimationInternal
         }
     }
 
-    void applyLightBlinking(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    void applyLightBlinking(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
         if (normalizedTime <= 0.0)
         {
@@ -567,7 +567,7 @@ namespace IdleAnimationInternal
 
         for (uint32_t groupIndex = 0u; groupIndex < plan.LightGroupPixels.size(); ++groupIndex)
         {
-            const PixelShipGenerator::Color color = groupIndex == static_cast<uint32_t>(activeGroup) ? ship.Palette.LightHighlight : ship.Palette.LightBase;
+            const SpectralShipGen::Color color = groupIndex == static_cast<uint32_t>(activeGroup) ? ship.Palette.LightHighlight : ship.Palette.LightBase;
             for (const PixelCoordinate& pixel : plan.LightGroupPixels[groupIndex])
             {
                 frame.setPixel(pixel.X, pixel.Y, color);
@@ -575,23 +575,23 @@ namespace IdleAnimationInternal
         }
     }
 
-    void applyMajorFeatureAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool lightsEnabled, bool detailVariationEnabled)
+    void applyMajorFeatureAnimation(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool lightsEnabled, bool detailVariationEnabled)
     {
         if (normalizedTime <= 0.0)
         {
             return;
         }
 
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
         const std::size_t componentCount = std::min(ship.IdleAnimationMetadata.MajorFeatureComponents.size(), plan.MajorFeatureParameters.size());
 
         for (std::size_t componentIndex = 0u; componentIndex < componentCount; ++componentIndex)
         {
-            const PixelShipGenerator::ShipMajorFeatureAnimationComponent& component = ship.IdleAnimationMetadata.MajorFeatureComponents[componentIndex];
+            const SpectralShipGen::ShipMajorFeatureAnimationComponent& component = ship.IdleAnimationMetadata.MajorFeatureComponents[componentIndex];
             const MajorFeatureAnimationParameters& parameters = plan.MajorFeatureParameters[componentIndex];
             if (!parameters.Active) { continue; }
 
-            if (component.Type == PixelShipGenerator::ShipMajorFeatureType::TECH_CORE && lightsEnabled)
+            if (component.Type == SpectralShipGen::ShipMajorFeatureType::TECH_CORE && lightsEnabled)
             {
                 const double primaryPulse = parameters.AlternatePhase
                     ? samplePulseEnvelope(normalizedTime, 0.54, 0.62, 0.75, 0.88)
@@ -612,7 +612,7 @@ namespace IdleAnimationInternal
                     }
                 }
             }
-            else if (component.Type == PixelShipGenerator::ShipMajorFeatureType::VENT_BANK && detailVariationEnabled && scaleTraits.AnimationComplexity >= 20u)
+            else if (component.Type == SpectralShipGen::ShipMajorFeatureType::VENT_BANK && detailVariationEnabled && scaleTraits.AnimationComplexity >= 20u)
             {
                 const double firstPulse = samplePulseEnvelope(normalizedTime, 0.16, 0.24, 0.34, 0.44);
                 const double secondPulse = samplePulseEnvelope(normalizedTime, 0.56, 0.64, 0.74, 0.84);
@@ -633,7 +633,7 @@ namespace IdleAnimationInternal
         }
     }
 
-    void applySmallDetailVariation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    void applySmallDetailVariation(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
         if (normalizedTime <= 0.0 || !plan.DetailVariationPixel.has_value())
         {
@@ -647,19 +647,19 @@ namespace IdleAnimationInternal
         else if (mechanicalPulse >= 0.5) { frame.setPixel(selectedPixel.X, selectedPixel.Y, ship.Palette.MechanicalBase); }
     }
 
-    std::pair<int32_t, int32_t> getRetractionOffset(PixelShipGenerator::ShipAttachmentDirection direction)
+    std::pair<int32_t, int32_t> getRetractionOffset(SpectralShipGen::ShipAttachmentDirection direction)
     {
         switch (direction)
         {
-        case PixelShipGenerator::ShipAttachmentDirection::UP: return { 0, 1 };
-        case PixelShipGenerator::ShipAttachmentDirection::DOWN: return { 0, -1 };
-        case PixelShipGenerator::ShipAttachmentDirection::LEFT: return { 1, 0 };
-        case PixelShipGenerator::ShipAttachmentDirection::RIGHT: return { -1, 0 };
+        case SpectralShipGen::ShipAttachmentDirection::UP: return { 0, 1 };
+        case SpectralShipGen::ShipAttachmentDirection::DOWN: return { 0, -1 };
+        case SpectralShipGen::ShipAttachmentDirection::LEFT: return { 1, 0 };
+        case SpectralShipGen::ShipAttachmentDirection::RIGHT: return { -1, 0 };
         default: return { 0, 0 };
         }
     }
 
-    void markAffectedPixel(PixelShipGenerator::PixelMask& affectedMask, int32_t x, int32_t y)
+    void markAffectedPixel(SpectralShipGen::PixelMask& affectedMask, int32_t x, int32_t y)
     {
         for (int32_t offsetY = -1; offsetY <= 1; ++offsetY)
         {
@@ -676,7 +676,7 @@ namespace IdleAnimationInternal
         }
     }
 
-    bool hasFourConnectedMaskNeighbour(const PixelShipGenerator::PixelMask& first, const PixelShipGenerator::PixelMask& second, uint32_t x, uint32_t y)
+    bool hasFourConnectedMaskNeighbour(const SpectralShipGen::PixelMask& first, const SpectralShipGen::PixelMask& second, uint32_t x, uint32_t y)
     {
         constexpr std::array<int32_t, 4u> OffsetX = { -1, 1, 0, 0 };
         constexpr std::array<int32_t, 4u> OffsetY = { 0, 0, -1, 1 };
@@ -695,7 +695,7 @@ namespace IdleAnimationInternal
         return false;
     }
 
-    bool moveWeaponComponent(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipWeaponAnimationComponent& component, PixelShipGenerator::PixelMask& occupiedMask, PixelShipGenerator::PixelMask& movableMask, PixelShipGenerator::PixelMask& muzzleMask, PixelShipGenerator::PixelMask& emissiveMask, PixelShipGenerator::PixelMask& affectedMask)
+    bool moveWeaponComponent(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipWeaponAnimationComponent& component, SpectralShipGen::PixelMask& occupiedMask, SpectralShipGen::PixelMask& movableMask, SpectralShipGen::PixelMask& muzzleMask, SpectralShipGen::PixelMask& emissiveMask, SpectralShipGen::PixelMask& affectedMask)
     {
         const auto [offsetX, offsetY] = getRetractionOffset(component.Direction);
         std::vector<PixelCoordinate> sourcePixels;
@@ -737,10 +737,10 @@ namespace IdleAnimationInternal
             return false;
         }
 
-        PixelShipGenerator::PixelMask candidateOccupied = occupiedMask;
-        PixelShipGenerator::PixelMask candidateMovable = movableMask;
-        PixelShipGenerator::PixelMask candidateMuzzle = muzzleMask;
-        PixelShipGenerator::PixelMask candidateEmissive = emissiveMask;
+        SpectralShipGen::PixelMask candidateOccupied = occupiedMask;
+        SpectralShipGen::PixelMask candidateMovable = movableMask;
+        SpectralShipGen::PixelMask candidateMuzzle = muzzleMask;
+        SpectralShipGen::PixelMask candidateEmissive = emissiveMask;
 
         for (const PixelCoordinate& source : sourcePixels)
         {
@@ -750,7 +750,7 @@ namespace IdleAnimationInternal
             candidateEmissive.set(source.X, source.Y, false);
         }
 
-        const PixelShipGenerator::PixelMask staticOccupiedMask = candidateOccupied;
+        const SpectralShipGen::PixelMask staticOccupiedMask = candidateOccupied;
 
         for (std::size_t index = 0u; index < destinationPixels.size(); ++index)
         {
@@ -797,26 +797,26 @@ namespace IdleAnimationInternal
         return true;
     }
 
-    void applyWeaponAnimation(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool mechanicalEnabled, bool lightsEnabled)
+    void applyWeaponAnimation(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan, bool mechanicalEnabled, bool lightsEnabled)
     {
         if (ship.IdleAnimationMetadata.WeaponComponents.empty() || normalizedTime <= 0.0)
         {
             return;
         }
 
-        PixelShipGenerator::PixelMask occupiedMask = ship.IdleAnimationMetadata.WeaponOccupiedMask;
-        PixelShipGenerator::PixelMask movableMask = ship.IdleAnimationMetadata.WeaponMovableMask;
-        PixelShipGenerator::PixelMask muzzleMask = ship.IdleAnimationMetadata.WeaponMuzzleMask;
-        PixelShipGenerator::PixelMask emissiveMask = ship.IdleAnimationMetadata.WeaponEmissiveMask;
-        PixelShipGenerator::PixelMask affectedMask(occupiedMask.getWidth(), occupiedMask.getHeight(), false);
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
+        SpectralShipGen::PixelMask occupiedMask = ship.IdleAnimationMetadata.WeaponOccupiedMask;
+        SpectralShipGen::PixelMask movableMask = ship.IdleAnimationMetadata.WeaponMovableMask;
+        SpectralShipGen::PixelMask muzzleMask = ship.IdleAnimationMetadata.WeaponMuzzleMask;
+        SpectralShipGen::PixelMask emissiveMask = ship.IdleAnimationMetadata.WeaponEmissiveMask;
+        SpectralShipGen::PixelMask affectedMask(occupiedMask.getWidth(), occupiedMask.getHeight(), false);
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.HullMask.getWidth(), ship.HullMask.getHeight() });
         const std::size_t componentCount = std::min(ship.IdleAnimationMetadata.WeaponComponents.size(), plan.WeaponParameters.size());
 
         if (mechanicalEnabled && scaleTraits.AnimationComplexity >= 20u)
         {
             for (std::size_t componentIndex = 0u; componentIndex < componentCount; ++componentIndex)
             {
-                const PixelShipGenerator::ShipWeaponAnimationComponent& component = ship.IdleAnimationMetadata.WeaponComponents[componentIndex];
+                const SpectralShipGen::ShipWeaponAnimationComponent& component = ship.IdleAnimationMetadata.WeaponComponents[componentIndex];
                 const WeaponAnimationParameters& parameters = plan.WeaponParameters[componentIndex];
                 if (!parameters.MechanicalActive || getMechanicalTravelPixels(normalizedTime, parameters.AlternatePhase, plan.Profile.SlowMechanicalCycle) == 0u)
                 {
@@ -827,9 +827,9 @@ namespace IdleAnimationInternal
             }
         }
 
-        if (PixelShipGenerator::PixelMaskUtils::getMaskPixelCount(affectedMask) > 0u)
+        if (SpectralShipGen::PixelMaskUtils::getMaskPixelCount(affectedMask) > 0u)
         {
-            PixelShipGenerator::ShipPainter painter;
+            SpectralShipGen::ShipPainter painter;
             painter.paintIdleWeaponLayer(frame, ship, occupiedMask, movableMask, muzzleMask, emissiveMask, affectedMask);
         }
 
@@ -854,24 +854,24 @@ namespace IdleAnimationInternal
         }
     }
 
-    uint32_t getAttachmentOutwardDistance(const PixelShipGenerator::ShipAttachmentPlacement& placement, uint32_t x, uint32_t y)
+    uint32_t getAttachmentOutwardDistance(const SpectralShipGen::ShipAttachmentPlacement& placement, uint32_t x, uint32_t y)
     {
         switch (placement.Direction)
         {
-        case PixelShipGenerator::ShipAttachmentDirection::LEFT: return placement.AnchorX >= x ? placement.AnchorX - x : 0u;
-        case PixelShipGenerator::ShipAttachmentDirection::RIGHT: return x >= placement.AnchorX ? x - placement.AnchorX : 0u;
-        case PixelShipGenerator::ShipAttachmentDirection::UP: return placement.AnchorY >= y ? placement.AnchorY - y : 0u;
-        case PixelShipGenerator::ShipAttachmentDirection::DOWN: return y >= placement.AnchorY ? y - placement.AnchorY : 0u;
+        case SpectralShipGen::ShipAttachmentDirection::LEFT: return placement.AnchorX >= x ? placement.AnchorX - x : 0u;
+        case SpectralShipGen::ShipAttachmentDirection::RIGHT: return x >= placement.AnchorX ? x - placement.AnchorX : 0u;
+        case SpectralShipGen::ShipAttachmentDirection::UP: return placement.AnchorY >= y ? placement.AnchorY - y : 0u;
+        case SpectralShipGen::ShipAttachmentDirection::DOWN: return y >= placement.AnchorY ? y - placement.AnchorY : 0u;
         default: return 0u;
         }
     }
 
-    std::pair<int32_t, int32_t> getAttachmentTangentOffset(PixelShipGenerator::ShipAttachmentDirection direction)
+    std::pair<int32_t, int32_t> getAttachmentTangentOffset(SpectralShipGen::ShipAttachmentDirection direction)
     {
-        return direction == PixelShipGenerator::ShipAttachmentDirection::LEFT || direction == PixelShipGenerator::ShipAttachmentDirection::RIGHT ? std::pair<int32_t, int32_t>{ 0, 1 } : std::pair<int32_t, int32_t>{ 1, 0 };
+        return direction == SpectralShipGen::ShipAttachmentDirection::LEFT || direction == SpectralShipGen::ShipAttachmentDirection::RIGHT ? std::pair<int32_t, int32_t>{ 0, 1 } : std::pair<int32_t, int32_t>{ 1, 0 };
     }
 
-    bool isAnimatedAttachmentPixel(const PixelShipGenerator::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, int32_t x, int32_t y)
+    bool isAnimatedAttachmentPixel(const SpectralShipGen::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, int32_t x, int32_t y)
     {
         if (x < 0 || y < 0 || x >= static_cast<int32_t>(ship.AttachmentMask.getWidth()) || y >= static_cast<int32_t>(ship.AttachmentMask.getHeight()))
         {
@@ -894,7 +894,7 @@ namespace IdleAnimationInternal
         return ship.AttachmentMask.get(pixelX, pixelY);
     }
 
-    bool hasNeighbouringAnimatedStructurePixel(const PixelShipGenerator::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, int32_t x, int32_t y)
+    bool hasNeighbouringAnimatedStructurePixel(const SpectralShipGen::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, int32_t x, int32_t y)
     {
         for (int32_t offsetY = -1; offsetY <= 1; ++offsetY)
         {
@@ -915,7 +915,7 @@ namespace IdleAnimationInternal
         return false;
     }
 
-    bool hasFourConnectedAnimatedAttachmentNeighbour(const PixelShipGenerator::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, const PixelCoordinate& pixel)
+    bool hasFourConnectedAnimatedAttachmentNeighbour(const SpectralShipGen::GeneratedShip& ship, const std::vector<PixelCoordinate>& origins, const std::vector<PixelCoordinate>& destinations, const PixelCoordinate& pixel)
     {
         constexpr std::array<int32_t, 4u> OffsetX = { -1, 1, 0, 0 };
         constexpr std::array<int32_t, 4u> OffsetY = { 0, 0, -1, 1 };
@@ -934,9 +934,9 @@ namespace IdleAnimationInternal
         return false;
     }
 
-    void applyMechanicalMicroMovement(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
+    void applyMechanicalMicroMovement(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime, const IdleAnimationPlan& plan)
     {
-        const PixelShipGenerator::GenerationScaleTraits scaleTraits = PixelShipGenerator::GenerationScaleTraits::fromDimensions({ ship.AttachmentMask.getWidth(), ship.AttachmentMask.getHeight() });
+        const SpectralShipGen::GenerationScaleTraits scaleTraits = SpectralShipGen::GenerationScaleTraits::fromDimensions({ ship.AttachmentMask.getWidth(), ship.AttachmentMask.getHeight() });
         if (normalizedTime <= 0.0 || scaleTraits.AnimationComplexity < 20u || !plan.MicroMovementPlacementIndex.has_value() || *plan.MicroMovementPlacementIndex >= ship.AttachmentPlacements.size())
         {
             return;
@@ -948,12 +948,12 @@ namespace IdleAnimationInternal
         const int32_t movement = signedPulse * plan.PreferredMicroMovementDirection;
         if (movement == 0) { return; }
 
-        const PixelShipGenerator::ShipAttachmentPlacement& selectedPlacement = ship.AttachmentPlacements[*plan.MicroMovementPlacementIndex];
+        const SpectralShipGen::ShipAttachmentPlacement& selectedPlacement = ship.AttachmentPlacements[*plan.MicroMovementPlacementIndex];
         const uint32_t maximumOutwardDistance = getAttachmentMaximumOutwardDistance(selectedPlacement);
         const auto [tangentX, tangentY] = getAttachmentTangentOffset(selectedPlacement.Direction);
         std::vector<PixelCoordinate> origins;
         std::vector<PixelCoordinate> destinations;
-        std::vector<PixelShipGenerator::Color> colors;
+        std::vector<SpectralShipGen::Color> colors;
 
         for (uint32_t y = selectedPlacement.MinimumY; y <= selectedPlacement.MaximumY; ++y)
         {
@@ -1047,14 +1047,14 @@ namespace IdleAnimationInternal
         return quantizeSignedUnit(sampleCurve(std::clamp(normalizedTime, 0.0, 1.0), HoverCurve));
     }
 
-    PixelShipGenerator::Image translateImageVertically(const PixelShipGenerator::Image& source, uint32_t width, uint32_t height, int32_t offsetY, const PixelShipGenerator::Color& transparent)
+    SpectralShipGen::Image translateImageVertically(const SpectralShipGen::Image& source, uint32_t width, uint32_t height, int32_t offsetY, const SpectralShipGen::Color& transparent)
     {
         if (offsetY == 0)
         {
             return source;
         }
 
-        PixelShipGenerator::Image translated;
+        SpectralShipGen::Image translated;
         translated.reset(width, height);
         translated.clear(transparent);
 
@@ -1076,7 +1076,7 @@ namespace IdleAnimationInternal
         return translated;
     }
 
-    void applyHoverOffset(PixelShipGenerator::Image& frame, const PixelShipGenerator::GeneratedShip& ship, double normalizedTime)
+    void applyHoverOffset(SpectralShipGen::Image& frame, const SpectralShipGen::GeneratedShip& ship, double normalizedTime)
     {
         const int32_t desiredOffset = getHoverOffset(normalizedTime);
 
@@ -1107,10 +1107,10 @@ namespace IdleAnimationInternal
         frame = translateImageVertically(frame, width, height, desiredOffset, ship.Palette.Transparent);
     }
 
-    PixelShipGenerator::Image evaluateIdleFrame(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipIdleAnimationSettings& settings, double normalizedTime, const IdleAnimationPlan& plan)
+    SpectralShipGen::Image evaluateIdleFrame(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipIdleAnimationSettings& settings, double normalizedTime, const IdleAnimationPlan& plan)
     {
         const double time = wrapNormalizedTime(normalizedTime);
-        PixelShipGenerator::Image frame = ship.FinalImage;
+        SpectralShipGen::Image frame = ship.FinalImage;
         if (time <= 0.0) { return frame; }
 
         if (settings.MechanicalMicroMovement) { applyEngineMechanicalAnimation(frame, ship, time, plan); }

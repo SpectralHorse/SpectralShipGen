@@ -5,16 +5,16 @@
 #include <exception>
 #include <iostream>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/PixelMask.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipHullLayerType.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/PixelMask.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipHullLayerType.h>
 
 namespace
 {
-    uint32_t countPixels(const PixelShipGenerator::PixelMask& mask)
+    uint32_t countPixels(const SpectralShipGen::PixelMask& mask)
     {
         uint32_t count = 0u;
         for (uint32_t y = 0u; y < mask.getHeight(); ++y)
@@ -24,17 +24,17 @@ namespace
         return count;
     }
 
-    uint64_t hashImage(const PixelShipGenerator::GeneratedShip& ship)
+    uint64_t hashImage(const SpectralShipGen::GeneratedShip& ship)
     {
         uint64_t hash = 14695981039346656037ull;
-        for (const PixelShipGenerator::Color& color : ship.FinalImage.getPixels())
+        for (const SpectralShipGen::Color& color : ship.FinalImage.getPixels())
         {
             for (uint8_t value : { color.R, color.G, color.B, color.A }) { hash ^= value; hash *= 1099511628211ull; }
         }
         return hash;
     }
 
-    bool validateLayerGeometry(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::ShipGenerationDebugInfo& debug)
+    bool validateLayerGeometry(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::ShipGenerationDebugInfo& debug)
     {
         if (debug.HullLayerMask.getWidth() != ship.HullMask.getWidth() || debug.HullLayerMask.getHeight() != ship.HullMask.getHeight()) { return debug.HullLayerCount == 0u; }
         if (debug.HullLayerUpperMask.getWidth() != ship.HullMask.getWidth() || debug.HullLayerUpperMask.getHeight() != ship.HullMask.getHeight()) { return false; }
@@ -56,9 +56,9 @@ namespace
         return true;
     }
 
-    PixelShipGenerator::ShipGenerationSettings makeSettings(uint64_t seed, uint32_t width, uint32_t height, PixelShipGenerator::ShipStyle style, PixelShipGenerator::ShipFactionType faction)
+    SpectralShipGen::ShipGenerationSettings makeSettings(uint64_t seed, uint32_t width, uint32_t height, SpectralShipGen::ShipStyle style, SpectralShipGen::ShipFactionType faction)
     {
-        PixelShipGenerator::ShipGenerationSettings settings;
+        SpectralShipGen::ShipGenerationSettings settings;
         settings.Seed = seed;
         settings.Dimensions = { width, height };
         settings.Style = style;
@@ -68,9 +68,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runHullLayerRegression()
+int SpectralShipGenTests::runHullLayerRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
     ShipGenerator generator;
     bool success = true;
 

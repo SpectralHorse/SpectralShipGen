@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
@@ -18,26 +18,26 @@ namespace
         uint64_t Seed;
         uint32_t Width;
         uint32_t Height;
-        PixelShipGenerator::ShipStyle Style;
-        PixelShipGenerator::ShipFactionType Faction;
+        SpectralShipGen::ShipStyle Style;
+        SpectralShipGen::ShipFactionType Faction;
         bool AttachmentsEnabled;
         uint64_t ExpectedHash;
     };
 
     constexpr std::array<RegressionRecipe, 12u> Recipes =
     { {
-        { "fighter_frontier_64", 0x0123456789ABCDEFull, 64u, 64u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x611F433BB0CF43DEull },
-        { "fighter_xeno_96", 0xBF58476D1CE4E5B9ull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::XENO, true, 0xEC3C76CE529D590Bull },
-        { "sleek_ascendant_64", 0x8C3C010CB4754C91ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0x3DCE4B3D3A63BF1Dull },
-        { "sleek_military_96_no_attachments", 0x243F6A8885A308D3ull, 96u, 96u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::MILITARY, false, 0x21E2649F7C57285Eull },
-        { "heavy_military_64", 0xD1B54A32D192ED03ull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::MILITARY, true, 0x086E950A968C74D8ull },
-        { "heavy_ascendant_96", 0x13198A2E03707344ull, 96u, 96u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0x94552840158A1577ull },
-        { "industrial_xeno_64_no_attachments", 0x94D049BB133111EBull, 64u, 64u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::XENO, false, 0x894FAC3499A5CF86ull },
-        { "industrial_frontier_96", 0xA4093822299F31D0ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x2F994D584DBAEAFEull },
-        { "sleek_frontier_64", 0x6A09E667F3BCC909ull, 64u, 64u, PixelShipGenerator::ShipStyle::SLEEK, PixelShipGenerator::ShipFactionType::FRONTIER, true, 0x947405784E98B68Dull },
-        { "fighter_military_96", 0xBB67AE8584CAA73Bull, 96u, 96u, PixelShipGenerator::ShipStyle::FIGHTER, PixelShipGenerator::ShipFactionType::MILITARY, false, 0xA9696F29981B73D8ull },
-        { "heavy_xeno_64", 0x3C6EF372FE94F82Bull, 64u, 64u, PixelShipGenerator::ShipStyle::HEAVY, PixelShipGenerator::ShipFactionType::XENO, true, 0x317232E9FC78BE22ull },
-        { "industrial_ascendant_96", 0xA54FF53A5F1D36F1ull, 96u, 96u, PixelShipGenerator::ShipStyle::INDUSTRIAL, PixelShipGenerator::ShipFactionType::ASCENDANT, true, 0xCD43A39ABA890A98ull }
+        { "fighter_frontier_64", 0x0123456789ABCDEFull, 64u, 64u, SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipFactionType::FRONTIER, true, 0x611F433BB0CF43DEull },
+        { "fighter_xeno_96", 0xBF58476D1CE4E5B9ull, 96u, 96u, SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipFactionType::XENO, true, 0xEC3C76CE529D590Bull },
+        { "sleek_ascendant_64", 0x8C3C010CB4754C91ull, 64u, 64u, SpectralShipGen::ShipStyle::SLEEK, SpectralShipGen::ShipFactionType::ASCENDANT, true, 0x3DCE4B3D3A63BF1Dull },
+        { "sleek_military_96_no_attachments", 0x243F6A8885A308D3ull, 96u, 96u, SpectralShipGen::ShipStyle::SLEEK, SpectralShipGen::ShipFactionType::MILITARY, false, 0x21E2649F7C57285Eull },
+        { "heavy_military_64", 0xD1B54A32D192ED03ull, 64u, 64u, SpectralShipGen::ShipStyle::HEAVY, SpectralShipGen::ShipFactionType::MILITARY, true, 0x086E950A968C74D8ull },
+        { "heavy_ascendant_96", 0x13198A2E03707344ull, 96u, 96u, SpectralShipGen::ShipStyle::HEAVY, SpectralShipGen::ShipFactionType::ASCENDANT, true, 0x94552840158A1577ull },
+        { "industrial_xeno_64_no_attachments", 0x94D049BB133111EBull, 64u, 64u, SpectralShipGen::ShipStyle::INDUSTRIAL, SpectralShipGen::ShipFactionType::XENO, false, 0x894FAC3499A5CF86ull },
+        { "industrial_frontier_96", 0xA4093822299F31D0ull, 96u, 96u, SpectralShipGen::ShipStyle::INDUSTRIAL, SpectralShipGen::ShipFactionType::FRONTIER, true, 0x2F994D584DBAEAFEull },
+        { "sleek_frontier_64", 0x6A09E667F3BCC909ull, 64u, 64u, SpectralShipGen::ShipStyle::SLEEK, SpectralShipGen::ShipFactionType::FRONTIER, true, 0x947405784E98B68Dull },
+        { "fighter_military_96", 0xBB67AE8584CAA73Bull, 96u, 96u, SpectralShipGen::ShipStyle::FIGHTER, SpectralShipGen::ShipFactionType::MILITARY, false, 0xA9696F29981B73D8ull },
+        { "heavy_xeno_64", 0x3C6EF372FE94F82Bull, 64u, 64u, SpectralShipGen::ShipStyle::HEAVY, SpectralShipGen::ShipFactionType::XENO, true, 0x317232E9FC78BE22ull },
+        { "industrial_ascendant_96", 0xA54FF53A5F1D36F1ull, 96u, 96u, SpectralShipGen::ShipStyle::INDUSTRIAL, SpectralShipGen::ShipFactionType::ASCENDANT, true, 0xCD43A39ABA890A98ull }
     } };
 
     void hashByte(uint64_t& hash, uint8_t value)
@@ -54,13 +54,13 @@ namespace
         hashByte(hash, static_cast<uint8_t>((value >> 24u) & 0xFFu));
     }
 
-    uint64_t calculateImageHash(const PixelShipGenerator::GeneratedShip& ship, uint32_t width, uint32_t height)
+    uint64_t calculateImageHash(const SpectralShipGen::GeneratedShip& ship, uint32_t width, uint32_t height)
     {
         uint64_t hash = 14695981039346656037ull;
         hashUInt32(hash, width);
         hashUInt32(hash, height);
 
-        for (const PixelShipGenerator::Color& color : ship.FinalImage.getPixels())
+        for (const SpectralShipGen::Color& color : ship.FinalImage.getPixels())
         {
             hashByte(hash, color.R);
             hashByte(hash, color.G);
@@ -71,9 +71,9 @@ namespace
         return hash;
     }
 
-    PixelShipGenerator::ShipGenerationSettings createSettings(const RegressionRecipe& recipe)
+    SpectralShipGen::ShipGenerationSettings createSettings(const RegressionRecipe& recipe)
     {
-        PixelShipGenerator::ShipGenerationSettings settings;
+        SpectralShipGen::ShipGenerationSettings settings;
         settings.Seed = recipe.Seed;
         settings.Dimensions.Width = recipe.Width;
         settings.Dimensions.Height = recipe.Height;
@@ -83,7 +83,7 @@ namespace
         return settings;
     }
 
-    bool isHullConnected(const PixelShipGenerator::PixelMask& hullMask)
+    bool isHullConnected(const SpectralShipGen::PixelMask& hullMask)
     {
         const uint32_t width = hullMask.getWidth();
         const uint32_t height = hullMask.getHeight();
@@ -159,7 +159,7 @@ namespace
         return visitedCount == totalPixels;
     }
 
-    bool isHullHorizontallySymmetric(const PixelShipGenerator::PixelMask& hullMask)
+    bool isHullHorizontallySymmetric(const SpectralShipGen::PixelMask& hullMask)
     {
         for (uint32_t y = 0u; y < hullMask.getHeight(); ++y)
         {
@@ -176,19 +176,19 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGeneratorRegression()
+int SpectralShipGenTests::runGeneratorRegression()
 {
     const bool recordMode = false;
-    PixelShipGenerator::ShipGenerator generator;
+    SpectralShipGen::ShipGenerator generator;
     bool success = true;
 
     for (const RegressionRecipe& recipe : Recipes)
     {
         try
         {
-            const PixelShipGenerator::ShipGenerationSettings settings = createSettings(recipe);
-            const PixelShipGenerator::GeneratedShip firstShip = generator.generate(settings);
-            const PixelShipGenerator::GeneratedShip secondShip = generator.generate(settings);
+            const SpectralShipGen::ShipGenerationSettings settings = createSettings(recipe);
+            const SpectralShipGen::GeneratedShip firstShip = generator.generate(settings);
+            const SpectralShipGen::GeneratedShip secondShip = generator.generate(settings);
             const uint64_t firstHash = calculateImageHash(firstShip, recipe.Width, recipe.Height);
             const uint64_t secondHash = calculateImageHash(secondShip, recipe.Width, recipe.Height);
 

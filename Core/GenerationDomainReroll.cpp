@@ -1,11 +1,11 @@
-#include <PixelShipGenerator/GenerationDomainReroll.h>
+#include <SpectralShipGen/GenerationDomainReroll.h>
 
 #include <array>
 #include <cstddef>
 
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     ShipGenerationRecipe rerollGenerationDomains(const ShipGenerationRecipe& recipe, const std::vector<GenerationDomain>& selectedDomains, uint64_t rerollSeed)
     {

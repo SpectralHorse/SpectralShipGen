@@ -5,14 +5,14 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <PixelShipGenerator/ShipFactionType.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipFactionType.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    bool masksOverlap(const PixelShipGenerator::PixelMask& first, const PixelShipGenerator::PixelMask& second)
+    bool masksOverlap(const SpectralShipGen::PixelMask& first, const SpectralShipGen::PixelMask& second)
     {
         for (uint32_t y = 0u; y < first.getHeight(); ++y)
         {
@@ -25,7 +25,7 @@ namespace
         return false;
     }
 
-    bool hasConnectedExhaust(const PixelShipGenerator::GeneratedShip& ship)
+    bool hasConnectedExhaust(const SpectralShipGen::GeneratedShip& ship)
     {
         for (uint32_t y = 0u; y < ship.EngineExhaustMask.getHeight(); ++y)
         {
@@ -44,7 +44,7 @@ namespace
         return true;
     }
 
-    uint32_t getExhaustRowWidth(const PixelShipGenerator::PixelMask& mask, const PixelShipGenerator::EngineUnitDebugInfo& unit, uint32_t y)
+    uint32_t getExhaustRowWidth(const SpectralShipGen::PixelMask& mask, const SpectralShipGen::EngineUnitDebugInfo& unit, uint32_t y)
     {
         uint32_t count = 0u;
         const uint32_t minimumX = unit.NozzleStartX;
@@ -59,31 +59,31 @@ namespace
     }
 
 
-    void verifyMirroredEnginePair(const PixelShipGenerator::EngineUnitDebugInfo& first, const PixelShipGenerator::EngineUnitDebugInfo& second, uint32_t imageWidth)
+    void verifyMirroredEnginePair(const SpectralShipGen::EngineUnitDebugInfo& first, const SpectralShipGen::EngineUnitDebugInfo& second, uint32_t imageWidth)
     {
         if (first.SizeClass != second.SizeClass || first.HousingWidth != second.HousingWidth || first.NozzleWidth != second.NozzleWidth || first.RootStartY != second.RootStartY || first.NozzleY != second.NozzleY || first.ExhaustStartY != second.ExhaustStartY || first.ExhaustLength != second.ExhaustLength || first.Nacelle != second.Nacelle) { throw std::runtime_error("Mirrored engine units do not share matching geometry."); }
         if (first.HousingStartX + second.HousingStartX + first.HousingWidth != imageWidth) { throw std::runtime_error("Mirrored engine housings are not structurally symmetric."); }
         if (first.NozzleStartX + second.NozzleStartX + first.NozzleWidth != imageWidth) { throw std::runtime_error("Mirrored engine nozzles are not structurally symmetric."); }
     }
 
-    void verifyPairedEngineSymmetry(const PixelShipGenerator::ShipGenerationDebugInfo& debugInfo, uint32_t imageWidth)
+    void verifyPairedEngineSymmetry(const SpectralShipGen::ShipGenerationDebugInfo& debugInfo, uint32_t imageWidth)
     {
         switch (debugInfo.EngineLayout)
         {
-        case PixelShipGenerator::EngineLayoutType::TWIN:
+        case SpectralShipGen::EngineLayoutType::TWIN:
             if (debugInfo.EngineUnits.size() != 2u) { throw std::runtime_error("TWIN layout engine count mismatch."); }
             verifyMirroredEnginePair(debugInfo.EngineUnits[0], debugInfo.EngineUnits[1], imageWidth);
             break;
-        case PixelShipGenerator::EngineLayoutType::QUAD:
+        case SpectralShipGen::EngineLayoutType::QUAD:
             if (debugInfo.EngineUnits.size() != 4u) { throw std::runtime_error("QUAD layout engine count mismatch."); }
             verifyMirroredEnginePair(debugInfo.EngineUnits[0], debugInfo.EngineUnits[3], imageWidth);
             verifyMirroredEnginePair(debugInfo.EngineUnits[1], debugInfo.EngineUnits[2], imageWidth);
             break;
-        case PixelShipGenerator::EngineLayoutType::CENTRAL_AUXILIARY:
+        case SpectralShipGen::EngineLayoutType::CENTRAL_AUXILIARY:
             if (debugInfo.EngineUnits.size() != 3u) { throw std::runtime_error("CENTRAL_AUXILIARY layout engine count mismatch."); }
             verifyMirroredEnginePair(debugInfo.EngineUnits[0], debugInfo.EngineUnits[2], imageWidth);
             break;
-        case PixelShipGenerator::EngineLayoutType::WIDE_BANK:
+        case SpectralShipGen::EngineLayoutType::WIDE_BANK:
             if (debugInfo.EngineUnits.size() == 3u) { verifyMirroredEnginePair(debugInfo.EngineUnits[0], debugInfo.EngineUnits[2], imageWidth); }
             else if (debugInfo.EngineUnits.size() == 4u) { verifyMirroredEnginePair(debugInfo.EngineUnits[0], debugInfo.EngineUnits[3], imageWidth); verifyMirroredEnginePair(debugInfo.EngineUnits[1], debugInfo.EngineUnits[2], imageWidth); }
             else { throw std::runtime_error("WIDE_BANK layout engine count mismatch."); }
@@ -93,7 +93,7 @@ namespace
         }
     }
 
-    void verifyEngineUnit(const PixelShipGenerator::GeneratedShip& ship, const PixelShipGenerator::EngineUnitDebugInfo& unit)
+    void verifyEngineUnit(const SpectralShipGen::GeneratedShip& ship, const SpectralShipGen::EngineUnitDebugInfo& unit)
     {
         if (unit.HousingWidth == 0u || unit.NozzleWidth == 0u || unit.NozzleWidth > unit.HousingWidth || unit.ExhaustLength == 0u) { throw std::runtime_error("Invalid engine unit dimensions."); }
         if (unit.HousingStartX + unit.HousingWidth > ship.EngineMask.getWidth()) { throw std::runtime_error("Engine housing exceeds image bounds."); }
@@ -128,28 +128,28 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runEngineGeometryRegression()
+int SpectralShipGenTests::runEngineGeometryRegression()
 {
     const uint32_t resolutions[] = { 24u, 32u, 44u, 64u, 96u, 128u, 160u };
-    PixelShipGenerator::ShipGenerator generator;
+    SpectralShipGen::ShipGenerator generator;
 
     for (uint32_t resolution : resolutions)
     {
         uint32_t maximumHousingWidth = 0u;
         uint32_t generatedEngineShipCount = 0u;
 
-        for (uint32_t styleIndex = 0u; styleIndex < static_cast<uint32_t>(PixelShipGenerator::ShipStyle::SHIP_STYLE_END); ++styleIndex)
+        for (uint32_t styleIndex = 0u; styleIndex < static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END); ++styleIndex)
         {
             for (uint32_t sample = 0u; sample < 24u; ++sample)
             {
-                PixelShipGenerator::ShipGenerationSettings settings;
+                SpectralShipGen::ShipGenerationSettings settings;
                 settings.Seed = 0xA24BAED4963EE407ull ^ (static_cast<uint64_t>(resolution) << 32u) ^ (static_cast<uint64_t>(styleIndex) << 24u) ^ sample;
                 settings.Dimensions.Width = resolution;
                 settings.Dimensions.Height = resolution;
-                settings.Style = static_cast<PixelShipGenerator::ShipStyle>(styleIndex);
-                settings.Faction = static_cast<PixelShipGenerator::ShipFactionType>(styleIndex % static_cast<uint32_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END));
-                PixelShipGenerator::ShipGenerationDebugInfo debugInfo;
-                const PixelShipGenerator::GeneratedShip ship = generator.generate(settings, &debugInfo);
+                settings.Style = static_cast<SpectralShipGen::ShipStyle>(styleIndex);
+                settings.Faction = static_cast<SpectralShipGen::ShipFactionType>(styleIndex % static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END));
+                SpectralShipGen::ShipGenerationDebugInfo debugInfo;
+                const SpectralShipGen::GeneratedShip ship = generator.generate(settings, &debugInfo);
 
                 if (masksOverlap(ship.EngineMask, ship.CockpitMask)) { throw std::runtime_error("Engine overlaps cockpit."); }
                 if (masksOverlap(ship.EngineExhaustMask, ship.HullMask)) { throw std::runtime_error("Exhaust overlaps hull."); }
@@ -164,11 +164,11 @@ int PixelShipGeneratorTests::runEngineGeometryRegression()
                     ++generatedEngineShipCount;
                 }
 
-                for (const PixelShipGenerator::EngineUnitDebugInfo& unit : debugInfo.EngineUnits)
+                for (const SpectralShipGen::EngineUnitDebugInfo& unit : debugInfo.EngineUnits)
                 {
                     verifyEngineUnit(ship, unit);
-                    if (debugInfo.EngineLayout == PixelShipGenerator::EngineLayoutType::QUAD && unit.SizeClass != PixelShipGenerator::EngineSizeClass::SMALL) { throw std::runtime_error("QUAD engine unit exceeded SMALL size class."); }
-                    if (debugInfo.EngineLayout == PixelShipGenerator::EngineLayoutType::WIDE_BANK && unit.SizeClass == PixelShipGenerator::EngineSizeClass::LARGE) { throw std::runtime_error("WIDE_BANK engine unit exceeded constrained size class."); }
+                    if (debugInfo.EngineLayout == SpectralShipGen::EngineLayoutType::QUAD && unit.SizeClass != SpectralShipGen::EngineSizeClass::SMALL) { throw std::runtime_error("QUAD engine unit exceeded SMALL size class."); }
+                    if (debugInfo.EngineLayout == SpectralShipGen::EngineLayoutType::WIDE_BANK && unit.SizeClass == SpectralShipGen::EngineSizeClass::LARGE) { throw std::runtime_error("WIDE_BANK engine unit exceeded constrained size class."); }
                     maximumHousingWidth = std::max(maximumHousingWidth, unit.HousingWidth);
                 }
             }

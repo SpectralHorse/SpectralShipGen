@@ -5,7 +5,7 @@
 #include "ShipGenerationContext.h"
 #include "WeaponGenerationInternal.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace WeaponGenerationInternal
     {

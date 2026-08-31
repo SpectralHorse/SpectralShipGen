@@ -5,10 +5,10 @@
 #include <iostream>
 #include <vector>
 
-#include <PixelShipGenerator/ShipFactionProfile.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct ShipGeneratorStaticFactionRegressionAccess
     {
@@ -35,7 +35,7 @@ namespace PixelShipGenerator
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -149,11 +149,11 @@ namespace
     }
 }
 
-namespace PixelShipGeneratorTests
+namespace SpectralShipGenTests
 {
     int runStaticFactionProfileRoutingRegression()
     {
-        using namespace PixelShipGenerator;
+        using namespace SpectralShipGen;
 
         const std::array<ShipFactionType, 6u> factions = {
             ShipFactionType::FRONTIER, ShipFactionType::MILITARY, ShipFactionType::ASCENDANT,

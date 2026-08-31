@@ -1,9 +1,9 @@
-#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <SpectralShipGen/ShipPaletteGenerationProfileValidation.h>
 
 #include <cstdint>
 #include <string>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     namespace
     {

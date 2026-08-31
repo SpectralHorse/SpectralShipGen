@@ -7,15 +7,15 @@
 #include <string>
 #include <vector>
 
-#include <PixelShipGenerator/GenerationDomainReroll.h>
-#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
+#include <SpectralShipGen/GenerationDomainReroll.h>
+#include <SpectralShipGen/ShipGenerationRecipeSerializer.h>
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -422,7 +422,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGenerationDomainRerollRegression()
+int SpectralShipGenTests::runGenerationDomainRerollRegression()
 {
     bool success = true;
     success = checkDomainSeedArchitecture() && success;

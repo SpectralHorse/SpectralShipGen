@@ -6,13 +6,13 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
-#include <PixelShipGenerator/ShipSpritesheetUtils.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipLongitudinalMovementAnimator.h>
+#include <SpectralShipGen/ShipSpritesheetUtils.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -108,9 +108,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runLongitudinalMovementAnimationRegression()
+int SpectralShipGenTests::runLongitudinalMovementAnimationRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     ShipGenerator generator;
     ShipLongitudinalMovementAnimator animator;

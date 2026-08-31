@@ -1,4 +1,4 @@
-#include <PixelShipGenerator/Serialization/ShipGenerationRecipeJson.h>
+#include <SpectralShipGen/Serialization/ShipGenerationRecipeJson.h>
 
 #include <cctype>
 #include <charconv>
@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 
-namespace PixelShipGenerator::RecipeJson
+namespace SpectralShipGen::RecipeJson
 {
     Value Value::null() { return {}; }
     Value Value::boolean(bool value) { Value result; result.ValueType = Type::Boolean; result.Boolean = value; return result; }

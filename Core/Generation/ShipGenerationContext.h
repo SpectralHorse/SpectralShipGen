@@ -7,28 +7,28 @@
 #include "CockpitData.h"
 #include "CoreTreatmentData.h"
 #include "DetailMotifPlan.h"
-#include <PixelShipGenerator/GeneratedShip.h>
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationDomain.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/GenerationSpatialBudget.h>
-#include <PixelShipGenerator/GenerationTuningProfile.h>
+#include <SpectralShipGen/GeneratedShip.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationDomain.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/GenerationSpatialBudget.h>
+#include <SpectralShipGen/GenerationTuningProfile.h>
 #include "HullLayerData.h"
 #include "MajorFeatureData.h"
 #include "MaterialCompositionData.h"
 #include "LiveryData.h"
-#include <PixelShipGenerator/MacroAsymmetry.h>
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipFactionProfile.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSeeds.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <SpectralShipGen/MacroAsymmetry.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipFactionProfile.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSeeds.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
 #include "StructuralNegativeSpaceData.h"
 #include "VisualHierarchyPlan.h"
 #include "WingRegionData.h"
 #include "WeaponData.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     struct ShipGenerationContext
     {

@@ -5,32 +5,32 @@
 #include <cstdint>
 #include <iostream>
 
-#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
-#include <PixelShipGenerator/ShipCockpitType.h>
-#include <PixelShipGenerator/ShipCoreTreatmentType.h>
-#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
-#include <PixelShipGenerator/ShipFactionType.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
-#include <PixelShipGenerator/ShipGenerationSettings.h>
-#include <PixelShipGenerator/ShipGenerator.h>
-#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
-#include <PixelShipGenerator/ShipWeaponType.h>
+#include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
+#include <SpectralShipGen/ShipCockpitType.h>
+#include <SpectralShipGen/ShipCoreTreatmentType.h>
+#include <SpectralShipGen/ShipFactionPaletteProfile.h>
+#include <SpectralShipGen/ShipFactionType.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationSettings.h>
+#include <SpectralShipGen/ShipGenerator.h>
+#include <SpectralShipGen/ShipSurfaceDetailProfile.h>
+#include <SpectralShipGen/ShipWeaponType.h>
 
 namespace
 {
-    using PixelShipGeneratorDiagnostics::DiagnosticGenerationConfiguration;
-    using PixelShipGeneratorDiagnostics::GenerationStatistics;
+    using SpectralShipGenDiagnostics::DiagnosticGenerationConfiguration;
+    using SpectralShipGenDiagnostics::GenerationStatistics;
 
-    constexpr std::array<PixelShipGenerator::ShipFactionType, static_cast<std::size_t>(PixelShipGenerator::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = {
-        PixelShipGenerator::ShipFactionType::FRONTIER,
-        PixelShipGenerator::ShipFactionType::MILITARY,
-        PixelShipGenerator::ShipFactionType::ASCENDANT,
-        PixelShipGenerator::ShipFactionType::XENO,
-        PixelShipGenerator::ShipFactionType::CORPORATE,
-        PixelShipGenerator::ShipFactionType::RELIC
+    constexpr std::array<SpectralShipGen::ShipFactionType, static_cast<std::size_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)> Factions = {
+        SpectralShipGen::ShipFactionType::FRONTIER,
+        SpectralShipGen::ShipFactionType::MILITARY,
+        SpectralShipGen::ShipFactionType::ASCENDANT,
+        SpectralShipGen::ShipFactionType::XENO,
+        SpectralShipGen::ShipFactionType::CORPORATE,
+        SpectralShipGen::ShipFactionType::RELIC
     };
 
-    constexpr std::array<PixelShipGenerator::ShipDimensions, 6u> NativeReviewDimensions = { {
+    constexpr std::array<SpectralShipGen::ShipDimensions, 6u> NativeReviewDimensions = { {
         { 32u, 32u },
         { 44u, 44u },
         { 48u, 64u },
@@ -64,40 +64,40 @@ namespace
         return total;
     }
 
-    GenerationStatistics collectFaction(PixelShipGenerator::ShipFactionType faction, uint64_t samples = 180u)
+    GenerationStatistics collectFaction(SpectralShipGen::ShipFactionType faction, uint64_t samples = 180u)
     {
         DiagnosticGenerationConfiguration configuration;
         configuration.Width = 64u;
         configuration.Height = 64u;
-        configuration.Style = PixelShipGenerator::ShipStyle::FIGHTER;
+        configuration.Style = SpectralShipGen::ShipStyle::FIGHTER;
         configuration.Faction = faction;
         configuration.DetailDensity = 62u;
         configuration.AsymmetricDetailChance = 14u;
         configuration.Samples = samples;
         configuration.DiagnosticSeed = 0x55FAC710C0FFEE11ull;
-        return PixelShipGeneratorDiagnostics::collectGenerationStatistics(configuration);
+        return SpectralShipGenDiagnostics::collectGenerationStatistics(configuration);
     }
 
     bool validateSameSeedNativeDistinctness()
     {
-        PixelShipGenerator::ShipGenerator generator;
+        SpectralShipGen::ShipGenerator generator;
 
-        for (const PixelShipGenerator::ShipDimensions dimensions : NativeReviewDimensions)
+        for (const SpectralShipGen::ShipDimensions dimensions : NativeReviewDimensions)
         {
-            std::array<PixelShipGenerator::GeneratedShip, Factions.size()> ships;
+            std::array<SpectralShipGen::GeneratedShip, Factions.size()> ships;
 
             for (std::size_t factionIndex = 0u; factionIndex < Factions.size(); ++factionIndex)
             {
-                PixelShipGenerator::ShipGenerationSettings settings;
+                SpectralShipGen::ShipGenerationSettings settings;
                 settings.Seed = 0x55D1571AC7000000ull + static_cast<uint64_t>(dimensions.Width) * 1000ull + dimensions.Height;
                 settings.Dimensions = dimensions;
-                settings.Style = PixelShipGenerator::ShipStyle::FIGHTER;
+                settings.Style = SpectralShipGen::ShipStyle::FIGHTER;
                 settings.Faction = Factions[factionIndex];
                 ships[factionIndex] = generator.generate(settings);
 
-                if (Factions[factionIndex] == PixelShipGenerator::ShipFactionType::CORPORATE || Factions[factionIndex] == PixelShipGenerator::ShipFactionType::RELIC)
+                if (Factions[factionIndex] == SpectralShipGen::ShipFactionType::CORPORATE || Factions[factionIndex] == SpectralShipGen::ShipFactionType::RELIC)
                 {
-                    const PixelShipGenerator::GeneratedShip repeat = generator.generate(settings);
+                    const SpectralShipGen::GeneratedShip repeat = generator.generate(settings);
                     if (repeat.FinalImage.getPixels() != ships[factionIndex].FinalImage.getPixels())
                     {
                         std::cerr << "New faction determinism failed at " << dimensions.Width << 'x' << dimensions.Height << ".\n";
@@ -106,8 +106,8 @@ namespace
                 }
             }
 
-            const std::size_t corporate = index(PixelShipGenerator::ShipFactionType::CORPORATE);
-            const std::size_t relic = index(PixelShipGenerator::ShipFactionType::RELIC);
+            const std::size_t corporate = index(SpectralShipGen::ShipFactionType::CORPORATE);
+            const std::size_t relic = index(SpectralShipGen::ShipFactionType::RELIC);
             if (ships[corporate].FinalImage.getPixels() == ships[relic].FinalImage.getPixels())
             {
                 std::cerr << "CORPORATE and RELIC matched at " << dimensions.Width << 'x' << dimensions.Height << ".\n";
@@ -128,9 +128,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runFactionExpansionRegression()
+int SpectralShipGenTests::runFactionExpansionRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     static_assert(static_cast<std::size_t>(ShipFactionType::SHIP_FACTION_TYPE_END) == 6u, "Task 55 expects six factions.");
 

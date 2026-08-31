@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/GeneratedShip.h>
+#include <SpectralShipGen/GeneratedShip.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     void GeneratedShip::reset(uint32_t width, uint32_t height, const ShipGenerationSeeds& seeds)
     {
@@ -42,4 +42,4 @@ namespace PixelShipGenerator
 
         FinalImage.clear(Color());
     }
-} // namespace PixelShipGenerator
+} // namespace SpectralShipGen

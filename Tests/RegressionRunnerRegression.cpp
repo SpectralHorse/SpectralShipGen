@@ -19,7 +19,7 @@ namespace
 
     int invoke(
         const std::vector<std::string>& arguments,
-        const std::vector<PixelShipGeneratorTests::RegressionSuite>& suites,
+        const std::vector<SpectralShipGenTests::RegressionSuite>& suites,
         std::string& output,
         std::string& errors)
     {
@@ -32,7 +32,7 @@ namespace
 
         std::ostringstream outputStream;
         std::ostringstream errorStream;
-        const int result = PixelShipGeneratorTests::runRegressionRunner(
+        const int result = SpectralShipGenTests::runRegressionRunner(
             static_cast<int>(argv.size()), argv.data(), suites, "RegressionRunnerFixture", outputStream, errorStream);
         output = outputStream.str();
         errors = errorStream.str();
@@ -40,7 +40,7 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runRegressionRunnerRegression()
+int SpectralShipGenTests::runRegressionRunnerRegression()
 {
     const std::vector<RegressionSuite> suites = {
         { "alpha", "Alpha Geometry", RegressionCategory::GEOMETRY, passSuite, false },

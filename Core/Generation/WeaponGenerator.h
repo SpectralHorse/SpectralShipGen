@@ -2,7 +2,7 @@
 
 #include "ShipGenerationContext.h"
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class WeaponGenerator
     {

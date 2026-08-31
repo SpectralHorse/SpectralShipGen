@@ -5,13 +5,13 @@
 #include <exception>
 #include <iostream>
 
-#include <PixelShipGenerator/GenerationComplexityBudget.h>
-#include <PixelShipGenerator/GenerationScaleTraits.h>
-#include <PixelShipGenerator/ShipGenerator.h>
+#include <SpectralShipGen/GenerationComplexityBudget.h>
+#include <SpectralShipGen/GenerationScaleTraits.h>
+#include <SpectralShipGen/ShipGenerator.h>
 
 namespace
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     bool imagesEqual(const Image& first, const Image& second)
     {
@@ -94,9 +94,9 @@ namespace
     }
 }
 
-int PixelShipGeneratorTests::runGenerationComplexityBudgetRegression()
+int SpectralShipGenTests::runGenerationComplexityBudgetRegression()
 {
-    using namespace PixelShipGenerator;
+    using namespace SpectralShipGen;
 
     try
     {

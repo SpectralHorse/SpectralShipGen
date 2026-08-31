@@ -1,6 +1,6 @@
-#include <PixelShipGenerator/ShipMaterialZoneType.h>
+#include <SpectralShipGen/ShipMaterialZoneType.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     const char* getShipMaterialZoneTypeName(ShipMaterialZoneType type)
     {

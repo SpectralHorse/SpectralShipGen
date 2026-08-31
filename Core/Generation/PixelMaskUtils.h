@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include <PixelShipGenerator/PixelMask.h>
+#include <SpectralShipGen/PixelMask.h>
 
-namespace PixelShipGenerator::PixelMaskUtils
+namespace SpectralShipGen::PixelMaskUtils
 {
     struct MaskBounds
     {

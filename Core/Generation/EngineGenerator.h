@@ -4,10 +4,10 @@
 #include <vector>
 
 #include "ShipGenerationContext.h"
-#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
-#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipGenerationDebugInfo.h>
+#include <SpectralShipGen/ShipGenerationProfile.h>
 
-namespace PixelShipGenerator
+namespace SpectralShipGen
 {
     class EngineGenerator
     {

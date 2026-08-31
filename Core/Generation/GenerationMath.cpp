@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 
-namespace PixelShipGenerator::GenerationMath
+namespace SpectralShipGen::GenerationMath
 {
     uint32_t scalePixelsFrom64(uint32_t value, uint32_t dimension)
     {
