@@ -50,6 +50,7 @@ namespace SpectralShipGenTests
     int runRegressionRunnerRegression();
     int runDiagnosticsRunnerRegression();
     int runDiagnosticsDashboardRegression();
+    int runTask106ReleaseRobustnessRegression();
 
     std::vector<RegressionSuite> createCoreRegressionSuites();
 }

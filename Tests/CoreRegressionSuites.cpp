@@ -15,6 +15,7 @@ namespace SpectralShipGenTests
             { "diagnostics", "Generation Diagnostics", RegressionCategory::DIAGNOSTICS, runGenerationDiagnosticsRegression, false },
             { "diagnostics-runner", "Reusable Diagnostics Runner", RegressionCategory::DIAGNOSTICS, runDiagnosticsRunnerRegression, false },
             { "diagnostics-dashboard", "Diagnostics Dashboard Analysis", RegressionCategory::DIAGNOSTICS, runDiagnosticsDashboardRegression, false },
+            { "release-robustness", "Task-106 Release Robustness Audit", RegressionCategory::DIAGNOSTICS, runTask106ReleaseRobustnessRegression, true },
             { "recipe", "Recipe Serialization", RegressionCategory::PERSISTENCE, runGenerationRecipeRegression, false },
             { "statistics", "Generator Statistics", RegressionCategory::DIAGNOSTICS, runGeneratorStatisticsRegression, true },
             { "engines", "Engine Geometry", RegressionCategory::GEOMETRY, runEngineGeometryRegression, true },

@@ -245,13 +245,14 @@ namespace SpectralShipGen
         const PixelMaskUtils::MaskBounds bounds = PixelMaskUtils::calculateMaskBounds(context.Ship.HullMask);
         if (!bounds.Valid) { return mask; }
         const uint32_t radius = std::max(1u, GenerationMath::scalePixelsFrom64(context.ScaleTraits.Tier >= GenerationScaleTier::MEDIUM ? 3u : 2u, context.Ship.HullMask.getWidth()));
+        const bool hasEnginePixels = PixelMaskUtils::getMaskPixelCount(context.Ship.EngineMask) != 0u;
         const uint32_t rearStart = bounds.MinY + ((bounds.MaxY - bounds.MinY + 1u) * 67u) / 100u;
         for (uint32_t y = rearStart; y <= bounds.MaxY; ++y)
         {
             for (uint32_t x = bounds.MinX; x <= bounds.MaxX; ++x)
             {
                 if (!context.Ship.HullMask.get(x, y)) { continue; }
-                if (PixelMaskUtils::getMaskPixelCount(context.Ship.EngineMask) == 0u || withinDistance(context.Ship.EngineMask, x, y, radius)) { mask.set(x, y); }
+                if (!hasEnginePixels || withinDistance(context.Ship.EngineMask, x, y, radius)) { mask.set(x, y); }
             }
         }
         return mask;

@@ -470,6 +470,7 @@ namespace SpectralShipGen
         const uint32_t basePatternCount = GenerationMath::scalePixelsFrom64(6u, minimumDimension);
         const uint32_t targetPatternCount = composeSurfaceDetailPercent(basePatternCount, effectiveDensity);
         const uint64_t totalWeight = static_cast<uint64_t>(profile.AccentPanelWeight) + profile.AccentStripeWeight + profile.AccentArmorWeight;
+        const uint32_t wingPixelCount = PixelMaskUtils::getMaskPixelCount(context.WingRegions.WingMask);
 
         if (targetPatternCount == 0u || totalWeight == 0u)
         {
@@ -491,7 +492,7 @@ namespace SpectralShipGen
 
                 if (context.WingRegions.hasWings() && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 30u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingMask, wingPixelCount, x, y);
                 }
 
                 if (mirrored)
@@ -626,6 +627,8 @@ namespace SpectralShipGen
         const uint32_t basePatternCount = GenerationMath::scalePixelsFrom64(4u, minimumDimension);
         uint32_t targetPatternCount = composeSurfaceDetailPercent(basePatternCount, effectiveDensity);
         targetPatternCount = composeSurfaceDetailPercent(targetPatternCount, profile.MechanicalPatternCountPercent);
+        const uint32_t recessedPixelCount = PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.RecessedMask);
+        const uint32_t wingRootPixelCount = PixelMaskUtils::getMaskPixelCount(context.WingRegions.WingRootMask);
 
         if (targetPatternCount == 0u)
         {
@@ -646,13 +649,13 @@ namespace SpectralShipGen
                 uint32_t x = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, width - 1u);
                 uint32_t y = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, height - 1u);
 
-                if (PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.RecessedMask) > 0u && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 38u)
+                if (recessedPixelCount > 0u && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 38u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.RecessedMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.RecessedMask, recessedPixelCount, x, y);
                 }
                 else if (context.WingRegions.hasWings() && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 40u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingRootMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingRootMask, wingRootPixelCount, x, y);
                 }
 
                 const uint32_t slitCount = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 2u, 3u);
@@ -724,6 +727,8 @@ namespace SpectralShipGen
         const uint32_t basePatternCount = GenerationMath::scalePixelsFrom64(3u, minimumDimension);
         uint32_t targetPatternCount = composeSurfaceDetailPercent(basePatternCount, effectiveDensity);
         targetPatternCount = composeSurfaceDetailPercent(targetPatternCount, profile.LightPatternCountPercent);
+        const uint32_t boundaryPixelCount = PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.BoundaryMask);
+        const uint32_t outerWingPixelCount = PixelMaskUtils::getMaskPixelCount(context.WingRegions.OuterWingMask);
 
         for (uint32_t patternIndex = 0u; patternIndex < targetPatternCount; ++patternIndex)
         {
@@ -738,13 +743,13 @@ namespace SpectralShipGen
                 uint32_t x = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, width - 1u);
                 uint32_t y = context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, height - 1u);
 
-                if (PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.BoundaryMask) > 0u && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 32u)
+                if (boundaryPixelCount > 0u && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 32u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.BoundaryMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.BoundaryMask, boundaryPixelCount, x, y);
                 }
                 else if (context.WingRegions.hasWings() && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 55u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.WingRegions.OuterWingMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.WingRegions.OuterWingMask, outerWingPixelCount, x, y);
                 }
 
                 const uint32_t lightHeight = context.ScaleTraits.DetailComplexity >= 80u && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 15u ? 2u : 1u;
@@ -788,6 +793,8 @@ namespace SpectralShipGen
         const uint32_t effectiveDensity = composeSurfaceDetailPercent(baseEffectiveDensity, 50u + context.ScaleTraits.DetailComplexity / 2u);
         const uint32_t basePatternCount = GenerationMath::scalePixelsFrom64(3u, minimumDimension);
         const uint32_t targetPatternCount = composeSurfaceDetailPercent(basePatternCount, effectiveDensity);
+        const uint32_t coreRegionPixelCount = PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.CoreRegionMask);
+        const uint32_t wingRootPixelCount = PixelMaskUtils::getMaskPixelCount(context.WingRegions.WingRootMask);
 
         if (targetPatternCount == 0u)
         {
@@ -816,15 +823,15 @@ namespace SpectralShipGen
 
                 if (type == SupplementalSurfaceDetailType::LUMINOUS_CHANNEL
                     && context.FactionProfile.SurfaceDetails.LuminousChannelCoreRegionBiasChance > 0u
-                    && PixelMaskUtils::getMaskPixelCount(context.CoreTreatment.CoreRegionMask) > 0u
+                    && coreRegionPixelCount > 0u
                     && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < context.FactionProfile.SurfaceDetails.LuminousChannelCoreRegionBiasChance)
                 {
-                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.CoreRegionMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.CoreTreatment.CoreRegionMask, coreRegionPixelCount, x, y);
                 }
                 else if (type == SupplementalSurfaceDetailType::IDENTIFICATION_MARKING && context.WingRegions.hasWings()
                     && context.getGenerationRandomUInt(GenerationDomain::DETAILS, 0u, 99u) < 45u)
                 {
-                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingRootMask, x, y);
+                    trySelectDetailAnchorFromMask(context, context.WingRegions.WingRootMask, wingRootPixelCount, x, y);
                 }
 
                 if (mirrored)
@@ -1255,10 +1262,8 @@ namespace SpectralShipGen
         return result;
     }
 
-    bool DetailGenerator::trySelectDetailAnchorFromMask(ShipGenerationContext& context, const PixelMask& mask, uint32_t& x, uint32_t& y) const
+    bool DetailGenerator::trySelectDetailAnchorFromMask(ShipGenerationContext& context, const PixelMask& mask, uint32_t pixelCount, uint32_t& x, uint32_t& y) const
     {
-        const uint32_t pixelCount = PixelMaskUtils::getMaskPixelCount(mask);
-
         if (pixelCount == 0u)
         {
             return false;

@@ -152,6 +152,7 @@ if(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION)
         Tests/RegressionRunnerRegression.cpp
         Tests/DiagnosticsRunnerRegression.cpp
         Tests/DiagnosticsDashboardRegression.cpp
+        Tests/Task106ReleaseRobustnessRegression.cpp
 
         Tests/GenerationComplexityBudgetRegression.cpp
         Tests/GenerationDomainRerollRegression.cpp
@@ -238,7 +239,7 @@ if(BUILD_TESTING AND TARGET SpectralShipGenRegression)
         scale-traits complexity-budget statistics engines wings major-features weapons shading
         hull-layers macro-asymmetry domain-reroll cockpit core-treatment style-expansion
         faction-expansion structural-negative-space silhouette-articulation visual-hierarchy
-        material-composition livery detail-motif
+        material-composition livery detail-motif release-robustness
     )
     foreach(SUITE_NAME IN LISTS SPECTRAL_SHIP_GEN_CORE_NORMAL_SUITES)
         add_test(NAME core.${SUITE_NAME} COMMAND SpectralShipGenRegression --suite ${SUITE_NAME})

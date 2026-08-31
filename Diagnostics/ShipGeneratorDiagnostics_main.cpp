@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include <SpectralShipGen/Diagnostics/DiagnosticsResultSerializer.h>
 #include <SpectralShipGen/Diagnostics/DiagnosticsRunner.h>
 #include <SpectralShipGen/Diagnostics/GenerationStatistics.h>
 #include <SpectralShipGen/BuiltInPresetCatalog.h>
@@ -15,6 +16,10 @@
 namespace
 {
     constexpr std::array<uint32_t, 7u> SupportedResolutions = { 24u, 32u, 44u, 64u, 96u, 128u, 160u };
+    constexpr std::array<SpectralShipGen::ShipDimensions, 11u> ReleaseAuditDimensions = { {
+        { 24u, 24u }, { 32u, 32u }, { 44u, 44u }, { 64u, 64u }, { 96u, 96u }, { 128u, 128u }, { 160u, 160u },
+        { 64u, 96u }, { 96u, 64u }, { 96u, 160u }, { 160u, 96u }
+    } };
 
     struct CommandLineOptions
     {
@@ -22,7 +27,9 @@ namespace
         bool AllResolutions = false;
         bool AllStyles = false;
         bool AllFactions = false;
+        bool ReleaseMatrix = false;
         std::optional<std::string> CsvPath;
+        std::optional<std::string> JsonPath;
         bool DetailedPerformance = false;
     };
 
@@ -55,7 +62,9 @@ namespace
         output << "  --all-resolutions                 Sweep all seven standard diagnostic resolutions.\n";
         output << "  --all-styles                      Sweep every current ShipStyle enum value.\n";
         output << "  --all-factions                    Sweep every current ShipFactionType enum value.\n";
+        output << "  --release-matrix                  Sweep Task-106 release dimensions, all styles, and all factions.\n";
         output << "  --csv <path>                      Write extended summary CSV from DiagnosticsResult.\n";
+        output << "  --json <path>                     Write serialized .shipdiag.json diagnostics data.\n";
         output << "  --performance                    Enable detailed per-stage timing instrumentation.\n";
         output << "  --help                            Show this help.\n";
     }
@@ -137,6 +146,14 @@ namespace
             if (argument == "--performance")
             {
                 options.DetailedPerformance = true;
+                continue;
+            }
+
+            if (argument == "--release-matrix")
+            {
+                options.ReleaseMatrix = true;
+                options.AllStyles = true;
+                options.AllFactions = true;
                 continue;
             }
 
@@ -245,6 +262,10 @@ namespace
             {
                 options.CsvPath = value;
             }
+            else if (argument == "--json")
+            {
+                options.JsonPath = value;
+            }
             else
             {
                 error = "Unknown argument: " + argument;
@@ -313,7 +334,11 @@ int main(int argc, char** argv)
 
     SpectralShipGenDiagnostics::DiagnosticsRunConfiguration runConfiguration;
     runConfiguration.Dimensions.clear();
-    if (options.AllResolutions)
+    if (options.ReleaseMatrix)
+    {
+        runConfiguration.Dimensions.assign(ReleaseAuditDimensions.begin(), ReleaseAuditDimensions.end());
+    }
+    else if (options.AllResolutions)
     {
         for (const uint32_t resolution : resolutions) { runConfiguration.Dimensions.push_back({ resolution, resolution }); }
     }
@@ -362,6 +387,17 @@ int main(int argc, char** argv)
         }
         SpectralShipGenDiagnostics::writeDiagnosticsResultCsv(csvFile, result);
         std::cout << "\nCSV summary written: " << *options.CsvPath << '\n';
+    }
+
+    if (options.JsonPath.has_value())
+    {
+        std::string saveError;
+        if (!SpectralShipGenDiagnostics::saveDiagnosticsResultJson(*options.JsonPath, result, saveError))
+        {
+            std::cerr << "Error: failed to write diagnostics JSON: " << saveError << '\n';
+            return 1;
+        }
+        std::cout << "Diagnostics JSON written: " << *options.JsonPath << '\n';
     }
 
     if (result.Cancelled || !result.Completed)

@@ -52,7 +52,7 @@ namespace SpectralShipGen
         bool areSurfaceDetailPixelsAvailable(const ShipGenerationContext& context, const std::vector<std::pair<uint32_t, uint32_t>>& pixels) const;
         void commitSurfaceDetailPixels(PixelMask& mask, const std::vector<std::pair<uint32_t, uint32_t>>& pixels) const;
         bool addSurfaceDetailCandidatePixel(const ShipGenerationContext& context, std::vector<std::pair<uint32_t, uint32_t>>& pixels, int32_t x, int32_t y, bool mirrored) const;
-        bool trySelectDetailAnchorFromMask(ShipGenerationContext& context, const PixelMask& mask, uint32_t& x, uint32_t& y) const;
+        bool trySelectDetailAnchorFromMask(ShipGenerationContext& context, const PixelMask& mask, uint32_t pixelCount, uint32_t& x, uint32_t& y) const;
 
         static constexpr uint32_t MaximumDetailPlacementAttempts = 16u;
     };
