@@ -1,10 +1,10 @@
 #include <stdexcept>
 #include <string>
 
-#include "ShipGenerationRecipe.h"
-#include "ShipGenerationRecipeSerializer.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipGenerationRecipe.h>
+#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 using namespace PixelShipGenerator;
 

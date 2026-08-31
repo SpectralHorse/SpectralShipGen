@@ -6,11 +6,11 @@
 #include <map>
 #include <string>
 
-#include "GeneratedShip.h"
-#include "ShipAttachment.h"
-#include "ShipFactionType.h"
-#include "ShipGenerationDebugInfo.h"
-#include "ShipGenerationProfile.h"
+#include <PixelShipGenerator/GeneratedShip.h>
+#include <PixelShipGenerator/ShipAttachment.h>
+#include <PixelShipGenerator/ShipFactionType.h>
+#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
 
 namespace PixelShipGeneratorDiagnostics
 {

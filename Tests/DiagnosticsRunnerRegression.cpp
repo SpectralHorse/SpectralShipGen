@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <algorithm>
 #include <cmath>
@@ -7,11 +7,11 @@
 #include <sstream>
 #include <vector>
 
-#include "DiagnosticsRunner.h"
-#include "DiagnosticsResultSerializer.h"
-#include "ShipFactionProfile.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
+#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

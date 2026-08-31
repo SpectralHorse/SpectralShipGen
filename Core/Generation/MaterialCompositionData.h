@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "PixelMask.h"
-#include "ShipMaterialZoneType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipMaterialZoneType.h>
 
 namespace PixelShipGenerator
 {

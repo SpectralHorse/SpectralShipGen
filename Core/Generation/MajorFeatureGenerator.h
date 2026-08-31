@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "MajorFeatureData.h"
-#include "PixelMask.h"
+#include <PixelShipGenerator/PixelMask.h>
 #include "ShipGenerationContext.h"
 
 namespace PixelShipGenerator

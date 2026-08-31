@@ -1,4 +1,4 @@
-#include "AnimationSamplingPlanner.h"
+#include <PixelShipGenerator/AnimationSamplingPlanner.h>
 
 #include <algorithm>
 #include <cstdint>

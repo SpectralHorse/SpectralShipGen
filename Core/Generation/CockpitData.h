@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "PixelMask.h"
-#include "ShipCockpitType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipCockpitType.h>
 
 namespace PixelShipGenerator
 {

@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
@@ -7,12 +7,12 @@
 #include <string>
 
 #include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerationSettings.h"
-#include "ShipFactionProfile.h"
-#include "ShipPaletteGenerationProfile.h"
-#include "ShipGenerator.h"
-#include "ShipIdleAnimator.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipIdleAnimator.h>
 
 namespace
 {

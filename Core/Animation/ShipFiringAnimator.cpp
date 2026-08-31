@@ -1,4 +1,4 @@
-#include "ShipFiringAnimator.h"
+#include <PixelShipGenerator/ShipFiringAnimator.h>
 
 #include <algorithm>
 #include <cmath>
@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
-#include "AnimationSamplingPlanner.h"
-#include "GenerationDomain.h"
-#include "GenerationScaleTraits.h"
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/AnimationSamplingPlanner.h>
+#include <PixelShipGenerator/GenerationDomain.h>
+#include <PixelShipGenerator/GenerationScaleTraits.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 #include "ShipFactionAnimationUtils.h"
 
 namespace

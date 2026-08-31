@@ -1,8 +1,8 @@
-#include "ShipPaletteGenerator.h"
+#include <PixelShipGenerator/ShipPaletteGenerator.h>
 
-#include "Color.h"
-#include "ShipFactionPaletteProfile.h"
-#include "ShipPaletteGenerationProfile.h"
+#include <PixelShipGenerator/Color.h>
+#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
 
 #include <algorithm>
 #include <cstdint>

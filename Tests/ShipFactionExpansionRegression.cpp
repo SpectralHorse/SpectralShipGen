@@ -1,20 +1,20 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 
-#include "GenerationStatistics.h"
-#include "ShipCockpitType.h"
-#include "ShipCoreTreatmentType.h"
-#include "ShipFactionPaletteProfile.h"
-#include "ShipFactionType.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
-#include "ShipSurfaceDetailProfile.h"
-#include "ShipWeaponType.h"
+#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
+#include <PixelShipGenerator/ShipCockpitType.h>
+#include <PixelShipGenerator/ShipCoreTreatmentType.h>
+#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
+#include <PixelShipGenerator/ShipFactionType.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
+#include <PixelShipGenerator/ShipWeaponType.h>
 
 namespace
 {

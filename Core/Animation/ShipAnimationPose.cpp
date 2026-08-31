@@ -1,4 +1,4 @@
-#include "ShipAnimationPose.h"
+#include <PixelShipGenerator/ShipAnimationPose.h>
 
 #include <algorithm>
 

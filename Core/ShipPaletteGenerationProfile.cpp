@@ -1,4 +1,4 @@
-#include "ShipPaletteGenerationProfile.h"
+#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
 
 namespace PixelShipGenerator
 {

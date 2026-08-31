@@ -1,4 +1,4 @@
-#include "DiagnosticsResultSerializer.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
 
 #include <cctype>
 #include <cmath>

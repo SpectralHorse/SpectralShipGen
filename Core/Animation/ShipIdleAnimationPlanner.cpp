@@ -5,9 +5,9 @@
 #include <limits>
 #include <vector>
 
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 #include "ShipFactionAnimationUtils.h"
-#include "GenerationScaleTraits.h"
+#include <PixelShipGenerator/GenerationScaleTraits.h>
 #include "PixelMaskUtils.h"
 
 namespace PixelShipGenerator

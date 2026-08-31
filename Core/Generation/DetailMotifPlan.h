@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include "GenerationSpatialBudget.h"
-#include "PixelMask.h"
-#include "ShipDetailMotifType.h"
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipDetailMotifType.h>
 
 namespace PixelShipGenerator
 {

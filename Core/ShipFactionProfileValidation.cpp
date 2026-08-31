@@ -1,5 +1,5 @@
-#include "ShipFactionProfileValidation.h"
-#include "ShipPaletteGenerationProfileValidation.h"
+#include <PixelShipGenerator/ShipFactionProfileValidation.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
 
 #include <array>
 #include <cstdint>

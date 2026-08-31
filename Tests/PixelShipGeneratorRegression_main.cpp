@@ -1,5 +1,5 @@
 #include "RegressionRunner.h"
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <iostream>
 

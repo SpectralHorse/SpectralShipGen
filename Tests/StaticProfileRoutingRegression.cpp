@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstddef>
@@ -6,11 +6,11 @@
 #include <exception>
 #include <iostream>
 
-#include "GenerationComplexityBudget.h"
-#include "GenerationSpatialBudget.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
 #include "ShipGenerationContext.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 #include "VisualHierarchyPlanner.h"
 
 namespace

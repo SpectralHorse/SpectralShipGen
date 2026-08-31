@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "ShipPainter.h"
-#include "GenerationScaleTraits.h"
+#include <PixelShipGenerator/GenerationScaleTraits.h>
 #include "PixelMaskUtils.h"
 
 namespace PixelShipGenerator

@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
@@ -7,16 +7,15 @@
 #include <string>
 #include <vector>
 
-#include "GenerationDomainReroll.h"
-#include "ShipGenerationRecipeSerializer.h"
+#include <PixelShipGenerator/GenerationDomainReroll.h>
+#include <PixelShipGenerator/ShipGenerationRecipeSerializer.h>
 #include "ShipGenerationContext.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {
     using namespace PixelShipGenerator;
-    using namespace PixelShipGeneratorPreview;
 
     bool masksEqual(const PixelMask& first, const PixelMask& second)
     {
@@ -36,9 +35,9 @@ namespace
         return first.getWidth() == second.getWidth() && first.getHeight() == second.getHeight() && first.getPixels() == second.getPixels();
     }
 
-    PreviewGenerationRecipe makeRecipe(ShipDimensions dimensions = { 96u, 96u })
+    ShipGenerationRecipe makeRecipe(ShipDimensions dimensions = { 96u, 96u })
     {
-        PreviewGenerationRecipe recipe;
+        ShipGenerationRecipe recipe;
         recipe.Seeds = deriveShipGenerationSeeds(0x0123456789ABCDEFull);
         recipe.Dimensions = dimensions;
         recipe.Style = ShipStyle::HEAVY;
@@ -49,7 +48,7 @@ namespace
         return recipe;
     }
 
-    ShipGenerationSettings makeSettings(const PreviewGenerationRecipe& recipe)
+    ShipGenerationSettings makeSettings(const ShipGenerationRecipe& recipe)
     {
         ShipGenerationSettings settings;
         settings.Seed = recipe.Seeds.Master;
@@ -80,7 +79,7 @@ namespace
         return true;
     }
 
-    bool generate(const PreviewGenerationRecipe& recipe, GeneratedShip& ship, ShipGenerationDebugInfo& debugInfo)
+    bool generate(const ShipGenerationRecipe& recipe, GeneratedShip& ship, ShipGenerationDebugInfo& debugInfo)
     {
         try
         {
@@ -191,7 +190,7 @@ namespace
     bool checkPerDomainRerollSeeds()
     {
         bool success = true;
-        const PreviewGenerationRecipe original = makeRecipe();
+        const ShipGenerationRecipe original = makeRecipe();
         const GenerationDomainSeeds originalEffective = resolveGenerationDomainSeeds(original.Seeds, original.DomainSeedOverrides, original.RandomStreamMode);
 
         for (std::size_t selectedIndex = 0u; selectedIndex < GenerationDomainCount; ++selectedIndex)
@@ -199,8 +198,8 @@ namespace
             const GenerationDomain selectedDomain = static_cast<GenerationDomain>(selectedIndex);
             const std::vector<GenerationDomain> selected = { selectedDomain };
             const uint64_t rerollSeed = 0xD1B54A32D192ED03ull + static_cast<uint64_t>(selectedIndex) * 0x9E3779B97F4A7C15ull;
-            const PreviewGenerationRecipe first = rerollGenerationDomains(original, selected, rerollSeed);
-            const PreviewGenerationRecipe second = rerollGenerationDomains(original, selected, rerollSeed);
+            const ShipGenerationRecipe first = rerollGenerationDomains(original, selected, rerollSeed);
+            const ShipGenerationRecipe second = rerollGenerationDomains(original, selected, rerollSeed);
             if (first != second)
             {
                 std::cerr << getGenerationDomainName(selectedDomain) << " reroll recipe is not deterministic.\n";
@@ -246,12 +245,12 @@ namespace
 
     bool checkMultiDomainReroll()
     {
-        const PreviewGenerationRecipe original = makeRecipe({ 96u, 64u });
+        const ShipGenerationRecipe original = makeRecipe({ 96u, 64u });
         const std::vector<GenerationDomain> firstOrder = { GenerationDomain::COCKPIT, GenerationDomain::WINGS, GenerationDomain::HULL_LAYERS };
         const std::vector<GenerationDomain> secondOrder = { GenerationDomain::HULL_LAYERS, GenerationDomain::COCKPIT, GenerationDomain::WINGS };
         const uint64_t rerollSeed = 0xC6BC279692B5CC83ull;
-        const PreviewGenerationRecipe first = rerollGenerationDomains(original, firstOrder, rerollSeed);
-        const PreviewGenerationRecipe second = rerollGenerationDomains(original, secondOrder, rerollSeed);
+        const ShipGenerationRecipe first = rerollGenerationDomains(original, firstOrder, rerollSeed);
+        const ShipGenerationRecipe second = rerollGenerationDomains(original, secondOrder, rerollSeed);
         if (first != second)
         {
             std::cerr << "Multi-domain reroll depends on selection ordering.\n";
@@ -276,14 +275,14 @@ namespace
     bool checkFocusedPreservation()
     {
         bool success = true;
-        const PreviewGenerationRecipe original = makeRecipe({ 96u, 96u });
+        const ShipGenerationRecipe original = makeRecipe({ 96u, 96u });
         GeneratedShip baseShip;
         ShipGenerationDebugInfo baseDebug;
         if (!generate(original, baseShip, baseDebug)) { return false; }
 
         const auto checkUpstream = [&](GenerationDomain domain, uint64_t rerollSeed, bool requireHull, bool requireCockpit, bool requireEngines) -> bool
             {
-                const PreviewGenerationRecipe rerolled = rerollGenerationDomains(original, { domain }, rerollSeed);
+                const ShipGenerationRecipe rerolled = rerollGenerationDomains(original, { domain }, rerollSeed);
                 GeneratedShip ship;
                 ShipGenerationDebugInfo debug;
                 if (!generate(rerolled, ship, debug)) { return false; }
@@ -293,7 +292,7 @@ namespace
                 return true;
             };
 
-        const PreviewGenerationRecipe paletteRecipe = rerollGenerationDomains(original, { GenerationDomain::PALETTE }, 0x1111222233334444ull);
+        const ShipGenerationRecipe paletteRecipe = rerollGenerationDomains(original, { GenerationDomain::PALETTE }, 0x1111222233334444ull);
         GeneratedShip paletteShip;
         ShipGenerationDebugInfo paletteDebug;
         if (!generate(paletteRecipe, paletteShip, paletteDebug) || !masksEqual(baseShip.HullMask, paletteShip.HullMask) || !masksEqual(baseShip.CockpitMask, paletteShip.CockpitMask) || !masksEqual(baseShip.EngineMask, paletteShip.EngineMask) || !masksEqual(baseShip.EngineExhaustMask, paletteShip.EngineExhaustMask) || !masksEqual(baseShip.AttachmentMask, paletteShip.AttachmentMask) || !masksEqual(baseShip.AccentMask, paletteShip.AccentMask) || !masksEqual(baseShip.MechanicalDetailMask, paletteShip.MechanicalDetailMask) || !masksEqual(baseShip.LightMask, paletteShip.LightMask) || !weaponDebugEqual(baseDebug, paletteDebug))
@@ -302,7 +301,7 @@ namespace
             success = false;
         }
 
-        const PreviewGenerationRecipe detailRecipe = rerollGenerationDomains(original, { GenerationDomain::DETAILS }, 0x5555666677778888ull);
+        const ShipGenerationRecipe detailRecipe = rerollGenerationDomains(original, { GenerationDomain::DETAILS }, 0x5555666677778888ull);
         GeneratedShip detailShip;
         ShipGenerationDebugInfo detailDebug;
         if (!generate(detailRecipe, detailShip, detailDebug) || !masksEqual(baseShip.HullMask, detailShip.HullMask) || !masksEqual(baseShip.CockpitMask, detailShip.CockpitMask) || !masksEqual(baseShip.EngineMask, detailShip.EngineMask) || !masksEqual(baseShip.EngineExhaustMask, detailShip.EngineExhaustMask) || !masksEqual(baseShip.AttachmentMask, detailShip.AttachmentMask) || !weaponDebugEqual(baseDebug, detailDebug))
@@ -337,7 +336,7 @@ namespace
 
     bool checkRecipeRoundTrip()
     {
-        PreviewGenerationRecipe recipe = makeRecipe({ 64u, 96u });
+        ShipGenerationRecipe recipe = makeRecipe({ 64u, 96u });
         recipe = rerollGenerationDomains(recipe, { GenerationDomain::COCKPIT, GenerationDomain::WEAPONS }, 0xF1357AEA2E62A9C5ull);
         ShipGenerationRecipeDocument document;
         document.Recipe = recipe;

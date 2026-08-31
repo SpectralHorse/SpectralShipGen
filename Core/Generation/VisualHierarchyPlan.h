@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include "GenerationComplexityBudget.h"
-#include "GenerationSpatialBudget.h"
-#include "ShipVisualAnchorType.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <PixelShipGenerator/ShipVisualAnchorType.h>
 
 namespace PixelShipGenerator
 {

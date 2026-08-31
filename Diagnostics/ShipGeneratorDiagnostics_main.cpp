@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "DiagnosticsRunner.h"
-#include "GenerationStatistics.h"
-#include "BuiltInPresetCatalog.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
+#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
+#include <PixelShipGenerator/BuiltInPresetCatalog.h>
 
 namespace
 {
@@ -52,7 +52,7 @@ namespace
         output << "  --attachments <on|off>            Enable or disable attachment generation.\n";
         output << "  --detail-density <0-100>\n";
         output << "  --asymmetric-detail-chance <0-100>\n";
-        output << "  --all-resolutions                 Sweep all seven PreviewApp resolutions.\n";
+        output << "  --all-resolutions                 Sweep all seven standard diagnostic resolutions.\n";
         output << "  --all-styles                      Sweep every current ShipStyle enum value.\n";
         output << "  --all-factions                    Sweep every current ShipFactionType enum value.\n";
         output << "  --csv <path>                      Write extended summary CSV from DiagnosticsResult.\n";

@@ -1,4 +1,4 @@
-#include "GenerationDomain.h"
+#include <PixelShipGenerator/GenerationDomain.h>
 
 #include <stdexcept>
 

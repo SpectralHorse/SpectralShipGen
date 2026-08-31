@@ -1,12 +1,12 @@
-#include "DiagnosticsAnalysis.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsAnalysis.h>
 
 #include <algorithm>
 #include <cmath>
 #include <set>
 
-#include "ShipGenerationPerformance.h"
-#include "BuiltInPresetCatalog.h"
-#include "ShipVisualAnchorType.h"
+#include <PixelShipGenerator/ShipGenerationPerformance.h>
+#include <PixelShipGenerator/BuiltInPresetCatalog.h>
+#include <PixelShipGenerator/ShipVisualAnchorType.h>
 
 namespace PixelShipGeneratorDiagnostics
 {

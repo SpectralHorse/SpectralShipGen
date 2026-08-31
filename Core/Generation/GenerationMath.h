@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "ShipDimensions.h"
+#include <PixelShipGenerator/ShipDimensions.h>
 
 namespace PixelShipGenerator::GenerationMath
 {

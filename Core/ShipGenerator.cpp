@@ -1,4 +1,4 @@
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipGenerator.h>
 
 #include <algorithm>
 #include <chrono>
@@ -21,15 +21,15 @@
 #include "Generation/ShipPainter.h"
 #include "Generation/WeaponGenerator.h"
 #include "Generation/VisualHierarchyPlanner.h"
-#include "GenerationTuningProfile.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerationProfileValidation.h"
-#include "ShipFactionProfileValidation.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerationPerformance.h"
-#include "ShipPaletteGenerator.h"
-#include "ShipPaletteGenerationProfileValidation.h"
-#include "ShipResolvedGenerationConfiguration.h"
+#include <PixelShipGenerator/GenerationTuningProfile.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipFactionProfileValidation.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerationPerformance.h>
+#include <PixelShipGenerator/ShipPaletteGenerator.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
 
 namespace PixelShipGenerator
 {

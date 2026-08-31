@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <algorithm>
 #include <array>
@@ -7,7 +7,7 @@
 #include <sstream>
 #include <string>
 
-#include "GenerationStatistics.h"
+#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
 
 namespace
 {

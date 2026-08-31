@@ -1,4 +1,4 @@
-#include "ShipMaterialZoneType.h"
+#include <PixelShipGenerator/ShipMaterialZoneType.h>
 
 namespace PixelShipGenerator
 {

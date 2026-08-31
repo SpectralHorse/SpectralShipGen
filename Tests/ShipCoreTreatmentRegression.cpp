@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstddef>
@@ -7,23 +7,23 @@
 #include <iostream>
 #include <utility>
 
-#include "GenerationComplexityBudget.h"
-#include "GenerationDomain.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/GenerationDomain.h>
 #include "CockpitGenerator.h"
 #include "CoreTreatmentGenerator.h"
 #include "EngineGenerator.h"
 #include "HullGenerator.h"
 #include "MacroAsymmetryPlanner.h"
 #include "ShipGenerationContext.h"
-#include "ShipGenerationProfile.h"
+#include <PixelShipGenerator/ShipGenerationProfile.h>
 #include "ShipPainter.h"
-#include "ShipPaletteGenerator.h"
-#include "PixelMask.h"
-#include "ShipCoreTreatmentType.h"
-#include "ShipGenerationDebugInfo.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipPaletteGenerator.h>
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipCoreTreatmentType.h>
+#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

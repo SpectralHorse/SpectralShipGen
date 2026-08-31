@@ -1,13 +1,13 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <cstdint>
 #include <iostream>
 
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerationSettings.h"
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
 #include "ShipPainter.h"
 
 namespace

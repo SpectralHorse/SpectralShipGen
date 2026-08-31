@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "GenerationSpatialBudget.h"
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
 #include "ShipGenerationContext.h"
 #include "WeaponGenerationInternal.h"
 

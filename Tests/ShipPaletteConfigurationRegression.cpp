@@ -1,15 +1,15 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
-#include "GenerationDomain.h"
-#include "ShipGenerator.h"
-#include "ShipIdleAnimator.h"
-#include "ShipPaletteGenerationProfile.h"
-#include "ShipPaletteGenerationProfileValidation.h"
+#include <PixelShipGenerator/GenerationDomain.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipIdleAnimator.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
 
 namespace
 {

@@ -1,6 +1,6 @@
-#include "ShipSurfaceDetailProfile.h"
+#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
 
-#include "ShipFactionProfile.h"
+#include <PixelShipGenerator/ShipFactionProfile.h>
 
 namespace PixelShipGenerator
 {

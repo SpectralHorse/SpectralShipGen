@@ -1,4 +1,4 @@
-#include "ShipFactionProfile.h"
+#include <PixelShipGenerator/ShipFactionProfile.h>
 
 #include <stdexcept>
 

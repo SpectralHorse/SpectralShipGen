@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "PixelMask.h"
-#include "ShipLiveryType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipLiveryType.h>
 
 namespace PixelShipGenerator
 {

@@ -1,12 +1,12 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <exception>
 #include <iostream>
 
-#include "GenerationSpatialBudget.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "PixelMask.h"
-#include "ShipMajorFeatureType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipMajorFeatureType.h>
 
 namespace PixelShipGenerator
 {

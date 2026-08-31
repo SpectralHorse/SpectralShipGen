@@ -10,8 +10,8 @@
 #include "GenerationMath.h"
 #include "MacroAsymmetryPlanner.h"
 #include "PixelMaskUtils.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipVisualAnchorType.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipVisualAnchorType.h>
 
 namespace PixelShipGenerator
 {

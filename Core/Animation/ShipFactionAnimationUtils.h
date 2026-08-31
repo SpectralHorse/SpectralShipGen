@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <limits>
 
-#include "ShipFactionProfile.h"
+#include <PixelShipGenerator/ShipFactionProfile.h>
 
 namespace PixelShipGenerator
 {

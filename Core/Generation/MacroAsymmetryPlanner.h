@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "MacroAsymmetry.h"
-#include "PixelMask.h"
+#include <PixelShipGenerator/MacroAsymmetry.h>
+#include <PixelShipGenerator/PixelMask.h>
 #include "ShipGenerationContext.h"
 
 namespace PixelShipGenerator

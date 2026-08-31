@@ -1,16 +1,14 @@
-#include "GenerationDomainReroll.h"
+#include <PixelShipGenerator/GenerationDomainReroll.h>
 
 #include <array>
 #include <cstddef>
 
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 
-namespace PixelShipGeneratorPreview
+namespace PixelShipGenerator
 {
-    PreviewGenerationRecipe rerollGenerationDomains(const PreviewGenerationRecipe& recipe, const std::vector<PixelShipGenerator::GenerationDomain>& selectedDomains, uint64_t rerollSeed)
+    ShipGenerationRecipe rerollGenerationDomains(const ShipGenerationRecipe& recipe, const std::vector<GenerationDomain>& selectedDomains, uint64_t rerollSeed)
     {
-        using namespace PixelShipGenerator;
-
         if (selectedDomains.empty()) { return recipe; }
 
         std::array<bool, GenerationDomainCount> selected{};
@@ -20,7 +18,7 @@ namespace PixelShipGeneratorPreview
             if (index < selected.size()) { selected[index] = true; }
         }
 
-        PreviewGenerationRecipe result = recipe;
+        ShipGenerationRecipe result = recipe;
         result.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
         const GenerationDomainSeeds effectiveSeeds = resolveGenerationDomainSeeds(result.Seeds, result.DomainSeedOverrides, GenerationRandomStreamMode::DOMAIN_SUBSTREAMS);
 

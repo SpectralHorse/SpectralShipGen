@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "PixelMask.h"
-#include "ShipCoreTreatmentType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipCoreTreatmentType.h>
 
 namespace PixelShipGenerator
 {

@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "PixelMask.h"
+#include <PixelShipGenerator/PixelMask.h>
 #include "ShipGenerationContext.h"
-#include "ShipGenerationProfile.h"
-#include "SilhouetteQualityMetrics.h"
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/SilhouetteQualityMetrics.h>
 
 namespace PixelShipGenerator
 {

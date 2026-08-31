@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

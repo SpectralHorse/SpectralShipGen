@@ -7,7 +7,7 @@
 #include <random>
 
 #include "PixelMaskUtils.h"
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 
 namespace PixelShipGenerator
 {

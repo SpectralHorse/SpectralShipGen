@@ -1,10 +1,10 @@
-#include "ShipGenerationRecipeProfileSerialization.h"
+#include <PixelShipGenerator/Serialization/ShipGenerationRecipeProfileSerialization.h>
 
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
 
-#include "Color.h"
+#include <PixelShipGenerator/Color.h>
 
 namespace PixelShipGenerator::RecipeProfileSerialization
 {

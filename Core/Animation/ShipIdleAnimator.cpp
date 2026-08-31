@@ -1,6 +1,6 @@
-#include "ShipIdleAnimator.h"
+#include <PixelShipGenerator/ShipIdleAnimator.h>
 
-#include "AnimationSamplingPlanner.h"
+#include <PixelShipGenerator/AnimationSamplingPlanner.h>
 #include "ShipIdleAnimationInternal.h"
 
 namespace PixelShipGenerator

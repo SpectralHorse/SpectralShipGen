@@ -1,10 +1,10 @@
-#include "ShipAnimationStateCoordinator.h"
+#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
 
 #include <stdexcept>
 
-#include "ShipFiringAnimator.h"
-#include "ShipLateralMovementAnimator.h"
-#include "ShipLongitudinalMovementAnimator.h"
+#include <PixelShipGenerator/ShipFiringAnimator.h>
+#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
+#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {

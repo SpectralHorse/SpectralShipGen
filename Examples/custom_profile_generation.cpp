@@ -1,10 +1,10 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include "ShipFactionProfileValidation.h"
-#include "ShipGenerationProfileValidation.h"
-#include "ShipPaletteGenerationProfileValidation.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipFactionProfileValidation.h>
+#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 using namespace PixelShipGenerator;
 

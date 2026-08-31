@@ -1,16 +1,16 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <exception>
 #include <iostream>
 
-#include "GenerationComplexityBudget.h"
-#include "PixelMask.h"
-#include "ShipGenerationDebugInfo.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
-#include "ShipHullLayerType.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipGenerationDebugInfo.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipHullLayerType.h>
 
 namespace
 {

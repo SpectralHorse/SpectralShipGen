@@ -1,4 +1,4 @@
-#include "Image.h"
+#include <PixelShipGenerator/Image.h>
 
 #include <algorithm>
 #include <cassert>

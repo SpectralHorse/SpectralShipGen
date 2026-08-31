@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <algorithm>
 #include <array>
@@ -8,13 +8,13 @@
 #include <queue>
 #include <vector>
 
-#include "GenerationComplexityBudget.h"
-#include "GenerationSpatialBudget.h"
-#include "ShipFactionType.h"
-#include "ShipGenerationProfile.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
-#include "ShipStructuralNegativeSpaceType.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
+#include <PixelShipGenerator/ShipFactionType.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipStructuralNegativeSpaceType.h>
 
 namespace
 {

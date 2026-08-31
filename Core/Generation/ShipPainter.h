@@ -2,12 +2,12 @@
 
 #include <cstdint>
 
-#include "Color.h"
-#include "GeneratedShip.h"
-#include "PixelMask.h"
+#include <PixelShipGenerator/Color.h>
+#include <PixelShipGenerator/GeneratedShip.h>
+#include <PixelShipGenerator/PixelMask.h>
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
-#include "ShipPalette.h"
+#include <PixelShipGenerator/ShipPalette.h>
 
 namespace PixelShipGenerator
 {

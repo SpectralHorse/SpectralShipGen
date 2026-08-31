@@ -1,4 +1,4 @@
-#include "ShipSpritesheetUtils.h"
+#include <PixelShipGenerator/ShipSpritesheetUtils.h>
 
 #include <cstdint>
 

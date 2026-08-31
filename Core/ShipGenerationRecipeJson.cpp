@@ -1,4 +1,4 @@
-#include "ShipGenerationRecipeJson.h"
+#include <PixelShipGenerator/Serialization/ShipGenerationRecipeJson.h>
 
 #include <cctype>
 #include <charconv>

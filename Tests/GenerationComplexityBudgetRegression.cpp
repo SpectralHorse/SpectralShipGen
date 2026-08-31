@@ -1,13 +1,13 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <exception>
 #include <iostream>
 
-#include "GenerationComplexityBudget.h"
-#include "GenerationScaleTraits.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
+#include <PixelShipGenerator/GenerationScaleTraits.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

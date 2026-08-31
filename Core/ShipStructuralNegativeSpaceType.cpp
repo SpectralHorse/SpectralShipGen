@@ -1,4 +1,4 @@
-#include "ShipStructuralNegativeSpaceType.h"
+#include <PixelShipGenerator/ShipStructuralNegativeSpaceType.h>
 
 namespace PixelShipGenerator
 {

@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "GenerationStatistics.h"
-#include "ShipDimensions.h"
-#include "ShipGenerationPerformance.h"
-#include "ShipVisualAnchorType.h"
-#include "ShipPaletteConfiguration.h"
+#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
+#include <PixelShipGenerator/ShipDimensions.h>
+#include <PixelShipGenerator/ShipGenerationPerformance.h>
+#include <PixelShipGenerator/ShipVisualAnchorType.h>
+#include <PixelShipGenerator/ShipPaletteConfiguration.h>
 
 namespace PixelShipGenerator
 {

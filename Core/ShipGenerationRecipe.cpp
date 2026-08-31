@@ -1,10 +1,10 @@
-#include "ShipGenerationRecipe.h"
+#include <PixelShipGenerator/ShipGenerationRecipe.h>
 
-#include "ShipGenerationSettings.h"
-#include "ShipFactionProfileValidation.h"
-#include "ShipGenerationProfileValidation.h"
-#include "ShipPaletteGenerationProfileValidation.h"
-#include "ShipResolvedGenerationConfiguration.h"
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipFactionProfileValidation.h>
+#include <PixelShipGenerator/ShipGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
+#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
 
 namespace PixelShipGenerator
 {

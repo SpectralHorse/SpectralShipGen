@@ -1,9 +1,9 @@
-#include "GenerationSpatialBudget.h"
+#include <PixelShipGenerator/GenerationSpatialBudget.h>
 
 #include <algorithm>
 #include <cstdint>
 
-#include "ShipGenerationProfile.h"
+#include <PixelShipGenerator/ShipGenerationProfile.h>
 
 namespace PixelShipGenerator
 {

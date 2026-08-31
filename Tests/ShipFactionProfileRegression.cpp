@@ -1,15 +1,15 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
-#include "ShipAttachmentProfile.h"
-#include "ShipFactionPaletteProfile.h"
-#include "ShipFactionProfile.h"
-#include "ShipFactionProfileValidation.h"
-#include "ShipSurfaceDetailProfile.h"
+#include <PixelShipGenerator/ShipAttachmentProfile.h>
+#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipFactionProfileValidation.h>
+#include <PixelShipGenerator/ShipSurfaceDetailProfile.h>
 
 namespace
 {

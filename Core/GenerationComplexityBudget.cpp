@@ -1,4 +1,4 @@
-#include "GenerationComplexityBudget.h"
+#include <PixelShipGenerator/GenerationComplexityBudget.h>
 
 #include <algorithm>
 #include <array>

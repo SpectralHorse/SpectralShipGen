@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <PixelShipGenerator/AnimationSamplingPlanner.h>
 #include <PixelShipGenerator/BuiltInPresetCatalog.h>
@@ -12,7 +12,7 @@
 #include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
 #include <PixelShipGenerator/ShipFiringAnimator.h>
 
-#include "DiagnosticsRunner.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
 
 #include <iostream>
 #include <stdexcept>

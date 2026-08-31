@@ -1,4 +1,4 @@
-#include "ShipPaletteGenerationProfileValidation.h"
+#include <PixelShipGenerator/ShipPaletteGenerationProfileValidation.h>
 
 #include <cstdint>
 #include <string>

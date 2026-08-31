@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "PixelMask.h"
+#include <PixelShipGenerator/PixelMask.h>
 
 namespace PixelShipGenerator::PixelMaskUtils
 {

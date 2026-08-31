@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <cmath>
 #include <filesystem>
@@ -6,8 +6,8 @@
 #include <iostream>
 #include <string>
 
-#include "DiagnosticsAnalysis.h"
-#include "DiagnosticsResultSerializer.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsAnalysis.h>
+#include <PixelShipGenerator/Diagnostics/DiagnosticsResultSerializer.h>
 
 namespace
 {

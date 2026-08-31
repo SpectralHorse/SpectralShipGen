@@ -2,11 +2,11 @@
 
 #include <string>
 
-#include "ShipGenerationRecipeJson.h"
-#include "ShipFactionProfile.h"
-#include "ShipGenerationProfile.h"
-#include "ShipPalette.h"
-#include "ShipPaletteGenerationProfile.h"
+#include <PixelShipGenerator/Serialization/ShipGenerationRecipeJson.h>
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipPalette.h>
+#include <PixelShipGenerator/ShipPaletteGenerationProfile.h>
 
 namespace PixelShipGenerator::RecipeProfileSerialization
 {

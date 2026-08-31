@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "PixelMask.h"
-#include "ShipWeaponType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipWeaponType.h>
 #include "WeaponData.h"
 
 namespace PixelShipGenerator

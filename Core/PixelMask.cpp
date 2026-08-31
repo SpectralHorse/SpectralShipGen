@@ -1,4 +1,4 @@
-#include "PixelMask.h"
+#include <PixelShipGenerator/PixelMask.h>
 
 #include <algorithm>
 #include <cassert>

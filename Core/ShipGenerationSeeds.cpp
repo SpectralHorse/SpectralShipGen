@@ -1,4 +1,4 @@
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 
 #include <stdexcept>
 

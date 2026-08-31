@@ -1,4 +1,4 @@
-#include "ShipDetailMotifType.h"
+#include <PixelShipGenerator/ShipDetailMotifType.h>
 
 namespace PixelShipGenerator
 {

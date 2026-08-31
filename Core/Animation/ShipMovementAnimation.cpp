@@ -1,4 +1,4 @@
-#include "ShipMovementAnimation.h"
+#include <PixelShipGenerator/ShipMovementAnimation.h>
 
 namespace PixelShipGenerator
 {

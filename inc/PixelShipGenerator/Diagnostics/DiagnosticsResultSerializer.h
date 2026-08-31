@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <string>
 
-#include "DiagnosticsRunner.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
 
 namespace PixelShipGeneratorDiagnostics
 {

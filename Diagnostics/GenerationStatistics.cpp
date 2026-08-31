@@ -1,5 +1,5 @@
-#include "GenerationStatistics.h"
-#include "GenerationScaleTraits.h"
+#include <PixelShipGenerator/Diagnostics/GenerationStatistics.h>
+#include <PixelShipGenerator/GenerationScaleTraits.h>
 
 #include <algorithm>
 #include <cmath>
@@ -13,11 +13,11 @@
 #include <utility>
 #include <vector>
 
-#include "DiagnosticsRunner.h"
-#include "BuiltInPresetCatalog.h"
-#include "ShipGenerationSeeds.h"
-#include "ShipGenerationSettings.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
+#include <PixelShipGenerator/BuiltInPresetCatalog.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
+#include <PixelShipGenerator/ShipGenerationSettings.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace
 {

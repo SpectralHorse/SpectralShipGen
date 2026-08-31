@@ -1,4 +1,4 @@
-#include "DiagnosticsRunner.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
 
 #include <algorithm>
 #include <chrono>
@@ -10,11 +10,11 @@
 #include <stdexcept>
 #include <tuple>
 
-#include "ShipGenerator.h"
-#include "ShipResolvedGenerationConfiguration.h"
-#include "ShipGenerationProfile.h"
-#include "ShipFactionProfile.h"
-#include "ShipGenerationSeeds.h"
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipResolvedGenerationConfiguration.h>
+#include <PixelShipGenerator/ShipGenerationProfile.h>
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipGenerationSeeds.h>
 
 namespace PixelShipGeneratorDiagnostics
 {

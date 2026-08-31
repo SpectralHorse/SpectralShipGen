@@ -1,6 +1,6 @@
-#include "ShipFactionPaletteProfile.h"
+#include <PixelShipGenerator/ShipFactionPaletteProfile.h>
 
-#include "ShipFactionProfile.h"
+#include <PixelShipGenerator/ShipFactionProfile.h>
 
 namespace PixelShipGenerator
 {

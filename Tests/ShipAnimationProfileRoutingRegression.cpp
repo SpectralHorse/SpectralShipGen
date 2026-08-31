@@ -1,4 +1,4 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cmath>
@@ -6,12 +6,12 @@
 #include <iostream>
 #include <vector>
 
-#include "ShipAnimationStateCoordinator.h"
-#include "ShipFiringAnimator.h"
-#include "ShipGenerator.h"
-#include "ShipIdleAnimator.h"
-#include "ShipLateralMovementAnimator.h"
-#include "ShipLongitudinalMovementAnimator.h"
+#include <PixelShipGenerator/ShipAnimationStateCoordinator.h>
+#include <PixelShipGenerator/ShipFiringAnimator.h>
+#include <PixelShipGenerator/ShipGenerator.h>
+#include <PixelShipGenerator/ShipIdleAnimator.h>
+#include <PixelShipGenerator/ShipLateralMovementAnimator.h>
+#include <PixelShipGenerator/ShipLongitudinalMovementAnimator.h>
 
 namespace
 {

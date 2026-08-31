@@ -7,8 +7,8 @@
 #include <utility>
 #include <vector>
 
-#include "GeneratedShip.h"
-#include "PixelMask.h"
+#include <PixelShipGenerator/GeneratedShip.h>
+#include <PixelShipGenerator/PixelMask.h>
 #include "ShipGenerationContext.h"
 
 namespace PixelShipGenerator

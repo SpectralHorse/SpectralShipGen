@@ -6,8 +6,8 @@
 #include <optional>
 #include <vector>
 
-#include "GeneratedShip.h"
-#include "ShipIdleAnimation.h"
+#include <PixelShipGenerator/GeneratedShip.h>
+#include <PixelShipGenerator/ShipIdleAnimation.h>
 
 namespace PixelShipGenerator
 {

@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 
-#include "PixelMask.h"
-#include "ShipAttachment.h"
-#include "ShipWeaponType.h"
+#include <PixelShipGenerator/PixelMask.h>
+#include <PixelShipGenerator/ShipAttachment.h>
+#include <PixelShipGenerator/ShipWeaponType.h>
 
 namespace PixelShipGenerator
 {

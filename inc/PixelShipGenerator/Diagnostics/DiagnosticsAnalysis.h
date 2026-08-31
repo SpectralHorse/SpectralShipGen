@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "DiagnosticsRunner.h"
+#include <PixelShipGenerator/Diagnostics/DiagnosticsRunner.h>
 
 namespace PixelShipGeneratorDiagnostics
 {

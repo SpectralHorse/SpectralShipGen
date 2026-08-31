@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include "CockpitData.h"
-#include "PixelMask.h"
+#include <PixelShipGenerator/PixelMask.h>
 #include "ShipGenerationContext.h"
 
 namespace PixelShipGenerator

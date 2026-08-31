@@ -1,12 +1,12 @@
-#include "RegressionSuites.h"
+#include "CoreRegressionSuites.h"
 
 #include <array>
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
-#include "ShipFactionProfile.h"
-#include "ShipGenerator.h"
+#include <PixelShipGenerator/ShipFactionProfile.h>
+#include <PixelShipGenerator/ShipGenerator.h>
 
 namespace PixelShipGenerator
 {
