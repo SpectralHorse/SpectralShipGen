@@ -221,3 +221,10 @@ cmake --build examples-build
 - **[SpectralShipGen Studio](https://github.com/SpectralHorse/SpectralShipGen-Studio)** — separate SFML GUI/application consuming the Library through its public CMake targets.
 
 The dependency direction is Studio → Library only.
+
+## License
+
+SpectralShipGen is licensed under the **zlib License**. See [`LICENSE`](LICENSE).
+
+The recipe/serialization JSON implementation is project-owned code inside the Library; SpectralShipGen does not bundle or require a third-party JSON library.
+
