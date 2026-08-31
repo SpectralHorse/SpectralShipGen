@@ -84,8 +84,8 @@ namespace
         ship.reset(dimensions.Width, dimensions.Height, seeds);
         ship.DomainSeeds = resolveGenerationDomainSeeds(seeds, {});
         ship.AnimationTraits = getShipGenerationProfile(style).AnimationTraits;
-        ship.Style = style;
-        ship.Faction = faction;
+        ship.Provenance.StructuralPreset = style;
+        ship.Provenance.FactionPreset = faction;
 
         const Color hullColor(70u, 75u, 88u, 255u);
         const Color weaponColor(185u, 190u, 202u, 255u);

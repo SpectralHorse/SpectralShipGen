@@ -26,22 +26,6 @@ namespace SpectralShipGen
             return result;
         }
 
-        const char* profileSourceString(ShipGenerationRecipeProfileSource source)
-        {
-            switch (source)
-            {
-            case ShipGenerationRecipeProfileSource::BUILT_IN_PRESET: return "BUILT_IN_PRESET";
-            case ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM: return "EMBEDDED_CUSTOM";
-            default: throw std::invalid_argument("Unknown recipe profile source.");
-            }
-        }
-
-        bool profileSourceFromString(const std::string& value, ShipGenerationRecipeProfileSource& source)
-        {
-            if (value == "BUILT_IN_PRESET") { source = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET; return true; }
-            if (value == "EMBEDDED_CUSTOM") { source = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM; return true; }
-            return false;
-        }
 
         const char* paletteSourceString(ShipPaletteSourceMode mode)
         {
@@ -62,22 +46,6 @@ namespace SpectralShipGen
             return false;
         }
 
-        const char* randomStreamModeString(GenerationRandomStreamMode mode)
-        {
-            switch (mode)
-            {
-            case GenerationRandomStreamMode::DOMAIN_SUBSTREAMS: return "DOMAIN_SUBSTREAMS";
-            case GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS: return "LEGACY_TOP_LEVEL_STREAMS";
-            default: throw std::invalid_argument("Unknown generation random stream mode.");
-            }
-        }
-
-        bool randomStreamModeFromString(const std::string& value, GenerationRandomStreamMode& mode)
-        {
-            if (value == "DOMAIN_SUBSTREAMS") { mode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS; return true; }
-            if (value == "LEGACY_TOP_LEVEL_STREAMS") { mode = GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS; return true; }
-            return false;
-        }
 
         const char* animationSamplingModeString(AnimationSamplingMode mode)
         {
@@ -123,7 +91,6 @@ namespace SpectralShipGen
             seeds.Object["palette"] = Value::number(recipe.Seeds.Palette);
             seeds.Object["details"] = Value::number(recipe.Seeds.Details);
             seeds.Object["attachments"] = Value::number(recipe.Seeds.Attachments);
-            seeds.Object["rng_mode"] = Value::string(randomStreamModeString(recipe.RandomStreamMode));
 
             if (recipe.DomainSeedOverrides.hasAny())
             {
@@ -138,13 +105,13 @@ namespace SpectralShipGen
             return seeds;
         }
 
-        Value serializeStructuralSource(const ShipGenerationRecipe& recipe)
+        Value serializeStructuralConfiguration(const ShipGenerationRecipe& recipe)
         {
             Value structural = Value::object();
-            structural.Object["source"] = Value::string(profileSourceString(recipe.StructuralSource));
-            if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+            structural.Object["source"] = Value::string(recipe.StructuralPreset.has_value() ? "BUILT_IN_PRESET" : "EMBEDDED_CUSTOM");
+            if (recipe.StructuralPreset.has_value())
             {
-                structural.Object["preset"] = Value::string(shipStyleToRecipeString(recipe.Style));
+                structural.Object["preset"] = Value::string(shipStyleToRecipeString(*recipe.StructuralPreset));
             }
             else
             {
@@ -153,13 +120,13 @@ namespace SpectralShipGen
             return structural;
         }
 
-        Value serializeFactionSource(const ShipGenerationRecipe& recipe)
+        Value serializeFactionConfiguration(const ShipGenerationRecipe& recipe)
         {
             Value faction = Value::object();
-            faction.Object["source"] = Value::string(profileSourceString(recipe.FactionSource));
-            if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+            faction.Object["source"] = Value::string(recipe.FactionPreset.has_value() ? "BUILT_IN_PRESET" : "EMBEDDED_CUSTOM");
+            if (recipe.FactionPreset.has_value())
             {
-                faction.Object["preset"] = Value::string(shipFactionToRecipeString(recipe.Faction));
+                faction.Object["preset"] = Value::string(shipFactionToRecipeString(*recipe.FactionPreset));
             }
             else
             {
@@ -188,7 +155,7 @@ namespace SpectralShipGen
             Value object = Value::object();
             object.Object["seed"] = animation.Seed.has_value() ? Value::number(*animation.Seed) : Value::null();
             object.Object["duration_milliseconds"] = Value::number(static_cast<uint64_t>(animation.AnimationDurationMilliseconds));
-            object.Object["exact_frame_count"] = Value::number(static_cast<uint64_t>(animation.FrameCount));
+            object.Object["exact_frame_count"] = Value::number(static_cast<uint64_t>(animation.ExactFrameCount));
             object.Object["minimum_frame_count"] = Value::number(static_cast<uint64_t>(animation.MinimumFrameCount));
             object.Object["maximum_frame_count"] = Value::number(static_cast<uint64_t>(animation.MaximumFrameCount));
             object.Object["sampling_mode"] = Value::string(animationSamplingModeString(animation.SamplingMode));
@@ -211,12 +178,12 @@ namespace SpectralShipGen
         bool validateAnimation(const ShipIdleAnimationSettings& settings, std::string& error)
         {
             if (settings.AnimationDurationMilliseconds == 0u || settings.AnimationDurationMilliseconds > 120000u) { error = "animation.duration_milliseconds must be in the range 1-120000."; return false; }
-            if (settings.FrameCount == 0u || settings.FrameCount > 1000u) { error = "animation.exact_frame_count must be in the range 1-1000."; return false; }
+            if (settings.ExactFrameCount == 0u || settings.ExactFrameCount > 1000u) { error = "animation.exact_frame_count must be in the range 1-1000."; return false; }
             if (settings.MinimumFrameCount == 0u || settings.MinimumFrameCount > 1000u) { error = "animation.minimum_frame_count must be in the range 1-1000."; return false; }
             if (settings.MaximumFrameCount == 0u || settings.MaximumFrameCount > 1000u) { error = "animation.maximum_frame_count must be in the range 1-1000."; return false; }
             if (settings.MinimumFrameCount > settings.MaximumFrameCount) { error = "animation.minimum_frame_count must not exceed animation.maximum_frame_count."; return false; }
             if (settings.SamplingMode >= AnimationSamplingMode::ANIMATION_SAMPLING_MODE_END) { error = "animation.sampling_mode is invalid."; return false; }
-            if (settings.SamplingMode == AnimationSamplingMode::EXACT_FRAME_COUNT && (settings.FrameCount < settings.MinimumFrameCount || settings.FrameCount > settings.MaximumFrameCount)) { error = "animation.exact_frame_count must be within animation frame limits in EXACT_FRAME_COUNT mode."; return false; }
+            if (settings.SamplingMode == AnimationSamplingMode::EXACT_FRAME_COUNT && (settings.ExactFrameCount < settings.MinimumFrameCount || settings.ExactFrameCount > settings.MaximumFrameCount)) { error = "animation.exact_frame_count must be within animation frame limits in EXACT_FRAME_COUNT mode."; return false; }
             return true;
         }
 
@@ -232,7 +199,7 @@ namespace SpectralShipGen
             return true;
         }
 
-        bool parseSeeds(const Value& object, uint32_t formatVersion, ShipGenerationRecipe& recipe, std::string& error)
+        bool parseSeeds(const Value& object, ShipGenerationRecipe& recipe, std::string& error)
         {
             if (!RecipeJson::getUInt64(object, "master", recipe.Seeds.Master, error, "ship.seeds")) { return false; }
             if (!RecipeJson::getUInt64(object, "structure", recipe.Seeds.Structure, error, "ship.seeds")) { return false; }
@@ -240,58 +207,35 @@ namespace SpectralShipGen
             if (!RecipeJson::getUInt64(object, "details", recipe.Seeds.Details, error, "ship.seeds")) { return false; }
             if (!RecipeJson::getUInt64(object, "attachments", recipe.Seeds.Attachments, error, "ship.seeds")) { return false; }
 
-            if (formatVersion >= 3u)
+            recipe.DomainSeedOverrides.clearAll();
+            const Value* domains = object.find("domains");
+            if (domains != nullptr)
             {
-                std::string mode;
-                if (!RecipeJson::getString(object, "rng_mode", mode, error, "ship.seeds")) { return false; }
-                if (!randomStreamModeFromString(mode, recipe.RandomStreamMode)) { error = "Unknown ship.seeds.rng_mode: " + mode + "."; return false; }
-
-                recipe.DomainSeedOverrides.clearAll();
-                const Value* domains = object.find("domains");
-                if (domains != nullptr)
+                if (domains->ValueType != Type::Object) { error = "ship.seeds.domains must be an object."; return false; }
+                for (std::size_t index = 0u; index < GenerationDomainCount; ++index)
                 {
-                    if (domains->ValueType != Type::Object) { error = "ship.seeds.domains must be an object."; return false; }
-                    for (std::size_t index = 0u; index < GenerationDomainCount; ++index)
-                    {
-                        const char* key = generationDomainKey(static_cast<GenerationDomain>(index));
-                        const Value* domainValue = domains->find(key);
-                        if (domainValue == nullptr) { continue; }
-                        Value wrapper = Value::object(); wrapper.Object[key] = *domainValue;
-                        uint64_t parsed = 0u;
-                        if (!RecipeJson::getUInt64(wrapper, key, parsed, error, "ship.seeds.domains")) { return false; }
-                        recipe.DomainSeedOverrides.Values[index] = parsed;
-                    }
+                    const char* key = generationDomainKey(static_cast<GenerationDomain>(index));
+                    const Value* domainValue = domains->find(key);
+                    if (domainValue == nullptr) { continue; }
+                    Value wrapper = Value::object(); wrapper.Object[key] = *domainValue;
+                    uint64_t parsed = 0u;
+                    if (!RecipeJson::getUInt64(wrapper, key, parsed, error, "ship.seeds.domains")) { return false; }
+                    recipe.DomainSeedOverrides.Values[index] = parsed;
                 }
-            }
-            else
-            {
-                recipe.RandomStreamMode = GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS;
-                recipe.DomainSeedOverrides.clearAll();
             }
             return true;
         }
 
-        bool parseAnimation(const Value& object, uint32_t formatVersion, ShipIdleAnimationSettings& animation, std::string& error)
+        bool parseAnimation(const Value& object, ShipIdleAnimationSettings& animation, std::string& error)
         {
             if (!parseOptionalSeed(object, "seed", animation.Seed, error, "animation")) { return false; }
-            if (formatVersion >= 4u)
-            {
-                std::string mode;
-                if (!RecipeJson::getUInt32(object, "duration_milliseconds", animation.AnimationDurationMilliseconds, error, "animation")) { return false; }
-                if (!RecipeJson::getUInt32(object, "exact_frame_count", animation.FrameCount, error, "animation")) { return false; }
-                if (!RecipeJson::getUInt32(object, "minimum_frame_count", animation.MinimumFrameCount, error, "animation")) { return false; }
-                if (!RecipeJson::getUInt32(object, "maximum_frame_count", animation.MaximumFrameCount, error, "animation")) { return false; }
-                if (!RecipeJson::getString(object, "sampling_mode", mode, error, "animation")) { return false; }
-                if (!animationSamplingModeFromString(mode, animation.SamplingMode)) { error = "Unknown animation.sampling_mode: " + mode + "."; return false; }
-            }
-            else
-            {
-                if (!RecipeJson::getUInt32(object, "frame_count", animation.FrameCount, error, "animation")) { return false; }
-                animation.AnimationDurationMilliseconds = animation.FrameCount * 100u;
-                animation.MinimumFrameCount = animation.FrameCount;
-                animation.MaximumFrameCount = animation.FrameCount;
-                animation.SamplingMode = AnimationSamplingMode::EXACT_FRAME_COUNT;
-            }
+            std::string mode;
+            if (!RecipeJson::getUInt32(object, "duration_milliseconds", animation.AnimationDurationMilliseconds, error, "animation")) { return false; }
+            if (!RecipeJson::getUInt32(object, "exact_frame_count", animation.ExactFrameCount, error, "animation")) { return false; }
+            if (!RecipeJson::getUInt32(object, "minimum_frame_count", animation.MinimumFrameCount, error, "animation")) { return false; }
+            if (!RecipeJson::getUInt32(object, "maximum_frame_count", animation.MaximumFrameCount, error, "animation")) { return false; }
+            if (!RecipeJson::getString(object, "sampling_mode", mode, error, "animation")) { return false; }
+            if (!animationSamplingModeFromString(mode, animation.SamplingMode)) { error = "Unknown animation.sampling_mode: " + mode + "."; return false; }
             if (!RecipeJson::getBool(object, "engine_flicker", animation.EngineFlicker, error, "animation")) { return false; }
             if (!RecipeJson::getBool(object, "light_blinking", animation.LightBlinking, error, "animation")) { return false; }
             if (!RecipeJson::getBool(object, "mechanical_micro_movement", animation.MechanicalMicroMovement, error, "animation")) { return false; }
@@ -300,54 +244,7 @@ namespace SpectralShipGen
             return validateAnimation(animation, error);
         }
 
-        bool parseLegacyShip(const Value& ship, uint32_t formatVersion, ShipGenerationRecipe& recipe, std::string& error)
-        {
-            const Value* dimensions = nullptr;
-            if (formatVersion >= 2u)
-            {
-                if (!RecipeJson::getObject(ship, "dimensions", dimensions, error, "ship")) { return false; }
-                if (!RecipeJson::getUInt32(*dimensions, "width", recipe.Dimensions.Width, error, "ship.dimensions")) { return false; }
-                if (!RecipeJson::getUInt32(*dimensions, "height", recipe.Dimensions.Height, error, "ship.dimensions")) { return false; }
-            }
-            else
-            {
-                const Value* resolution = ship.find("resolution");
-                if (resolution == nullptr) { error = "Missing required field: ship.resolution."; return false; }
-                if (resolution->ValueType == Type::Object)
-                {
-                    if (!RecipeJson::getUInt32(*resolution, "width", recipe.Dimensions.Width, error, "ship.resolution")) { return false; }
-                    if (!RecipeJson::getUInt32(*resolution, "height", recipe.Dimensions.Height, error, "ship.resolution")) { return false; }
-                }
-                else if (resolution->ValueType == Type::Number)
-                {
-                    Value wrapper = Value::object(); wrapper.Object["resolution"] = *resolution;
-                    uint32_t square = 0u;
-                    if (!RecipeJson::getUInt32(wrapper, "resolution", square, error, "ship")) { return false; }
-                    recipe.Dimensions = { square, square };
-                }
-                else { error = "ship.resolution has the wrong JSON type."; return false; }
-            }
-
-            std::string style;
-            std::string faction;
-            if (!RecipeJson::getString(ship, "style", style, error, "ship") || !shipStyleFromRecipeString(style, recipe.Style)) { error = "Unknown or invalid ship.style: " + style + "."; return false; }
-            if (!RecipeJson::getString(ship, "faction", faction, error, "ship") || !shipFactionFromRecipeString(faction, recipe.Faction)) { error = "Unknown or invalid ship.faction: " + faction + "."; return false; }
-            recipe.StructuralSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-            recipe.FactionSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-            recipe.PaletteConfiguration.Mode = ShipPaletteSourceMode::FACTION_PROFILE_GENERATED;
-
-            const Value* seeds = nullptr;
-            const Value* settings = nullptr;
-            if (!RecipeJson::getObject(ship, "seeds", seeds, error, "ship")) { return false; }
-            if (!RecipeJson::getObject(ship, "settings", settings, error, "ship")) { return false; }
-            if (!parseSeeds(*seeds, formatVersion, recipe, error)) { return false; }
-            if (!RecipeJson::getUInt32(*settings, "detail_density", recipe.DetailDensity, error, "ship.settings")) { return false; }
-            if (!RecipeJson::getUInt32(*settings, "asymmetric_detail_chance", recipe.AsymmetricDetailChance, error, "ship.settings")) { return false; }
-            if (!RecipeJson::getBool(*settings, "attachments_enabled", recipe.AttachmentsEnabled, error, "ship.settings")) { return false; }
-            return true;
-        }
-
-        bool parseVersion5Ship(const Value& ship, ShipGenerationRecipe& recipe, std::string& error)
+        bool parseCurrentShip(const Value& ship, ShipGenerationRecipe& recipe, std::string& error)
         {
             const Value* dimensions = nullptr;
             const Value* structural = nullptr;
@@ -365,33 +262,39 @@ namespace SpectralShipGen
             if (!RecipeJson::getObject(ship, "settings", settings, error, "ship")) { return false; }
 
             std::string source;
-            if (!RecipeJson::getString(*structural, "source", source, error, "ship.structural") || !profileSourceFromString(source, recipe.StructuralSource)) { error = "Unknown ship.structural.source: " + source + "."; return false; }
-            if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+            if (!RecipeJson::getString(*structural, "source", source, error, "ship.structural")) { return false; }
+            if (source == "BUILT_IN_PRESET")
             {
+                ShipStyle presetValue = ShipStyle::SHIP_STYLE_END;
                 std::string preset;
-                if (!RecipeJson::getString(*structural, "preset", preset, error, "ship.structural") || !shipStyleFromRecipeString(preset, recipe.Style)) { error = "Unknown ship.structural.preset: " + preset + "."; return false; }
+                if (!RecipeJson::getString(*structural, "preset", preset, error, "ship.structural") || !shipStyleFromRecipeString(preset, presetValue)) { error = "Unknown ship.structural.preset: " + preset + "."; return false; }
+                recipe.StructuralPreset = presetValue;
             }
-            else
+            else if (source == "EMBEDDED_CUSTOM")
             {
-                recipe.Style = ShipStyle::SHIP_STYLE_END;
+                recipe.StructuralPreset.reset();
                 const Value* profile = nullptr;
                 if (!RecipeJson::getObject(*structural, "profile", profile, error, "ship.structural")) { return false; }
                 if (!RecipeProfileSerialization::deserialize(*profile, recipe.StructuralProfile, error, "ship.structural.profile")) { return false; }
             }
+            else { error = "Unknown ship.structural.source: " + source + "."; return false; }
 
-            if (!RecipeJson::getString(*faction, "source", source, error, "ship.faction") || !profileSourceFromString(source, recipe.FactionSource)) { error = "Unknown ship.faction.source: " + source + "."; return false; }
-            if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+            if (!RecipeJson::getString(*faction, "source", source, error, "ship.faction")) { return false; }
+            if (source == "BUILT_IN_PRESET")
             {
+                ShipFactionType presetValue = ShipFactionType::SHIP_FACTION_TYPE_END;
                 std::string preset;
-                if (!RecipeJson::getString(*faction, "preset", preset, error, "ship.faction") || !shipFactionFromRecipeString(preset, recipe.Faction)) { error = "Unknown ship.faction.preset: " + preset + "."; return false; }
+                if (!RecipeJson::getString(*faction, "preset", preset, error, "ship.faction") || !shipFactionFromRecipeString(preset, presetValue)) { error = "Unknown ship.faction.preset: " + preset + "."; return false; }
+                recipe.FactionPreset = presetValue;
             }
-            else
+            else if (source == "EMBEDDED_CUSTOM")
             {
-                recipe.Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
+                recipe.FactionPreset.reset();
                 const Value* profile = nullptr;
                 if (!RecipeJson::getObject(*faction, "profile", profile, error, "ship.faction")) { return false; }
                 if (!RecipeProfileSerialization::deserialize(*profile, recipe.FactionProfile, error, "ship.faction.profile")) { return false; }
             }
+            else { error = "Unknown ship.faction.source: " + source + "."; return false; }
 
             if (!RecipeJson::getString(*palette, "source", source, error, "ship.palette") || !paletteSourceFromString(source, recipe.PaletteConfiguration.Mode)) { error = "Unknown ship.palette.source: " + source + "."; return false; }
             if (recipe.PaletteConfiguration.Mode == ShipPaletteSourceMode::EXPLICIT_GENERATED)
@@ -407,7 +310,7 @@ namespace SpectralShipGen
                 if (!RecipeProfileSerialization::deserialize(*colors, recipe.PaletteConfiguration.Fixed, error, "ship.palette.colors")) { return false; }
             }
 
-            if (!parseSeeds(*seeds, ShipGenerationRecipeFormatVersion, recipe, error)) { return false; }
+            if (!parseSeeds(*seeds, recipe, error)) { return false; }
             if (!RecipeJson::getUInt32(*settings, "detail_density", recipe.DetailDensity, error, "ship.settings")) { return false; }
             if (!RecipeJson::getUInt32(*settings, "asymmetric_detail_chance", recipe.AsymmetricDetailChance, error, "ship.settings")) { return false; }
             if (!RecipeJson::getBool(*settings, "attachments_enabled", recipe.AttachmentsEnabled, error, "ship.settings")) { return false; }
@@ -449,8 +352,8 @@ namespace SpectralShipGen
         dimensions.Object["width"] = Value::number(static_cast<uint64_t>(document.Recipe.Dimensions.Width));
         dimensions.Object["height"] = Value::number(static_cast<uint64_t>(document.Recipe.Dimensions.Height));
         ship.Object["dimensions"] = std::move(dimensions);
-        ship.Object["structural"] = serializeStructuralSource(document.Recipe);
-        ship.Object["faction"] = serializeFactionSource(document.Recipe);
+        ship.Object["structural"] = serializeStructuralConfiguration(document.Recipe);
+        ship.Object["faction"] = serializeFactionConfiguration(document.Recipe);
         ship.Object["palette"] = serializePaletteSource(document.Recipe.PaletteConfiguration);
         ship.Object["seeds"] = serializeSeeds(document.Recipe);
 
@@ -474,20 +377,13 @@ namespace SpectralShipGen
         uint32_t formatVersion = 0u;
         std::string error;
         if (!RecipeJson::getUInt32(parsed.Root, "format_version", formatVersion, error, "recipe")) { return errorResult(error); }
-        if (formatVersion < 1u || formatVersion > ShipGenerationRecipeFormatVersion) { return errorResult("Unsupported format version: " + std::to_string(formatVersion) + "."); }
+        if (formatVersion != ShipGenerationRecipeFormatVersion) { return errorResult("Unsupported SpectralShipGen recipe format version: " + std::to_string(formatVersion) + ". This build supports format version " + std::to_string(ShipGenerationRecipeFormatVersion) + "."); }
 
         const Value* ship = nullptr;
         if (!RecipeJson::getObject(parsed.Root, "ship", ship, error, "recipe")) { return errorResult(error); }
 
         ShipGenerationRecipeDocument document;
-        if (formatVersion <= 4u)
-        {
-            if (!parseLegacyShip(*ship, formatVersion, document.Recipe, error)) { return errorResult(error); }
-        }
-        else
-        {
-            if (!parseVersion5Ship(*ship, document.Recipe, error)) { return errorResult(error); }
-        }
+        if (!parseCurrentShip(*ship, document.Recipe, error)) { return errorResult(error); }
 
         if (!validateCommonRecipe(document.Recipe, error)) { return errorResult(error); }
 
@@ -496,7 +392,7 @@ namespace SpectralShipGen
         {
             if (animation->ValueType != Type::Object) { return errorResult("animation must be a JSON object."); }
             ShipIdleAnimationSettings settings;
-            if (!parseAnimation(*animation, formatVersion, settings, error)) { return errorResult(error); }
+            if (!parseAnimation(*animation, settings, error)) { return errorResult(error); }
             document.AnimationSettings = settings;
         }
 

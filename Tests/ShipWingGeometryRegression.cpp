@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <algorithm>
 #include <array>
@@ -89,8 +90,8 @@ int SpectralShipGenTests::runWingGeometryRegression()
                 const SpectralShipGen::ShipGenerationSeeds seeds = SpectralShipGen::deriveShipGenerationSeeds(settings.Seed);
                 const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(style);
                 SpectralShipGen::ShipGenerationDebugInfo debugInfo;
-                SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, &debugInfo);
-                SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
+                SpectralShipGen::ShipGenerationContext firstContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &debugInfo);
+                SpectralShipGen::ShipGenerationContext secondContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, nullptr);
 
                 if (!generateValidatedHull(firstContext, hullGenerator) || !generateValidatedHull(secondContext, hullGenerator))
                 {

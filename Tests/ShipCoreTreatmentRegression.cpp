@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <array>
 #include <cstddef>
@@ -107,7 +108,7 @@ namespace
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(settings.Seed);
         const ShipGenerationProfile& profile = getShipGenerationProfile(settings.Style);
         ShipGenerationDebugInfo debug;
-        ShipGenerationContext context(settings, profile, seeds, &debug);
+        ShipGenerationContext context(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &debug);
         context.Ship.Palette = ShipPaletteGenerator::generate(context.DomainSeeds.get(GenerationDomain::PALETTE), settings.Faction, profile);
         HullGenerator hullGenerator;
         CockpitGenerator cockpitGenerator;
@@ -239,7 +240,7 @@ int SpectralShipGenTests::runCoreTreatmentRegression()
     ShipGenerationDebugInfo baseDebug;
     const GeneratedShip base = generator.generate(baseSettings, &baseDebug);
     const ShipGenerationSeeds topSeeds = deriveShipGenerationSeeds(baseSettings.Seed);
-    const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(topSeeds, baseSettings.DomainSeedOverrides, baseSettings.RandomStreamMode);
+    const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(topSeeds, baseSettings.DomainSeedOverrides);
     ShipGenerationSettings rerolledSettings = baseSettings;
     rerolledSettings.DomainSeedOverrides.set(GenerationDomain::HULL_LAYERS, deriveGenerationDomainRerollSeed(0x5353535353535353ull, GenerationDomain::HULL_LAYERS, domains.get(GenerationDomain::HULL_LAYERS)));
     ShipGenerationDebugInfo rerolledDebug;

@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <array>
 #include <cstdint>
@@ -40,8 +41,8 @@ namespace
         ShipGenerationRecipe recipe;
         recipe.Seeds = deriveShipGenerationSeeds(0x0123456789ABCDEFull);
         recipe.Dimensions = dimensions;
-        recipe.Style = ShipStyle::HEAVY;
-        recipe.Faction = ShipFactionType::FRONTIER;
+        recipe.StructuralPreset = ShipStyle::HEAVY;
+        recipe.FactionPreset = ShipFactionType::FRONTIER;
         recipe.DetailDensity = 68u;
         recipe.AsymmetricDetailChance = 19u;
         recipe.AttachmentsEnabled = true;
@@ -53,8 +54,8 @@ namespace
         ShipGenerationSettings settings;
         settings.Seed = recipe.Seeds.Master;
         settings.Dimensions = recipe.Dimensions;
-        settings.Style = recipe.Style;
-        settings.Faction = recipe.Faction;
+        settings.Style = recipe.StructuralPreset.value_or(ShipStyle::FIGHTER);
+        settings.Faction = recipe.FactionPreset.value_or(ShipFactionType::FRONTIER);
         settings.DetailDensity = recipe.DetailDensity;
         settings.AsymmetricDetailChance = recipe.AsymmetricDetailChance;
         settings.AttachmentsEnabled = recipe.AttachmentsEnabled;
@@ -63,7 +64,6 @@ namespace
         settings.SeedOverrides.Details = recipe.Seeds.Details;
         settings.SeedOverrides.Attachments = recipe.Seeds.Attachments;
         settings.DomainSeedOverrides = recipe.DomainSeedOverrides;
-        settings.RandomStreamMode = recipe.RandomStreamMode;
         return settings;
     }
 
@@ -142,9 +142,9 @@ namespace
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(settings.Seed);
         const ShipGenerationProfile profile = getShipGenerationProfile(settings.Style);
 
-        ShipGenerationContext attachmentReference(settings, profile, seeds);
+        ShipGenerationContext attachmentReference(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         const uint32_t expectedAttachmentRoll = attachmentReference.getGenerationRandomUInt(GenerationDomain::ATTACHMENTS, 0u, 1000000u);
-        ShipGenerationContext attachmentAfterWeapons(settings, profile, seeds);
+        ShipGenerationContext attachmentAfterWeapons(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         for (uint32_t index = 0u; index < 32u; ++index)
         {
             attachmentAfterWeapons.getGenerationRandomUInt(GenerationDomain::WEAPONS, 0u, 1000000u);
@@ -156,9 +156,9 @@ namespace
             return false;
         }
 
-        ShipGenerationContext engineReference(settings, profile, seeds);
+        ShipGenerationContext engineReference(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         const uint32_t expectedEngineRoll = engineReference.getGenerationRandomUInt(GenerationDomain::ENGINES, 0u, 1000000u);
-        ShipGenerationContext engineAfterCockpit(settings, profile, seeds);
+        ShipGenerationContext engineAfterCockpit(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         for (uint32_t index = 0u; index < 32u; ++index)
         {
             engineAfterCockpit.getGenerationRandomUInt(GenerationDomain::COCKPIT, 0u, 1000000u);
@@ -170,9 +170,9 @@ namespace
             return false;
         }
 
-        ShipGenerationContext wingReference(settings, profile, seeds);
+        ShipGenerationContext wingReference(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         const uint32_t expectedWingRoll = wingReference.getGenerationRandomUInt(GenerationDomain::WINGS, 0u, 1000000u);
-        ShipGenerationContext wingAfterHull(settings, profile, seeds);
+        ShipGenerationContext wingAfterHull(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds);
         for (uint32_t index = 0u; index < 32u; ++index)
         {
             wingAfterHull.getGenerationRandomUInt(GenerationDomain::HULL, 0u, 1000000u);
@@ -191,7 +191,7 @@ namespace
     {
         bool success = true;
         const ShipGenerationRecipe original = makeRecipe();
-        const GenerationDomainSeeds originalEffective = resolveGenerationDomainSeeds(original.Seeds, original.DomainSeedOverrides, original.RandomStreamMode);
+        const GenerationDomainSeeds originalEffective = resolveGenerationDomainSeeds(original.Seeds, original.DomainSeedOverrides);
 
         for (std::size_t selectedIndex = 0u; selectedIndex < GenerationDomainCount; ++selectedIndex)
         {
@@ -212,7 +212,7 @@ namespace
                 success = false;
             }
 
-            const GenerationDomainSeeds rerolledEffective = resolveGenerationDomainSeeds(first.Seeds, first.DomainSeedOverrides, first.RandomStreamMode);
+            const GenerationDomainSeeds rerolledEffective = resolveGenerationDomainSeeds(first.Seeds, first.DomainSeedOverrides);
             for (std::size_t domainIndex = 0u; domainIndex < GenerationDomainCount; ++domainIndex)
             {
                 if (domainIndex == selectedIndex)
@@ -257,8 +257,8 @@ namespace
             return false;
         }
 
-        const GenerationDomainSeeds before = resolveGenerationDomainSeeds(original.Seeds, original.DomainSeedOverrides, original.RandomStreamMode);
-        const GenerationDomainSeeds after = resolveGenerationDomainSeeds(first.Seeds, first.DomainSeedOverrides, first.RandomStreamMode);
+        const GenerationDomainSeeds before = resolveGenerationDomainSeeds(original.Seeds, original.DomainSeedOverrides);
+        const GenerationDomainSeeds after = resolveGenerationDomainSeeds(first.Seeds, first.DomainSeedOverrides);
         for (std::size_t index = 0u; index < GenerationDomainCount; ++index)
         {
             const GenerationDomain domain = static_cast<GenerationDomain>(index);
@@ -341,9 +341,9 @@ namespace
         ShipGenerationRecipeDocument document;
         document.Recipe = recipe;
         const std::string serialized = serializeShipGenerationRecipe(document);
-        if (serialized.find("\"rng_mode\": \"DOMAIN_SUBSTREAMS\"") == std::string::npos || serialized.find("\"cockpit\"") == std::string::npos || serialized.find("\"weapons\"") == std::string::npos)
+        if (serialized.find("\"rng_mode\"") != std::string::npos || serialized.find("\"cockpit\"") == std::string::npos || serialized.find("\"weapons\"") == std::string::npos)
         {
-            std::cerr << "Task-50 recipe serialization omitted domain state.\n";
+            std::cerr << "Current recipe serialization did not preserve clean domain state.\n";
             return false;
         }
         const ShipGenerationRecipeLoadResult loaded = deserializeShipGenerationRecipe(serialized);
@@ -355,7 +355,7 @@ namespace
         return true;
     }
 
-    bool checkLegacyRecipeCompatibility()
+    bool checkUnsupportedPreV6RecipeRejection()
     {
         constexpr uint64_t MasterSeed = 0x6A09E667F3BCC909ull;
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(MasterSeed);
@@ -372,27 +372,9 @@ namespace
             << "}\n";
 
         const ShipGenerationRecipeLoadResult loaded = deserializeShipGenerationRecipe(json.str());
-        if (!loaded.Success || loaded.Document.Recipe.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
+        if (loaded.Success || loaded.Error.find("Unsupported SpectralShipGen recipe format version") == std::string::npos)
         {
-            std::cerr << "Pre-Task-50 recipe was not loaded in legacy compatibility mode.\n";
-            return false;
-        }
-
-        GeneratedShip firstShip;
-        GeneratedShip secondShip;
-        ShipGenerationDebugInfo firstDebug;
-        ShipGenerationDebugInfo secondDebug;
-        if (!generate(loaded.Document.Recipe, firstShip, firstDebug) || !generate(loaded.Document.Recipe, secondShip, secondDebug) || !imagesEqual(firstShip.FinalImage, secondShip.FinalImage))
-        {
-            std::cerr << "Pre-Task-50 recipe compatibility mode is not deterministic.\n";
-            return false;
-        }
-
-        const std::string upgradedSerialization = serializeShipGenerationRecipe(loaded.Document);
-        const ShipGenerationRecipeLoadResult reloaded = deserializeShipGenerationRecipe(upgradedSerialization);
-        if (!reloaded.Success || reloaded.Document.Recipe.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            std::cerr << "Re-exporting a legacy recipe lost its compatibility mode.\n";
+            std::cerr << "Unsupported pre-1.0 recipe was not rejected cleanly.\n";
             return false;
         }
         return true;
@@ -431,7 +413,7 @@ int SpectralShipGenTests::runGenerationDomainRerollRegression()
     success = checkMultiDomainReroll() && success;
     success = checkFocusedPreservation() && success;
     success = checkRecipeRoundTrip() && success;
-    success = checkLegacyRecipeCompatibility() && success;
+    success = checkUnsupportedPreV6RecipeRejection() && success;
     success = checkOrdinaryGenerationAndRectangular() && success;
     return success ? 0 : 1;
 }

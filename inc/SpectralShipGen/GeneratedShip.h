@@ -8,8 +8,6 @@
 #include <SpectralShipGen/ShipAnimationTraits.h>
 #include <SpectralShipGen/ShipAttachment.h>
 #include <SpectralShipGen/ShipFactionProfile.h>
-#include <SpectralShipGen/ShipFactionType.h>
-#include <SpectralShipGen/ShipGenerationProfile.h>
 #include <SpectralShipGen/ShipGenerationProvenance.h>
 #include <SpectralShipGen/ShipGenerationSeeds.h>
 #include <SpectralShipGen/ShipIdleAnimationMetadata.h>
@@ -29,11 +27,6 @@ namespace SpectralShipGen
         ShipFactionAnimationProfile FactionAnimationProfile;
         ShipFactionPaintColorRole FactionWeaponMuzzleRole = ShipFactionPaintColorRole::ENGINE_HIGHLIGHT;
         ShipGenerationProvenance Provenance;
-        // Backward-compatible provenance mirrors. New code should prefer Provenance,
-        // whose optional preset identities do not require custom enum sentinels.
-        ShipStyle Style = ShipStyle::SHIP_STYLE_END;
-        ShipFactionType Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
-
         PixelMask HullMask;
         PixelMask CockpitMask;
         PixelMask EngineMask;

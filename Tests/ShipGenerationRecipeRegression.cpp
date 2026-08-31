@@ -53,8 +53,8 @@ namespace
         ShipGenerationRecipe recipe;
         recipe.Seeds = SpectralShipGen::deriveShipGenerationSeeds(regressionCase.MasterSeed);
         recipe.Dimensions = regressionCase.Dimensions;
-        recipe.Style = regressionCase.Style;
-        recipe.Faction = regressionCase.Faction;
+        recipe.StructuralPreset = regressionCase.Style;
+        recipe.FactionPreset = regressionCase.Faction;
         recipe.DetailDensity = 63u;
         recipe.AsymmetricDetailChance = 17u;
         recipe.AttachmentsEnabled = regressionCase.AttachmentsEnabled;
@@ -67,8 +67,8 @@ namespace
         settings.Seed = recipe.Seeds.Master;
         settings.Dimensions.Width = recipe.Dimensions.Width;
         settings.Dimensions.Height = recipe.Dimensions.Height;
-        settings.Style = recipe.Style;
-        settings.Faction = recipe.Faction;
+        settings.Style = recipe.StructuralPreset.value_or(SpectralShipGen::ShipStyle::FIGHTER);
+        settings.Faction = recipe.FactionPreset.value_or(SpectralShipGen::ShipFactionType::FRONTIER);
         settings.DetailDensity = recipe.DetailDensity;
         settings.AsymmetricDetailChance = recipe.AsymmetricDetailChance;
         settings.AttachmentsEnabled = recipe.AttachmentsEnabled;
@@ -77,7 +77,6 @@ namespace
         settings.SeedOverrides.Details = recipe.Seeds.Details;
         settings.SeedOverrides.Attachments = recipe.Seeds.Attachments;
         settings.DomainSeedOverrides = recipe.DomainSeedOverrides;
-        settings.RandomStreamMode = recipe.RandomStreamMode;
         return settings;
     }
 
@@ -85,7 +84,7 @@ namespace
     {
         SpectralShipGen::ShipIdleAnimationSettings settings;
         settings.AnimationDurationMilliseconds = 1500u;
-        settings.FrameCount = 12u;
+        settings.ExactFrameCount = 12u;
         settings.MinimumFrameCount = 8u;
         settings.MaximumFrameCount = 48u;
         settings.SamplingMode = SpectralShipGen::AnimationSamplingMode::ADAPTIVE;
@@ -100,7 +99,7 @@ namespace
 
     bool animationSettingsEqual(const SpectralShipGen::ShipIdleAnimationSettings& first, const SpectralShipGen::ShipIdleAnimationSettings& second)
     {
-        return first.AnimationDurationMilliseconds == second.AnimationDurationMilliseconds && first.FrameCount == second.FrameCount && first.MinimumFrameCount == second.MinimumFrameCount && first.MaximumFrameCount == second.MaximumFrameCount && first.SamplingMode == second.SamplingMode && first.EngineFlicker == second.EngineFlicker && first.LightBlinking == second.LightBlinking && first.MechanicalMicroMovement == second.MechanicalMicroMovement && first.HoverOffset == second.HoverOffset && first.SmallDetailVariation == second.SmallDetailVariation && first.Seed == second.Seed;
+        return first.AnimationDurationMilliseconds == second.AnimationDurationMilliseconds && first.ExactFrameCount == second.ExactFrameCount && first.MinimumFrameCount == second.MinimumFrameCount && first.MaximumFrameCount == second.MaximumFrameCount && first.SamplingMode == second.SamplingMode && first.EngineFlicker == second.EngineFlicker && first.LightBlinking == second.LightBlinking && first.MechanicalMicroMovement == second.MechanicalMicroMovement && first.HoverOffset == second.HoverOffset && first.SmallDetailVariation == second.SmallDetailVariation && first.Seed == second.Seed;
     }
 
 
@@ -111,14 +110,12 @@ namespace
         recipe.Seeds = deriveShipGenerationSeeds(0x8700000000000087ull);
         recipe.DomainSeedOverrides.set(GenerationDomain::PALETTE, 0x8700000000001001ull);
         recipe.DomainSeedOverrides.set(GenerationDomain::DETAILS, 0x8700000000001002ull);
-        recipe.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
         recipe.Dimensions = { 96u, 64u };
         recipe.DetailDensity = 68u;
         recipe.AsymmetricDetailChance = 21u;
         recipe.AttachmentsEnabled = true;
 
-        recipe.StructuralSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-        recipe.Style = ShipStyle::SHIP_STYLE_END;
+        recipe.StructuralPreset.reset();
         recipe.StructuralProfile = getShipGenerationProfile(ShipStyle::INDUSTRIAL);
         recipe.StructuralProfile.LargeWeaponChance = 82u;
         recipe.StructuralProfile.LargeWeaponScalePercent = 145u;
@@ -127,8 +124,7 @@ namespace
         recipe.StructuralProfile.PaletteHullValueOffset = 7;
         recipe.StructuralProfile.AnimationTraits.Firing.ResponseStrengthPercent = 137u;
 
-        recipe.FactionSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-        recipe.Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
+        recipe.FactionPreset.reset();
         recipe.FactionProfile = getShipFactionProfile(ShipFactionType::RELIC);
         recipe.FactionProfile.Weapons.EmissiveChance = 47u;
         recipe.FactionProfile.SurfaceDetails.DetailDensityPercent = 91u;
@@ -270,91 +266,16 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         }
     }
 
-    const std::string legacyObjectRecipe = R"JSON({
-  "format_version": 1,
-  "ship": {
-    "resolution": { "width": 48, "height": 48 },
-    "style": "FIGHTER",
-    "faction": "FRONTIER",
-    "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5 },
-    "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": true }
-  }
-})JSON";
-    const auto legacyObject = SpectralShipGen::deserializeShipGenerationRecipe(legacyObjectRecipe);
-    if (!legacyObject.Success || legacyObject.Document.Recipe.Dimensions != SpectralShipGen::ShipDimensions{ 48u, 48u })
+    // Pre-1.0 recipe schemas are intentionally unsupported. Rejection must be
+    // explicit and must not attempt to migrate historical private data.
+    for (const uint32_t unsupportedVersion : { 1u, 3u, 5u })
     {
-        success = false;
-        std::cerr << "Task-41 object resolution recipe did not migrate to dimensions.\n";
-    }
-
-    const std::string legacyScalarRecipe = R"JSON({
-  "format_version": 1,
-  "ship": {
-    "resolution": 44,
-    "style": "HEAVY",
-    "faction": "MILITARY",
-    "seeds": { "master": 10, "structure": 11, "palette": 12, "details": 13, "attachments": 14 },
-    "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": false }
-  }
-})JSON";
-    const auto legacyScalar = SpectralShipGen::deserializeShipGenerationRecipe(legacyScalarRecipe);
-    if (!legacyScalar.Success || legacyScalar.Document.Recipe.Dimensions != SpectralShipGen::ShipDimensions{ 44u, 44u })
-    {
-        success = false;
-        std::cerr << "Legacy scalar resolution recipe did not migrate to square dimensions.\n";
-    }
-
-
-    const std::string legacyAnimationRecipe = R"JSON({
-  "format_version": 3,
-  "ship": {
-    "dimensions": { "width": 64, "height": 48 },
-    "style": "INDUSTRIAL",
-    "faction": "FRONTIER",
-    "seeds": { "master": 101, "structure": 102, "palette": 103, "details": 104, "attachments": 105, "rng_mode": "DOMAIN_SUBSTREAMS" },
-    "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": true }
-  },
-  "animation": {
-    "seed": 106,
-    "frame_count": 20,
-    "engine_flicker": true,
-    "light_blinking": true,
-    "mechanical_micro_movement": true,
-    "hover_offset": true,
-    "small_detail_variation": true
-  }
-})JSON";
-    const auto legacyAnimation = SpectralShipGen::deserializeShipGenerationRecipe(legacyAnimationRecipe);
-    if (!legacyAnimation.Success || !legacyAnimation.Document.AnimationSettings.has_value())
-    {
-        success = false;
-        std::cerr << "Task-67 legacy animation recipe failed to migrate.\n";
-    }
-    else
-    {
-        const SpectralShipGen::ShipIdleAnimationSettings& migrated = *legacyAnimation.Document.AnimationSettings;
-        if (migrated.SamplingMode != SpectralShipGen::AnimationSamplingMode::EXACT_FRAME_COUNT || migrated.FrameCount != 20u || migrated.MinimumFrameCount != 20u || migrated.MaximumFrameCount != 20u || migrated.AnimationDurationMilliseconds != 2000u)
+        const std::string oldRecipe = "{ \"format_version\": " + std::to_string(unsupportedVersion) + ", \"ship\": {} }";
+        const auto rejected = SpectralShipGen::deserializeShipGenerationRecipe(oldRecipe);
+        if (rejected.Success || rejected.Error.find("Unsupported SpectralShipGen recipe format version") == std::string::npos)
         {
             success = false;
-            std::cerr << "Task-67 legacy animation recipe did not preserve exact frame-count/100ms timing semantics.\n";
-        }
-        else
-        {
-            try
-            {
-                const SpectralShipGen::GeneratedShip migratedShip = generator.generate(legacyAnimation.Document.Recipe);
-                const SpectralShipGen::ShipIdleAnimation migratedAnimation = animator.generate(migratedShip, migrated);
-                if (migratedAnimation.Frames.size() != 20u || migratedAnimation.DurationMilliseconds != 2000u || migratedAnimation.FrameDurationMilliseconds != 100.0)
-                {
-                    success = false;
-                    std::cerr << "Task-67 migrated legacy animation did not preserve exact output/timing semantics.\n";
-                }
-            }
-            catch (const std::exception& exception)
-            {
-                success = false;
-                std::cerr << "Task-67 migrated legacy animation generation failed: " << exception.what() << '\n';
-            }
+            std::cerr << "Unsupported pre-1.0 recipe version " << unsupportedVersion << " was not rejected cleanly.\n";
         }
     }
 
@@ -376,7 +297,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         else
         {
             const ShipGenerationRecipe& recipe = loaded.Document.Recipe;
-            if (recipe.StructuralSource != ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM || recipe.FactionSource != ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM || recipe.Style != ShipStyle::SHIP_STYLE_END || recipe.Faction != ShipFactionType::SHIP_FACTION_TYPE_END || recipe.PaletteConfiguration.Mode != ShipPaletteSourceMode::EXPLICIT_GENERATED)
+            if (recipe.StructuralPreset.has_value() || recipe.FactionPreset.has_value() || recipe.PaletteConfiguration.Mode != ShipPaletteSourceMode::EXPLICIT_GENERATED)
             {
                 success = false;
                 std::cerr << "Custom recipe source/provenance semantics changed during round-trip.\n";
@@ -394,7 +315,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
             try
             {
                 const GeneratedShip after = generator.generate(recipe);
-                if (!imagesEqual(before, after) || before.Style != ShipStyle::SHIP_STYLE_END || after.Style != ShipStyle::SHIP_STYLE_END || before.Faction != ShipFactionType::SHIP_FACTION_TYPE_END || after.Faction != ShipFactionType::SHIP_FACTION_TYPE_END)
+                if (!imagesEqual(before, after) || before.Provenance.StructuralPreset.has_value() || after.Provenance.StructuralPreset.has_value() || before.Provenance.FactionPreset.has_value() || after.Provenance.FactionPreset.has_value())
                 {
                     success = false;
                     std::cerr << "Fully custom recipe did not reproduce static output/provenance.\n";
@@ -445,8 +366,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
     {
         using namespace SpectralShipGen;
         ShipGenerationRecipe customStructural = createCustomRecipe(ShipPaletteSourceMode::FACTION_PROFILE_GENERATED);
-        customStructural.FactionSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-        customStructural.Faction = ShipFactionType::MILITARY;
+        customStructural.FactionPreset = ShipFactionType::MILITARY;
         ShipGenerationRecipeLoadResult structuralLoad = deserializeShipGenerationRecipe(serializeShipGenerationRecipe({ customStructural, std::nullopt }));
         if (!structuralLoad.Success || !imagesEqual(generator.generate(customStructural), generator.generate(structuralLoad.Document.Recipe)))
         {
@@ -455,8 +375,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         }
 
         ShipGenerationRecipe customFaction = createCustomRecipe(ShipPaletteSourceMode::FACTION_PROFILE_GENERATED);
-        customFaction.StructuralSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-        customFaction.Style = ShipStyle::DELTA;
+        customFaction.StructuralPreset = ShipStyle::DELTA;
         ShipGenerationRecipeLoadResult factionLoad = deserializeShipGenerationRecipe(serializeShipGenerationRecipe({ customFaction, std::nullopt }));
         if (!factionLoad.Success || !imagesEqual(generator.generate(customFaction), generator.generate(factionLoad.Document.Recipe)))
         {
@@ -523,7 +442,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         const ShipGenerationRecipe recipe = makeShipGenerationRecipe(settings);
         const GeneratedShip direct = generator.generate(settings);
         const GeneratedShip viaRecipe = generator.generate(recipe);
-        if (!imagesEqual(direct, viaRecipe) || recipe.StructuralSource != ShipGenerationRecipeProfileSource::BUILT_IN_PRESET || recipe.FactionSource != ShipGenerationRecipeProfileSource::BUILT_IN_PRESET || recipe.Seeds.Palette != *settings.SeedOverrides.Palette)
+        if (!imagesEqual(direct, viaRecipe) || recipe.StructuralPreset != settings.Style || recipe.FactionPreset != settings.Faction || recipe.Seeds.Palette != *settings.SeedOverrides.Palette)
         {
             success = false;
             std::cerr << "Built-in configuration-to-recipe helper changed deterministic generation state.\n";
@@ -549,7 +468,7 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         const ShipGenerationRecipe explicitRecipe = makeShipGenerationRecipe(configuration, structuralProfile, factionProfile);
         const GeneratedShip explicitDirect = generator.generate(configuration, structuralProfile, factionProfile);
         const GeneratedShip explicitViaRecipe = generator.generate(explicitRecipe);
-        if (!imagesEqual(explicitDirect, explicitViaRecipe) || explicitRecipe.Style != ShipStyle::SHIP_STYLE_END || explicitRecipe.Faction != ShipFactionType::SHIP_FACTION_TYPE_END || explicitRecipe.PaletteConfiguration.Mode != ShipPaletteSourceMode::FIXED)
+        if (!imagesEqual(explicitDirect, explicitViaRecipe) || explicitRecipe.StructuralPreset.has_value() || explicitRecipe.FactionPreset.has_value() || explicitRecipe.PaletteConfiguration.Mode != ShipPaletteSourceMode::FIXED)
         {
             success = false;
             std::cerr << "Fully explicit configuration-to-recipe helper changed deterministic generation state.\n";
@@ -579,13 +498,13 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         }
 
         const auto missingSettings = SpectralShipGen::deserializeShipGenerationRecipe(R"JSON({
-          "format_version": 5,
+          "format_version": 6,
           "ship": {
             "dimensions": { "width": 64, "height": 64 },
             "structural": { "source": "BUILT_IN_PRESET", "preset": "FIGHTER" },
             "faction": { "source": "BUILT_IN_PRESET", "preset": "FRONTIER" },
             "palette": { "source": "FACTION_PROFILE_GENERATED" },
-            "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5, "rng_mode": "DOMAIN_SUBSTREAMS" }
+            "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5 }
           }
         })JSON");
         if (missingSettings.Success)
@@ -595,13 +514,13 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
         }
 
         const auto wrongType = SpectralShipGen::deserializeShipGenerationRecipe(R"JSON({
-          "format_version": 5,
+          "format_version": 6,
           "ship": {
             "dimensions": { "width": "64", "height": 64 },
             "structural": { "source": "BUILT_IN_PRESET", "preset": "FIGHTER" },
             "faction": { "source": "BUILT_IN_PRESET", "preset": "FRONTIER" },
             "palette": { "source": "FACTION_PROFILE_GENERATED" },
-            "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5, "rng_mode": "DOMAIN_SUBSTREAMS" },
+            "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5 },
             "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": true }
           }
         })JSON");
@@ -616,13 +535,13 @@ int SpectralShipGenTests::runGenerationRecipeRegression()
     if (unsupportedVersion.Success) { success = false; std::cerr << "Unsupported format version was not rejected.\n"; }
 
     const auto unknownPreset = SpectralShipGen::deserializeShipGenerationRecipe(R"JSON({
-      "format_version": 5,
+      "format_version": 6,
       "ship": {
         "dimensions": { "width": 64, "height": 64 },
         "structural": { "source": "BUILT_IN_PRESET", "preset": "UNKNOWN_STYLE" },
         "faction": { "source": "BUILT_IN_PRESET", "preset": "FRONTIER" },
         "palette": { "source": "FACTION_PROFILE_GENERATED" },
-        "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5, "rng_mode": "DOMAIN_SUBSTREAMS" },
+        "seeds": { "master": 1, "structure": 2, "palette": 3, "details": 4, "attachments": 5 },
         "settings": { "detail_density": 50, "asymmetric_detail_chance": 10, "attachments_enabled": true }
       }
     })JSON");

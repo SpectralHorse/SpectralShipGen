@@ -61,7 +61,7 @@ int SpectralShipGenTests::runArbitraryResolutionRegression()
             }
 
             SpectralShipGen::ShipIdleAnimationSettings animationSettings;
-            animationSettings.FrameCount = 6u;
+            animationSettings.ExactFrameCount = 6u;
             animationSettings.Seed = 0xA24BAED4963EE407ull ^ resolution;
             const SpectralShipGen::ShipIdleAnimation animation = animator.generate(ship, animationSettings);
             if (animation.FrameWidth != resolution || animation.FrameHeight != resolution || animation.Frames.size() != animation.Sampling.ActualFrameCount)

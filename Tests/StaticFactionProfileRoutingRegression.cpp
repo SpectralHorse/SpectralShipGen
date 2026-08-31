@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 #include <SpectralShipGen/ShipFactionProfile.h>
@@ -16,7 +17,7 @@ namespace SpectralShipGen
             const ShipGenerationConfiguration& configuration,
             const ShipGenerationProfile& structuralProfile,
             const ShipFactionProfile& factionProfile,
-            ShipStyle styleProvenance,
+            std::optional<ShipStyle> structuralPreset,
             ShipGenerationDebugInfo* debugInfo)
         {
             ExplicitShipGenerationConfiguration explicitConfiguration;
@@ -27,8 +28,12 @@ namespace SpectralShipGen
             explicitConfiguration.AttachmentsEnabled = configuration.AttachmentsEnabled;
             explicitConfiguration.SeedOverrides = configuration.SeedOverrides;
             explicitConfiguration.DomainSeedOverrides = configuration.DomainSeedOverrides;
-            explicitConfiguration.RandomStreamMode = configuration.RandomStreamMode;
-            return generator.generateInternal(explicitConfiguration, structuralProfile, factionProfile, styleProvenance, configuration.Faction, nullptr, debugInfo, nullptr);
+            ShipResolvedGenerationConfiguration resolved = resolveShipGenerationConfiguration(explicitConfiguration, structuralProfile, factionProfile);
+            resolved.Provenance.StructuralPreset = structuralPreset;
+            if (configuration.Faction < ShipFactionType::SHIP_FACTION_TYPE_END) { resolved.Provenance.FactionPreset = configuration.Faction; }
+            resolved.Provenance.PaletteSource = explicitConfiguration.PaletteConfiguration.Mode;
+            if (resolved.Provenance.PaletteSource == ShipPaletteSourceMode::FACTION_PROFILE_GENERATED) { resolved.Provenance.PaletteFactionPreset = resolved.Provenance.FactionPreset; }
+            return generator.generateInternal(resolved, nullptr, debugInfo, nullptr);
         }
     };
 }
@@ -139,7 +144,6 @@ namespace
         configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
         configuration.SeedOverrides = settings.SeedOverrides;
         configuration.DomainSeedOverrides = settings.DomainSeedOverrides;
-        configuration.RandomStreamMode = settings.RandomStreamMode;
         return configuration;
     }
 
@@ -184,9 +188,9 @@ namespace SpectralShipGenTests
             const GeneratedShip routedShip = ShipGeneratorStaticFactionRegressionAccess::generate(
                 generator, routedConfiguration, getShipGenerationProfile(settings.Style), getShipFactionProfile(settings.Faction), settings.Style, &routedDebug);
 
-            if (routedShip.Faction != routedConfiguration.Faction)
+            if (routedShip.Provenance.FactionPreset != routedConfiguration.Faction)
             {
-                std::cerr << "Static faction routing regression did not preserve the intentionally mismatched provenance field.\n";
+                std::cerr << "Static faction routing regression did not preserve the intentionally mismatched optional provenance field.\n";
                 return 1;
             }
             if (!staticShipEqual(presetShip, routedShip) || !staticDebugEqual(presetDebug, routedDebug))
@@ -214,7 +218,7 @@ namespace SpectralShipGenTests
         customRoutedConfiguration.Faction = ShipFactionType::FRONTIER;
         ShipGenerationDebugInfo customRoutedDebug;
         const GeneratedShip customRoutedShip = ShipGeneratorStaticFactionRegressionAccess::generate(
-            generator, customRoutedConfiguration, customProfile, getShipFactionProfile(ShipFactionType::CORPORATE), ShipStyle::SHIP_STYLE_END, &customRoutedDebug);
+            generator, customRoutedConfiguration, customProfile, getShipFactionProfile(ShipFactionType::CORPORATE), std::nullopt, &customRoutedDebug);
 
         if (!staticShipEqual(customPresetShip, customRoutedShip) || !staticDebugEqual(customPresetDebug, customRoutedDebug))
         {

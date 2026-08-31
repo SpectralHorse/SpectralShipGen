@@ -398,7 +398,6 @@ namespace SpectralShipGen
         // without consulting ShipStyle identity.
         uint32_t ComplexityBudgetPercent = 100u;
         ShipComplexityCategoryWeights ComplexityCategoryWeights;
-        ShipComplexityCategoryWeights LegacyComplexityCategoryWeights = { 14, 0, 15, 18, 30, 10, 13 };
         ShipSpatialCapacityBias SpatialCapacityBias;
 
         // Canvas-relative longitudinal occupancy. Existing styles keep the
@@ -455,7 +454,6 @@ namespace SpectralShipGen
         bool SilhouetteWeakArticulationGuidanceEnabled = true;
         ShipSilhouetteGuidanceWeights SilhouetteGuidanceWeights;
         bool SilhouetteProfileValidationEnabled = true;
-        bool AllowTinyBroadSilhouetteLegacyValidationException = false;
         uint32_t TinySilhouetteExtraWidthRelaxationPercent = 0u;
         bool CleanAxialTaperArticulationExemption = false;
         bool WingWedgeArticulationExemption = false;

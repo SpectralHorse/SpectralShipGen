@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <algorithm>
 #include <array>
@@ -236,8 +237,8 @@ int SpectralShipGenTests::runWeaponGeometryRegression()
                     const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(style);
                     SpectralShipGen::ShipGenerationDebugInfo firstDebug;
                     SpectralShipGen::ShipGenerationDebugInfo secondDebug;
-                    SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, &firstDebug);
-                    SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, &secondDebug);
+                    SpectralShipGen::ShipGenerationContext firstContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &firstDebug);
+                    SpectralShipGen::ShipGenerationContext secondContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &secondDebug);
 
                     if (!generatePipeline(firstContext) || !generatePipeline(secondContext))
                     {
@@ -342,8 +343,8 @@ int SpectralShipGenTests::runWeaponGeometryRegression()
             const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(settings.Style);
             SpectralShipGen::ShipGenerationDebugInfo firstDebug;
             SpectralShipGen::ShipGenerationDebugInfo secondDebug;
-            SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, &firstDebug);
-            SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, &secondDebug);
+            SpectralShipGen::ShipGenerationContext firstContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &firstDebug);
+            SpectralShipGen::ShipGenerationContext secondContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &secondDebug);
 
             if (!generatePipeline(firstContext) || !generatePipeline(secondContext) || !validateWeapons(firstContext) || !validateWeapons(secondContext))
             {

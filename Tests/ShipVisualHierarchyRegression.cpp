@@ -95,7 +95,7 @@ namespace
             return false;
         }
 
-        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(firstShip.Seeds, settings.DomainSeedOverrides, settings.RandomStreamMode);
+        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(firstShip.Seeds, settings.DomainSeedOverrides);
         ShipGenerationSettings cockpitReroll = settings;
         cockpitReroll.DomainSeedOverrides.set(GenerationDomain::COCKPIT, domains.get(GenerationDomain::COCKPIT) ^ 0xA24BAED4963EE407ull);
         GeneratedShip rerolledShip;

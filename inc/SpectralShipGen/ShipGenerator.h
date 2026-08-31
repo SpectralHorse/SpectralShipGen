@@ -25,23 +25,22 @@ namespace SpectralShipGen
         GeneratedShip generate(const ShipResolvedGenerationConfiguration& configuration, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
         GeneratedShip generateCalibrated(const ShipResolvedGenerationConfiguration& configuration, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
-        // Backward-compatible built-in preset API. Style is resolved to a
-        // ShipGenerationProfile and then routed through the same canonical
-        // resolved-profile implementation as explicit/custom generation.
+        // Convenient built-in preset API. Style/faction selectors are resolved
+        // into semantic profiles and then routed through the same canonical
+        // resolved-configuration implementation as explicit/custom generation.
         GeneratedShip generate(const ShipGenerationSettings& settings);
         GeneratedShip generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo);
         GeneratedShip generate(const ShipGenerationSettings& settings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo);
         GeneratedShip generateCalibrated(const ShipGenerationSettings& settings, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
         // Portable recipe entry path. Built-in recipe sources retain truthful
-        // preset provenance; embedded custom sources use *_END provenance and
-        // the same canonical resolved-profile implementation.
+        // optional preset provenance; embedded custom sources carry no fabricated
+        // built-in identity and use the same canonical resolved implementation.
         GeneratedShip generate(const ShipGenerationRecipe& recipe, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
 
-        // First-class explicit-profile API. ShipGenerationConfiguration contains
-        // no built-in style identity; custom output therefore carries
-        // ShipStyle::SHIP_STYLE_END provenance unless generated via the preset
-        // convenience API above.
+        // First-class explicit structural-profile API. ShipGenerationConfiguration
+        // contains no built-in structural preset identity, so custom output carries
+        // no structural preset provenance unless supplied through a preset path.
         GeneratedShip generate(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, ShipGenerationDebugInfo* debugInfo = nullptr, ShipGenerationPerformanceInfo* performanceInfo = nullptr);
         GeneratedShip generateCalibrated(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const GenerationCalibrationSettings& calibrationSettings, ShipGenerationDebugInfo* debugInfo = nullptr);
 
@@ -61,16 +60,6 @@ namespace SpectralShipGen
             ShipGenerationDebugInfo* debugInfo,
             ShipGenerationPerformanceInfo* performanceInfo);
 
-        // Internal compatibility bridge retained for focused routing regressions;
-        // it immediately constructs the canonical resolved configuration.
-        GeneratedShip generateInternal(const ExplicitShipGenerationConfiguration& configuration,
-            const ShipGenerationProfile& profile,
-            const ShipFactionProfile& factionProfile,
-            ShipStyle builtInStyleProvenance,
-            ShipFactionType builtInFactionProvenance,
-            const GenerationCalibrationSettings* calibrationSettings,
-            ShipGenerationDebugInfo* debugInfo,
-            ShipGenerationPerformanceInfo* performanceInfo);
 
         static constexpr uint32_t MaximumHullGenerationAttempts = 8u;
     };

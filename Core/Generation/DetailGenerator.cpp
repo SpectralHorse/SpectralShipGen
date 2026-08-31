@@ -131,12 +131,9 @@ namespace SpectralShipGen
             context.DebugInfo->HasSurfaceDetailProfile = true;
         }
 
-        if (settings.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            std::mt19937_64 motifRandomGenerator(mixGenerationSeed64(context.DomainSeeds.get(GenerationDomain::DETAILS) ^ DetailMotifSalt));
-            planDetailMotifs(context, detailProfile, motifRandomGenerator);
-            generatePlannedMotifs(context, motifRandomGenerator);
-        }
+        std::mt19937_64 motifRandomGenerator(mixGenerationSeed64(context.DomainSeeds.get(GenerationDomain::DETAILS) ^ DetailMotifSalt));
+        planDetailMotifs(context, detailProfile, motifRandomGenerator);
+        generatePlannedMotifs(context, motifRandomGenerator);
 
         const uint32_t freeformPercent = getFreeformDetailPercent(context);
         detailProfile.DetailDensityPercent = composeSurfaceDetailPercent(detailProfile.DetailDensityPercent, freeformPercent);

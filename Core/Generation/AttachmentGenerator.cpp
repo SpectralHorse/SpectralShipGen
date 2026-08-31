@@ -372,14 +372,14 @@ namespace SpectralShipGen
             return ShipAttachmentRegion::WING_OUTER_SIDE;
         }
 
-        const bool legacyOuterWingRegion = !context.WingRegions.hasWings() && maximumRowWidth > 0u && rowWidth * 100u >= maximumRowWidth * 80u;
+        const bool fallbackOuterWingRegion = !context.WingRegions.hasWings() && maximumRowWidth > 0u && rowWidth * 100u >= maximumRowWidth * 80u;
 
         if (verticalPercent < 30u)
         {
             return ShipAttachmentRegion::FRONT_SIDE;
         }
 
-        if (verticalPercent >= 45u && verticalPercent <= 82u && legacyOuterWingRegion)
+        if (verticalPercent >= 45u && verticalPercent <= 82u && fallbackOuterWingRegion)
         {
             return ShipAttachmentRegion::WING_OUTER_SIDE;
         }

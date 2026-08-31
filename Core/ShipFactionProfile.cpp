@@ -289,10 +289,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 125u;
             result.Complexity.TotalBudgetPercent = 106u;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 2;
-            result.Complexity.LegacyCategoryOffsets.MajorFeature = -2;
-            result.Complexity.LegacyCategoryOffsets.Attachment = 3;
-            result.Complexity.LegacyCategoryOffsets.Detail = 2;
             result.Complexity.CategoryOffsets.CockpitStructure = 1;
             result.Complexity.CategoryOffsets.HullLayer = 2;
             result.Complexity.CategoryOffsets.MajorFeature = -2;
@@ -457,10 +453,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 65u;
             result.Complexity.TotalBudgetPercent = 98u;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 2;
-            result.Complexity.LegacyCategoryOffsets.MajorFeature = 1;
-            result.Complexity.LegacyCategoryOffsets.LargeWeapon = 2;
-            result.Complexity.LegacyCategoryOffsets.Detail = -2;
             result.Complexity.CategoryOffsets.CockpitStructure = 2;
             result.Complexity.CategoryOffsets.HullLayer = 2;
             result.Complexity.CategoryOffsets.MajorFeature = 1;
@@ -626,10 +618,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 72u;
             result.Complexity.TotalBudgetPercent = 92u;
-            result.Complexity.LegacyCategoryOffsets.Silhouette = -2;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 1;
-            result.Complexity.LegacyCategoryOffsets.MajorFeature = 3;
-            result.Complexity.LegacyCategoryOffsets.Attachment = -2;
             result.Complexity.CategoryOffsets.Silhouette = -2;
             result.Complexity.CategoryOffsets.CockpitStructure = 2;
             result.Complexity.CategoryOffsets.HullLayer = 1;
@@ -801,9 +789,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 135u;
             result.Complexity.TotalBudgetPercent = 102u;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 1;
-            result.Complexity.LegacyCategoryOffsets.MajorFeature = 1;
-            result.Complexity.LegacyCategoryOffsets.Attachment = 1;
             result.Complexity.CategoryOffsets.CockpitStructure = 1;
             result.Complexity.CategoryOffsets.HullLayer = 1;
             result.Complexity.CategoryOffsets.MajorFeature = 1;
@@ -978,10 +963,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 58u;
             result.Complexity.TotalBudgetPercent = 98u;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 2;
-            result.Complexity.LegacyCategoryOffsets.LargeWeapon = 1;
-            result.Complexity.LegacyCategoryOffsets.Attachment = -1;
-            result.Complexity.LegacyCategoryOffsets.Detail = 1;
             result.Complexity.CategoryOffsets.CockpitStructure = 2;
             result.Complexity.CategoryOffsets.HullLayer = 2;
             result.Complexity.CategoryOffsets.LargeWeapon = 1;
@@ -1175,10 +1156,6 @@ namespace SpectralShipGen
 
             result.MacroAsymmetry.ChancePercent = 88u;
             result.Complexity.TotalBudgetPercent = 104u;
-            result.Complexity.LegacyCategoryOffsets.HullLayer = 4;
-            result.Complexity.LegacyCategoryOffsets.MajorFeature = 3;
-            result.Complexity.LegacyCategoryOffsets.Attachment = -2;
-            result.Complexity.LegacyCategoryOffsets.Detail = -3;
             result.Complexity.CategoryOffsets.CockpitStructure = 3;
             result.Complexity.CategoryOffsets.HullLayer = 5;
             result.Complexity.CategoryOffsets.MajorFeature = 4;

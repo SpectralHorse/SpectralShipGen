@@ -75,7 +75,7 @@ namespace
         }
         if (!validateMaterialMasks(first, firstDebug)) { return false; }
 
-        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(deriveShipGenerationSeeds(settings.Seed), settings.DomainSeedOverrides, settings.RandomStreamMode);
+        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(deriveShipGenerationSeeds(settings.Seed), settings.DomainSeedOverrides);
         ShipGenerationSettings rerolled = settings;
         rerolled.DomainSeedOverrides.set(GenerationDomain::PALETTE, deriveGenerationDomainRerollSeed(0x59B22D1EF2345678ull, GenerationDomain::PALETTE, domains.get(GenerationDomain::PALETTE)));
         ShipGenerationDebugInfo paletteDebug;

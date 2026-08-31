@@ -56,9 +56,9 @@ namespace SpectralShipGenDiagnostics
         DiagnosticsDetailLevel DetailLevel = DiagnosticsDetailLevel::RAW_SAMPLES_AND_SUMMARY;
         std::string BuildConfiguration;
         std::string VersionIdentifier;
-        // Optional custom/developer-facing identity plus palette source. Built-in
-        // style/faction identity remains represented by Styles/Factions; custom
-        // runs use *_END there rather than fabricating a preset.
+        // Optional custom/developer-facing label plus palette source. Styles/Factions
+        // describe built-in matrix runs; resolved custom runs retain truthful optional
+        // preset provenance on work items instead of fabricating enum identities.
         std::string ConfigurationLabel;
         SpectralShipGen::ShipPaletteSourceMode PaletteSourceMode = SpectralShipGen::ShipPaletteSourceMode::FACTION_PROFILE_GENERATED;
     };
@@ -70,8 +70,8 @@ namespace SpectralShipGenDiagnostics
         uint64_t SampleIndex = 0u;
         uint64_t Seed = 0u;
         SpectralShipGen::ShipDimensions Dimensions;
-        SpectralShipGen::ShipStyle Style = SpectralShipGen::ShipStyle::FIGHTER;
-        SpectralShipGen::ShipFactionType Faction = SpectralShipGen::ShipFactionType::FRONTIER;
+        std::optional<SpectralShipGen::ShipStyle> Style = SpectralShipGen::ShipStyle::FIGHTER;
+        std::optional<SpectralShipGen::ShipFactionType> Faction = SpectralShipGen::ShipFactionType::FRONTIER;
     };
 
     struct DiagnosticsProgress
@@ -81,8 +81,8 @@ namespace SpectralShipGenDiagnostics
         double ProgressPercent = 0.0;
         uint32_t CurrentWidth = 0u;
         uint32_t CurrentHeight = 0u;
-        SpectralShipGen::ShipStyle CurrentStyle = SpectralShipGen::ShipStyle::FIGHTER;
-        SpectralShipGen::ShipFactionType CurrentFaction = SpectralShipGen::ShipFactionType::FRONTIER;
+        std::optional<SpectralShipGen::ShipStyle> CurrentStyle = SpectralShipGen::ShipStyle::FIGHTER;
+        std::optional<SpectralShipGen::ShipFactionType> CurrentFaction = SpectralShipGen::ShipFactionType::FRONTIER;
         uint64_t CurrentSampleIndex = 0u;
         uint64_t CurrentSeed = 0u;
         uint64_t ElapsedNanoseconds = 0u;
@@ -243,16 +243,6 @@ namespace SpectralShipGenDiagnostics
     {
     public:
         DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
-            const DiagnosticsProgressCallback& progressCallback = {},
-            const DiagnosticsCancellationCallback& cancellationCallback = {},
-            const DiagnosticsSampleCallback& sampleCallback = {}) const;
-
-        // Backward-compatible explicit structural/faction diagnostics overload.
-        // It resolves into the canonical ShipResolvedGenerationConfiguration
-        // path without fabricating built-in preset identity.
-        DiagnosticsResult run(const DiagnosticsRunConfiguration& configuration,
-            const SpectralShipGen::ShipGenerationProfile& profile,
-            const SpectralShipGen::ShipFactionProfile& factionProfile,
             const DiagnosticsProgressCallback& progressCallback = {},
             const DiagnosticsCancellationCallback& cancellationCallback = {},
             const DiagnosticsSampleCallback& sampleCallback = {}) const;

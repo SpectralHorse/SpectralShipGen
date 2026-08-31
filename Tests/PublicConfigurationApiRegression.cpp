@@ -132,7 +132,7 @@ namespace SpectralShipGenTests
             const GeneratedShip customShipAgain = generator.generate(custom);
             require(sameImage(customShip.FinalImage, customShipAgain.FinalImage), "Custom canonical generation is not deterministic.");
             require(!customShip.Provenance.StructuralPreset.has_value() && !customShip.Provenance.FactionPreset.has_value(), "Generated custom ship fabricated preset provenance.");
-            require(customShip.Style == ShipStyle::SHIP_STYLE_END && customShip.Faction == ShipFactionType::SHIP_FACTION_TYPE_END, "Legacy provenance mirrors must remain truthful for custom generation.");
+            require(!customShip.Provenance.StructuralPreset.has_value() && !customShip.Provenance.FactionPreset.has_value(), "Custom generation must not fabricate built-in provenance.");
 
             ShipResolvedGenerationConfiguration fixedPaletteConfiguration = custom;
             fixedPaletteConfiguration.Generation.PaletteConfiguration.Mode = ShipPaletteSourceMode::FIXED;
@@ -192,8 +192,8 @@ namespace SpectralShipGenTests
             const auto diagnosticsResult = SpectralShipGenDiagnostics::DiagnosticsRunner().run(diagnostics, custom);
             require(diagnosticsResult.Completed && diagnosticsResult.OverallSummary.SuccessfulSamples == 2u, "Custom resolved diagnostics run failed.");
             require(diagnosticsResult.Configuration.PaletteSourceMode == ShipPaletteSourceMode::EXPLICIT_GENERATED, "Diagnostics palette identity was not preserved.");
-            require(diagnosticsResult.Configuration.Styles.size() == 1u && diagnosticsResult.Configuration.Styles.front() == ShipStyle::SHIP_STYLE_END, "Diagnostics fabricated structural preset identity.");
-            require(diagnosticsResult.Configuration.Factions.size() == 1u && diagnosticsResult.Configuration.Factions.front() == ShipFactionType::SHIP_FACTION_TYPE_END, "Diagnostics fabricated faction preset identity.");
+            require(diagnosticsResult.Configuration.Styles.empty(), "Diagnostics fabricated structural preset identity.");
+            require(diagnosticsResult.Configuration.Factions.empty(), "Diagnostics fabricated faction preset identity.");
 
             ShipResolvedGenerationConfiguration invalid = custom;
             invalid.Generation.Dimensions.Width = 8u;

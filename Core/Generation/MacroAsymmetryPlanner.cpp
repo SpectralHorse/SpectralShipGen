@@ -68,14 +68,9 @@ namespace SpectralShipGen
         }
         chance = std::min(context.VisualHierarchy.InfluenceEnabled ? 72u : 45u, chance);
 
-        uint64_t legacyState = mixGenerationSeed64(context.Seeds.Structure ^ context.Seeds.Attachments ^ MacroAsymmetrySalt);
         auto roll = [&](uint32_t maximumExclusive) mutable -> uint32_t
             {
                 if (maximumExclusive == 0u) { return 0u; }
-                if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-                {
-                    return nextRoll(legacyState, maximumExclusive);
-                }
                 return context.getGenerationRandomUInt(GenerationDomain::MACRO_ASYMMETRY, 0u, maximumExclusive - 1u);
             };
         if (roll(100u) >= chance) { return; }

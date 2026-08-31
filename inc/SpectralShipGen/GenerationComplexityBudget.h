@@ -28,9 +28,9 @@ namespace SpectralShipGen
         static constexpr std::size_t CategoryCount = static_cast<std::size_t>(GenerationComplexityCategory::GENERATION_COMPLEXITY_CATEGORY_END);
 
         static GenerationComplexityBudget create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, bool reserveCockpitStructure = true);
-        // Backward-compatible built-in faction convenience.
+        // Built-in faction convenience.
         static GenerationComplexityBudget create(const GenerationScaleTraits& scaleTraits, const ShipGenerationProfile& profile, ShipFactionType faction, bool reserveCockpitStructure = true);
-        // Compatibility/preset convenience. Static generation should pass an already-resolved profile.
+        // Built-in preset convenience. Static generation should pass an already-resolved profile.
         static GenerationComplexityBudget create(const GenerationScaleTraits& scaleTraits, ShipStyle style, ShipFactionType faction, bool reserveCockpitStructure = true);
 
         bool canAfford(GenerationComplexityCategory category, uint32_t cost) const;

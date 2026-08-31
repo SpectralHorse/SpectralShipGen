@@ -11,7 +11,7 @@ namespace SpectralShipGen
 {
     namespace
     {
-        using Result = ShipFactionProfileValidationResult;
+        using Result = ValidationResult;
 
         void addError(Result& result, const char* field, const char* message)
         {
@@ -53,12 +53,12 @@ namespace SpectralShipGen
         }
     }
 
-    ShipFactionProfileValidationResult validateShipFactionProfile(const ShipFactionProfile& profile)
+    ValidationResult validateShipFactionProfile(const ShipFactionProfile& profile)
     {
         Result result;
 
-        const ShipPaletteGenerationProfileValidationResult paletteValidation = validateShipPaletteGenerationProfile(getShipPaletteGenerationProfile(profile));
-        for (const ShipPaletteGenerationProfileValidationIssue& issue : paletteValidation.Errors)
+        const ValidationResult paletteValidation = validateShipPaletteGenerationProfile(getShipPaletteGenerationProfile(profile));
+        for (const ValidationIssue& issue : paletteValidation.Errors)
         {
             std::string field = issue.Field;
             if (field.rfind("Ranges.", 0u) == 0u) { field = "Palette." + field.substr(7u); }
@@ -196,7 +196,6 @@ namespace SpectralShipGen
             profile.VisualHierarchy.AnchorWeightMultipliersPercent.NegativeSpace }, false);
 
         for (const int32_t offset : {
-            profile.Complexity.LegacyCategoryOffsets.Silhouette, profile.Complexity.LegacyCategoryOffsets.CockpitStructure, profile.Complexity.LegacyCategoryOffsets.HullLayer, profile.Complexity.LegacyCategoryOffsets.MajorFeature, profile.Complexity.LegacyCategoryOffsets.LargeWeapon, profile.Complexity.LegacyCategoryOffsets.Attachment, profile.Complexity.LegacyCategoryOffsets.Detail,
             profile.Complexity.CategoryOffsets.Silhouette, profile.Complexity.CategoryOffsets.CockpitStructure, profile.Complexity.CategoryOffsets.HullLayer, profile.Complexity.CategoryOffsets.MajorFeature, profile.Complexity.CategoryOffsets.LargeWeapon, profile.Complexity.CategoryOffsets.Attachment, profile.Complexity.CategoryOffsets.Detail })
         {
             validateSafeOffset(result, "Complexity.CategoryOffsets", offset);

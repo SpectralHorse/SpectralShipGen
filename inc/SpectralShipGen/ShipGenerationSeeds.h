@@ -8,13 +8,6 @@
 
 namespace SpectralShipGen
 {
-    enum class GenerationRandomStreamMode : uint32_t
-    {
-        DOMAIN_SUBSTREAMS = 0u,
-        LEGACY_TOP_LEVEL_STREAMS,
-        GENERATION_RANDOM_STREAM_MODE_END
-    };
-
     struct ShipGenerationSeeds
     {
         uint64_t Master = 0u;
@@ -61,7 +54,7 @@ namespace SpectralShipGen
     ShipGenerationSeeds applyShipGenerationSeedOverrides(const ShipGenerationSeeds& seeds, const ShipGenerationSeedOverrides& overrides);
     uint64_t getGenerationSeedForChannel(const ShipGenerationSeeds& seeds, GenerationSeedChannel channel);
     uint64_t deriveGenerationDomainSeed(uint64_t parentSeed, GenerationDomain domain);
-    GenerationDomainSeeds resolveGenerationDomainSeeds(const ShipGenerationSeeds& seeds, const GenerationDomainSeedOverrides& overrides, GenerationRandomStreamMode mode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS);
+    GenerationDomainSeeds resolveGenerationDomainSeeds(const ShipGenerationSeeds& seeds, const GenerationDomainSeedOverrides& overrides);
     void clearGenerationDomainOverridesForChannel(GenerationDomainSeedOverrides& overrides, GenerationSeedChannel channel);
     uint64_t deriveGenerationDomainRerollSeed(uint64_t rerollSeed, GenerationDomain domain, uint64_t previousEffectiveSeed);
 }

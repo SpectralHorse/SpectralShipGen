@@ -79,15 +79,14 @@ namespace SpectralShipGen
         ShipPalette resolvePalette(const ShipPaletteConfiguration& paletteConfiguration,
             uint64_t paletteSeed,
             const ShipFactionProfile& factionProfile,
-            const ShipGenerationProfile& structuralProfile,
-            bool enhancedMaterialContrast)
+            const ShipGenerationProfile& structuralProfile)
         {
             switch (paletteConfiguration.Mode)
             {
             case ShipPaletteSourceMode::FACTION_PROFILE_GENERATED:
-                return ShipPaletteGenerator::generate(paletteSeed, factionProfile, structuralProfile, enhancedMaterialContrast);
+                return ShipPaletteGenerator::generate(paletteSeed, factionProfile, structuralProfile);
             case ShipPaletteSourceMode::EXPLICIT_GENERATED:
-                return ShipPaletteGenerator::generate(paletteSeed, paletteConfiguration.Generated, structuralProfile, enhancedMaterialContrast);
+                return ShipPaletteGenerator::generate(paletteSeed, paletteConfiguration.Generated, structuralProfile);
             case ShipPaletteSourceMode::FIXED:
                 return paletteConfiguration.Fixed;
             default:
@@ -197,19 +196,6 @@ namespace SpectralShipGen
         return generateCalibrated(resolveShipGenerationConfiguration(configuration, profile, factionProfile), calibrationSettings, debugInfo);
     }
 
-    GeneratedShip ShipGenerator::generateInternal(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile, ShipStyle builtInStyleProvenance, ShipFactionType builtInFactionProvenance, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
-    {
-        ShipResolvedGenerationConfiguration resolved = resolveShipGenerationConfiguration(configuration, profile, factionProfile);
-        if (builtInStyleProvenance < ShipStyle::SHIP_STYLE_END) { resolved.Provenance.StructuralPreset = builtInStyleProvenance; }
-        if (builtInFactionProvenance < ShipFactionType::SHIP_FACTION_TYPE_END) { resolved.Provenance.FactionPreset = builtInFactionProvenance; }
-        resolved.Provenance.PaletteSource = configuration.PaletteConfiguration.Mode;
-        if (resolved.Provenance.PaletteSource == ShipPaletteSourceMode::FACTION_PROFILE_GENERATED && resolved.Provenance.FactionPreset.has_value())
-        {
-            resolved.Provenance.PaletteFactionPreset = resolved.Provenance.FactionPreset;
-        }
-        return generateInternal(resolved, calibrationSettings, debugInfo, performanceInfo);
-    }
-
     GeneratedShip ShipGenerator::generateInternal(const ShipResolvedGenerationConfiguration& resolvedConfiguration, const GenerationCalibrationSettings* calibrationSettings, ShipGenerationDebugInfo* debugInfo, ShipGenerationPerformanceInfo* performanceInfo)
     {
         throwIfInvalid(resolvedConfiguration);
@@ -228,12 +214,10 @@ namespace SpectralShipGen
         ShipGenerationSeeds seeds = deriveShipGenerationSeeds(configuration.Seed);
         seeds = applyShipGenerationSeedOverrides(seeds, configuration.SeedOverrides);
 
-        const ShipStyle styleProvenance = resolvedConfiguration.Provenance.StructuralPreset.value_or(ShipStyle::SHIP_STYLE_END);
-        const ShipFactionType factionProvenance = resolvedConfiguration.Provenance.FactionPreset.value_or(ShipFactionType::SHIP_FACTION_TYPE_END);
-        ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings, styleProvenance, factionProvenance);
+        ShipGenerationContext context(configuration, profile, factionProfile, seeds, debugInfo, calibrationSettings);
         context.Ship.Provenance = resolvedConfiguration.Provenance;
         context.Ship.PaletteSourceMode = configuration.PaletteConfiguration.Mode;
-        context.Ship.Palette = resolvePalette(configuration.PaletteConfiguration, context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile, configuration.RandomStreamMode != GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS);
+        context.Ship.Palette = resolvePalette(configuration.PaletteConfiguration, context.DomainSeeds.get(GenerationDomain::PALETTE), factionProfile, profile);
 
         HullGenerator hullGenerator;
         HullLayerGenerator hullLayerGenerator;

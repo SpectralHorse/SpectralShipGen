@@ -184,34 +184,55 @@ namespace SpectralShipGenDiagnostics
             out << ']';
         }
 
+        template <typename T>
+        void writeOptionalEnum(std::ostream& out, const std::optional<T>& value)
+        {
+            if (value.has_value()) { out << static_cast<uint32_t>(*value); }
+            else { out << "null"; }
+        }
+
+        std::optional<SpectralShipGen::ShipStyle> optionalStyle(const JsonValue& value)
+        {
+            if (value.Type == JsonType::NIL) { return std::nullopt; }
+            const uint32_t index = u32(value);
+            if (index >= static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid sample style."); }
+            return static_cast<SpectralShipGen::ShipStyle>(index);
+        }
+
+        std::optional<SpectralShipGen::ShipFactionType> optionalFaction(const JsonValue& value)
+        {
+            if (value.Type == JsonType::NIL) { return std::nullopt; }
+            const uint32_t index = u32(value);
+            if (index >= static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample faction."); }
+            return static_cast<SpectralShipGen::ShipFactionType>(index);
+        }
+
         void rebuildLoadedAggregates(DiagnosticsResult& result)
         {
             result.OverallSummary = aggregateDiagnosticsSamples(result.Samples);
             result.ConfigurationResults.clear();
-            uint64_t configurationIndex = 0u;
-            for (const auto dimensions : result.Configuration.Dimensions)
+
+            std::map<uint64_t, std::vector<DiagnosticsRawSampleResult>> samplesByConfiguration;
+            for (const auto& sample : result.Samples) { samplesByConfiguration[sample.WorkItem.ConfigurationIndex].push_back(sample); }
+
+            for (const auto& entry : samplesByConfiguration)
             {
-                for (const auto style : result.Configuration.Styles)
-                {
-                    for (const auto faction : result.Configuration.Factions)
-                    {
-                        DiagnosticsConfigurationResult configurationResult;
-                        configurationResult.Configuration.Width = dimensions.Width;
-                        configurationResult.Configuration.Height = dimensions.Height;
-                        configurationResult.Configuration.Style = style;
-                        configurationResult.Configuration.Faction = faction;
-                        configurationResult.Configuration.DetailDensity = result.Configuration.DetailDensity;
-                        configurationResult.Configuration.AsymmetricDetailChance = result.Configuration.AsymmetricDetailChance;
-                        configurationResult.Configuration.AttachmentsEnabled = result.Configuration.AttachmentsEnabled;
-                        configurationResult.Configuration.Samples = result.Configuration.SamplesPerConfiguration;
-                        configurationResult.Configuration.DiagnosticSeed = result.Configuration.DiagnosticSeed;
-                        std::vector<DiagnosticsRawSampleResult> selected;
-                        for (const auto& sample : result.Samples) { if (sample.WorkItem.ConfigurationIndex == configurationIndex) { selected.push_back(sample); } }
-                        configurationResult.PerformanceSummary = aggregateDiagnosticsSamples(selected);
-                        result.ConfigurationResults.push_back(std::move(configurationResult));
-                        ++configurationIndex;
-                    }
-                }
+                const auto& selected = entry.second;
+                if (selected.empty()) { continue; }
+                const DiagnosticsWorkItem& representative = selected.front().WorkItem;
+
+                DiagnosticsConfigurationResult configurationResult;
+                configurationResult.Configuration.Width = representative.Dimensions.Width;
+                configurationResult.Configuration.Height = representative.Dimensions.Height;
+                configurationResult.Configuration.Style = representative.Style;
+                configurationResult.Configuration.Faction = representative.Faction;
+                configurationResult.Configuration.DetailDensity = result.Configuration.DetailDensity;
+                configurationResult.Configuration.AsymmetricDetailChance = result.Configuration.AsymmetricDetailChance;
+                configurationResult.Configuration.AttachmentsEnabled = result.Configuration.AttachmentsEnabled;
+                configurationResult.Configuration.Samples = result.Configuration.SamplesPerConfiguration;
+                configurationResult.Configuration.DiagnosticSeed = result.Configuration.DiagnosticSeed;
+                configurationResult.PerformanceSummary = aggregateDiagnosticsSamples(selected);
+                result.ConfigurationResults.push_back(std::move(configurationResult));
             }
         }
     }
@@ -253,8 +274,11 @@ namespace SpectralShipGenDiagnostics
         {
             const auto& s = result.Samples[i];
             out << "    {\"work_index\":" << s.WorkItem.WorkIndex << ",\"configuration_index\":" << s.WorkItem.ConfigurationIndex << ",\"sample_index\":" << s.WorkItem.SampleIndex << ",\"seed\":" << s.WorkItem.Seed
-                << ",\"width\":" << s.WorkItem.Dimensions.Width << ",\"height\":" << s.WorkItem.Dimensions.Height << ",\"style\":" << static_cast<uint32_t>(s.WorkItem.Style) << ",\"faction\":" << static_cast<uint32_t>(s.WorkItem.Faction)
-                << ",\"success\":" << (s.Success ? "true" : "false") << ",\"error\":\"" << escaped(s.ErrorMessage) << "\",\"total_ns\":" << s.TotalGenerationNanoseconds
+                << ",\"width\":" << s.WorkItem.Dimensions.Width << ",\"height\":" << s.WorkItem.Dimensions.Height << ",\"style\":";
+            writeOptionalEnum(out, s.WorkItem.Style);
+            out << ",\"faction\":";
+            writeOptionalEnum(out, s.WorkItem.Faction);
+            out << ",\"success\":" << (s.Success ? "true" : "false") << ",\"error\":\"" << escaped(s.ErrorMessage) << "\",\"total_ns\":" << s.TotalGenerationNanoseconds
                 << ",\"stage_ns\":"; writeIntegerArray(out, s.Performance.StageDurationNanoseconds);
             out << ",\"hull_attempts\":" << s.HullAttemptCount << ",\"hull_rejections\":" << s.HullValidationRejectionCount << ",\"silhouette_rejections\":"; writeIntegerArray(out, s.SilhouetteRejectionCounts);
             out << ",\"negative_space_attempts\":" << s.StructuralNegativeSpaceAttemptCount << ",\"negative_space_successes\":" << s.StructuralNegativeSpaceSuccessCount
@@ -305,9 +329,9 @@ namespace SpectralShipGenDiagnostics
             const JsonValue& dims = member(config, "dimensions"); if (dims.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.dimensions must be an array."); }
             for (const auto& d : dims.Array) { result.Configuration.Dimensions.push_back({ u32(member(d, "width")), u32(member(d, "height")) }); }
             const JsonValue& styles = member(config, "styles"); if (styles.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.styles must be an array."); }
-            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<SpectralShipGen::ShipStyle>(index)); }
+            for (const auto& value : styles.Array) { const uint32_t index = u32(value); if (index >= static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END)) { throw std::runtime_error("Invalid style in diagnostics file."); } result.Configuration.Styles.push_back(static_cast<SpectralShipGen::ShipStyle>(index)); }
             const JsonValue& factions = member(config, "factions"); if (factions.Type != JsonType::ARRAY) { throw std::runtime_error("configuration.factions must be an array."); }
-            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index > static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<SpectralShipGen::ShipFactionType>(index)); }
+            for (const auto& value : factions.Array) { const uint32_t index = u32(value); if (index >= static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid faction in diagnostics file."); } result.Configuration.Factions.push_back(static_cast<SpectralShipGen::ShipFactionType>(index)); }
             result.Configuration.SamplesPerConfiguration = u64(member(config, "samples_per_configuration"));
             result.Configuration.DiagnosticSeed = u64(member(config, "diagnostic_seed"));
             result.Configuration.DetailDensity = u32(member(config, "detail_density"));
@@ -332,9 +356,8 @@ namespace SpectralShipGenDiagnostics
                 DiagnosticsRawSampleResult s;
                 s.WorkItem.WorkIndex = u64(member(j, "work_index")); s.WorkItem.ConfigurationIndex = u64(member(j, "configuration_index")); s.WorkItem.SampleIndex = u64(member(j, "sample_index")); s.WorkItem.Seed = u64(member(j, "seed"));
                 s.WorkItem.Dimensions = { u32(member(j, "width")), u32(member(j, "height")) };
-                const uint32_t style = u32(member(j, "style")); const uint32_t faction = u32(member(j, "faction"));
-                if (style > static_cast<uint32_t>(SpectralShipGen::ShipStyle::SHIP_STYLE_END) || faction > static_cast<uint32_t>(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)) { throw std::runtime_error("Invalid sample style/faction."); }
-                s.WorkItem.Style = static_cast<SpectralShipGen::ShipStyle>(style); s.WorkItem.Faction = static_cast<SpectralShipGen::ShipFactionType>(faction);
+                s.WorkItem.Style = optionalStyle(member(j, "style"));
+                s.WorkItem.Faction = optionalFaction(member(j, "faction"));
                 s.Success = boolean(member(j, "success")); s.ErrorMessage = stringValue(member(j, "error")); s.TotalGenerationNanoseconds = u64(member(j, "total_ns"));
                 const JsonValue& stages = member(j, "stage_ns"); if (stages.Type != JsonType::ARRAY || stages.Array.size() != s.Performance.StageDurationNanoseconds.size()) { throw std::runtime_error("Invalid stage timing array."); }
                 for (std::size_t index = 0u; index < stages.Array.size(); ++index) { s.Performance.StageDurationNanoseconds[index] = u64(stages.Array[index]); }

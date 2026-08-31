@@ -318,7 +318,6 @@ int SpectralShipGenTests::runTask106ReleaseRobustnessRegression()
 
     ShipGenerationRecipe overrideRecipe = makeShipGenerationRecipe(customCases[4u].Configuration);
     overrideRecipe.DomainSeedOverrides.set(GenerationDomain::DETAILS, 0x106D0A1100000001ull);
-    overrideRecipe.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
     ShipGenerationRecipeDocument overrideDocument;
     overrideDocument.Recipe = overrideRecipe;
     const ShipGenerationRecipeLoadResult overrideLoad = deserializeShipGenerationRecipe(serializeShipGenerationRecipe(overrideDocument));
@@ -327,12 +326,11 @@ int SpectralShipGenTests::runTask106ReleaseRobustnessRegression()
         return fail("domain override recipe semantics did not round-trip");
     }
 
-    ShipGenerationRecipe legacyRecipe = makeShipGenerationRecipe(customCases[0u].Configuration);
-    legacyRecipe.RandomStreamMode = GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS;
-    if (!validateShipGenerationRecipe(legacyRecipe).isValid()) { return fail("legacy random stream recipe is not valid"); }
-    const GeneratedShip legacyFirst = generator.generate(legacyRecipe);
-    const GeneratedShip legacySecond = generator.generate(legacyRecipe);
-    if (imageSignature(legacyFirst.FinalImage) != imageSignature(legacySecond.FinalImage)) { return fail("legacy random stream mode lost deterministic repeatability"); }
+    ShipGenerationRecipe repeatabilityRecipe = makeShipGenerationRecipe(customCases[0u].Configuration);
+    if (!validateShipGenerationRecipe(repeatabilityRecipe).isValid()) { return fail("current repeatability recipe is not valid"); }
+    const GeneratedShip repeatabilityFirst = generator.generate(repeatabilityRecipe);
+    const GeneratedShip repeatabilitySecond = generator.generate(repeatabilityRecipe);
+    if (imageSignature(repeatabilityFirst.FinalImage) != imageSignature(repeatabilitySecond.FinalImage)) { return fail("current recipe lost deterministic repeatability"); }
 
     uint64_t completed = 0u;
     DiagnosticsRunConfiguration cancellation = builtIns;

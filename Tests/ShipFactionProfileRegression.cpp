@@ -59,7 +59,7 @@ namespace
                 &profile.SurfaceDetails != &getShipFactionSurfaceDetailProfile(faction) ||
                 &profile.Attachments != &getShipFactionAttachmentProfile(faction))
             {
-                std::cerr << "Legacy faction getter is not a view into canonical profile for faction index " << index << ".\n";
+                std::cerr << "Faction component getter is not a view into canonical profile for faction index " << index << ".\n";
                 success = false;
             }
 

@@ -8,7 +8,7 @@
 
 namespace SpectralShipGen
 {
-    inline constexpr uint32_t ShipGenerationRecipeFormatVersion = 5u;
+    inline constexpr uint32_t ShipGenerationRecipeFormatVersion = 6u;
 
     struct ShipGenerationRecipeLoadResult
     {

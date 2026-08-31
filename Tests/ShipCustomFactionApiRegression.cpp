@@ -103,7 +103,6 @@ namespace
         result.AttachmentsEnabled = settings.AttachmentsEnabled;
         result.SeedOverrides = settings.SeedOverrides;
         result.DomainSeedOverrides = settings.DomainSeedOverrides;
-        result.RandomStreamMode = settings.RandomStreamMode;
         return result;
     }
 
@@ -198,7 +197,7 @@ namespace
             const GeneratedShip preset = generator.generate(presetSettings, &presetDebug);
             const GeneratedShip explicitShip = generator.generate(explicitConfigurationFrom(presetSettings), getShipGenerationProfile(Styles[index]), getShipFactionProfile(Factions[index]), &explicitDebug);
 
-            if (preset.Style != Styles[index] || preset.Faction != Factions[index] || explicitShip.Style != ShipStyle::SHIP_STYLE_END || explicitShip.Faction != ShipFactionType::SHIP_FACTION_TYPE_END)
+            if (preset.Provenance.StructuralPreset != Styles[index] || preset.Provenance.FactionPreset != Factions[index] || explicitShip.Provenance.StructuralPreset.has_value() || explicitShip.Provenance.FactionPreset.has_value())
             {
                 std::cerr << "Task 85 regression failed: built-in/custom provenance semantics are not truthful.\n";
                 return false;
@@ -210,10 +209,11 @@ namespace
             }
 
             GeneratedShip withoutFactionProvenance = preset;
-            withoutFactionProvenance.Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
+            withoutFactionProvenance.Provenance.FactionPreset.reset();
+            withoutFactionProvenance.Provenance.PaletteFactionPreset.reset();
             if (!animationEvaluationEqual(preset, withoutFactionProvenance))
             {
-                std::cerr << "Task 85 regression failed: animation still depends on GeneratedShip::Faction provenance.\n";
+                std::cerr << "Task 85 regression failed: animation still depends on optional faction provenance.\n";
                 return false;
             }
         }
@@ -286,7 +286,7 @@ namespace
             ShipGenerationDebugInfo debugInfo;
             const GeneratedShip first = generator.generate(configuration, structuralProfiles[index], factionProfiles[index], &debugInfo);
             const GeneratedShip second = generator.generate(configuration, structuralProfiles[index], factionProfiles[index]);
-            if (first.Style != ShipStyle::SHIP_STYLE_END || first.Faction != ShipFactionType::SHIP_FACTION_TYPE_END || !staticBehaviorEqual(first, second) || !animationEvaluationEqual(first, second))
+            if (first.Provenance.StructuralPreset.has_value() || first.Provenance.FactionPreset.has_value() || !staticBehaviorEqual(first, second) || !animationEvaluationEqual(first, second))
             {
                 std::cerr << "Task 85 regression failed: custom structural + custom faction generation is not deterministic/animatable.\n";
                 return false;
@@ -330,7 +330,7 @@ namespace
         // Common workflow: a canonical built-in structural profile value combined
         // with a custom faction still uses the explicit path and carries no fake IDs.
         const GeneratedShip builtInStructureCustomFaction = generator.generate(baseConfiguration, getShipGenerationProfile(ShipStyle::FIGHTER), factionProfile);
-        if (builtInStructureCustomFaction.Style != ShipStyle::SHIP_STYLE_END || builtInStructureCustomFaction.Faction != ShipFactionType::SHIP_FACTION_TYPE_END)
+        if (builtInStructureCustomFaction.Provenance.StructuralPreset.has_value() || builtInStructureCustomFaction.Provenance.FactionPreset.has_value())
         {
             std::cerr << "Task 85 regression failed: built-in structural profile + custom faction fabricated provenance.\n";
             return false;

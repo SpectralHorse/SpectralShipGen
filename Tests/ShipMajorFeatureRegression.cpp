@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <array>
 #include <cstdint>
@@ -150,8 +151,8 @@ int SpectralShipGenTests::runMajorFeatureRegression()
                     settings.Seed = 0x36000000ull + static_cast<uint64_t>(resolution) * 100000ull + static_cast<uint64_t>(static_cast<uint32_t>(style)) * 10000ull + static_cast<uint64_t>(static_cast<uint32_t>(faction)) * 1000ull + sample;
                     const SpectralShipGen::ShipGenerationSeeds seeds = SpectralShipGen::deriveShipGenerationSeeds(settings.Seed);
                     const SpectralShipGen::ShipGenerationProfile& profile = SpectralShipGen::getShipGenerationProfile(style);
-                    SpectralShipGen::ShipGenerationContext firstContext(settings, profile, seeds, nullptr);
-                    SpectralShipGen::ShipGenerationContext secondContext(settings, profile, seeds, nullptr);
+                    SpectralShipGen::ShipGenerationContext firstContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, nullptr);
+                    SpectralShipGen::ShipGenerationContext secondContext(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, nullptr);
 
                     if (!generatePipeline(firstContext) || !generatePipeline(secondContext))
                     {

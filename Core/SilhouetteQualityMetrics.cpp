@@ -218,7 +218,7 @@ namespace SpectralShipGen
         switch (reason)
         {
         case SilhouetteValidationFailureReason::NONE: return "NONE";
-        case SilhouetteValidationFailureReason::LEGACY_GEOMETRY_VALIDATION: return "LEGACY_GEOMETRY_VALIDATION";
+        case SilhouetteValidationFailureReason::BASE_GEOMETRY_VALIDATION: return "BASE_GEOMETRY_VALIDATION";
         case SilhouetteValidationFailureReason::INVALID_WING_REGIONS: return "INVALID_WING_REGIONS";
         case SilhouetteValidationFailureReason::LOW_LATERAL_UTILIZATION: return "LOW_LATERAL_UTILIZATION";
         case SilhouetteValidationFailureReason::LOW_LONGITUDINAL_UTILIZATION: return "LOW_LONGITUDINAL_UTILIZATION";

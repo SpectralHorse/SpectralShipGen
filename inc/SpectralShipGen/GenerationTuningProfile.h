@@ -69,7 +69,7 @@ namespace SpectralShipGen
 
     struct GenerationCalibrationSettings
     {
-        // Built-in-preset tuning catalog used by the legacy Style path.
+        // Built-in-preset tuning catalog used by the built-in preset path.
         const GenerationTuningProfile* TuningProfile = nullptr;
         // Style-independent tuning for explicit-profile generation. Supplying
         // both tuning pointers is invalid/ambiguous.

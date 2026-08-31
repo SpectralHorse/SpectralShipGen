@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <array>
 #include <cstdint>
@@ -94,7 +95,7 @@ namespace
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(seed);
         const ShipGenerationProfile& profile = getShipGenerationProfile(style);
         Snapshot snapshot;
-        ShipGenerationContext context(settings, profile, seeds, &snapshot.Debug);
+        ShipGenerationContext context(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, &snapshot.Debug);
         HullGenerator hullGenerator;
         CockpitGenerator cockpitGenerator;
         MacroAsymmetryPlanner asymmetryPlanner;
@@ -215,7 +216,7 @@ int SpectralShipGenTests::runCockpitGeometryRegression()
     ShipGenerator generator;
     const GeneratedShip base = generator.generate(baseSettings);
     const ShipGenerationSeeds topSeeds = deriveShipGenerationSeeds(baseSettings.Seed);
-    const GenerationDomainSeeds domainSeeds = resolveGenerationDomainSeeds(topSeeds, baseSettings.DomainSeedOverrides, baseSettings.RandomStreamMode);
+    const GenerationDomainSeeds domainSeeds = resolveGenerationDomainSeeds(topSeeds, baseSettings.DomainSeedOverrides);
     ShipGenerationSettings rerolledSettings = baseSettings;
     rerolledSettings.DomainSeedOverrides.set(GenerationDomain::COCKPIT, deriveGenerationDomainRerollSeed(0xCAFEBABE52005200ull, GenerationDomain::COCKPIT, domainSeeds.get(GenerationDomain::COCKPIT)));
     const GeneratedShip rerolled = generator.generate(rerolledSettings);

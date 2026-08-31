@@ -337,7 +337,6 @@ namespace SpectralShipGen
             // Task 79: static behavior formerly hidden behind ShipStyle.
             profile.ComplexityBudgetPercent = 82u;
             profile.ComplexityCategoryWeights = { 14, 10, 13, 18, 22, 8, 15 };
-            profile.LegacyComplexityCategoryWeights = { 15, 0, 14, 20, 22, 10, 19 };
             profile.SilhouetteGuidanceEnabled = false;
             profile.CleanAxialTaperArticulationExemption = true;
             profile.CoreTreatmentChance = 58u;
@@ -551,7 +550,6 @@ namespace SpectralShipGen
             // Task 79: static behavior formerly hidden behind ShipStyle.
             profile.ComplexityBudgetPercent = 108u;
             profile.ComplexityCategoryWeights = { 13, 15, 20, 24, 19, 5, 4 };
-            profile.LegacyComplexityCategoryWeights = { 15, 0, 22, 26, 22, 7, 8 };
             profile.SilhouetteGuidanceWeights = { 3u, 2u, 1u };
             profile.CoreTreatmentChance = 82u;
             profile.CoreTreatmentWeights = { 18u, 16u, 30u, 14u, 16u, 6u };
@@ -761,7 +759,6 @@ namespace SpectralShipGen
             // Task 79: static behavior formerly hidden behind ShipStyle.
             profile.ComplexityBudgetPercent = 112u;
             profile.ComplexityCategoryWeights = { 12, 14, 17, 17, 14, 16, 10 };
-            profile.LegacyComplexityCategoryWeights = { 14, 0, 19, 18, 16, 19, 14 };
             profile.SilhouetteGuidanceWeights = { 1u, 2u, 3u };
             profile.CoreTreatmentChance = 84u;
             profile.CoreTreatmentWeights = { 14u, 14u, 18u, 22u, 16u, 16u };
@@ -984,7 +981,6 @@ namespace SpectralShipGen
             profile.VisualHierarchyEnabled = false;
             profile.ComplexityBudgetPercent = 98u;
             profile.ComplexityCategoryWeights = { 15, 14, 18, 22, 24, 3, 4 };
-            profile.LegacyComplexityCategoryWeights = { 16, 0, 18, 24, 27, 5, 10 };
             profile.SpatialCapacityBias = { 3, 4, 4, 2, -2, -4 };
             profile.SilhouetteGuidanceEnabled = false;
             profile.SilhouetteProfileValidationEnabled = false;
@@ -1221,10 +1217,8 @@ namespace SpectralShipGen
             // Task 79: static behavior formerly hidden behind ShipStyle.
             profile.ComplexityBudgetPercent = 106u;
             profile.ComplexityCategoryWeights = { 15, 14, 25, 18, 22, 3, 3 };
-            profile.LegacyComplexityCategoryWeights = { 16, 0, 27, 22, 23, 5, 7 };
             profile.SpatialCapacityBias = { -2, 1, 2, 1, 5, 5 };
             profile.SilhouetteWeakArticulationGuidanceEnabled = false;
-            profile.AllowTinyBroadSilhouetteLegacyValidationException = true;
             profile.TinySilhouetteExtraWidthRelaxationPercent = 4u;
             profile.WingWedgeArticulationExemption = true;
             profile.CoreTreatmentChance = 90u;

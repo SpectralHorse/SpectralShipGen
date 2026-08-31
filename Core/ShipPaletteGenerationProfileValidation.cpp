@@ -7,7 +7,7 @@ namespace SpectralShipGen
 {
     namespace
     {
-        using Result = ShipPaletteGenerationProfileValidationResult;
+        using Result = ValidationResult;
 
         void addError(Result& result, const char* field, const char* message)
         {
@@ -40,7 +40,7 @@ namespace SpectralShipGen
         }
     }
 
-    ShipPaletteGenerationProfileValidationResult validateShipPaletteGenerationProfile(const ShipPaletteGenerationProfile& profile)
+    ValidationResult validateShipPaletteGenerationProfile(const ShipPaletteGenerationProfile& profile)
     {
         Result result;
         const ShipPaletteGenerationRanges& ranges = profile.Ranges;

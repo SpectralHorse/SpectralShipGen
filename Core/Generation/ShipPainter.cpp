@@ -470,20 +470,6 @@ namespace SpectralShipGen
     {
         const PixelMaskUtils::MaskBounds bounds = PixelMaskUtils::calculateMaskBounds(ship.CockpitMask);
         if (!bounds.Valid) { return; }
-
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            for (uint32_t y = bounds.MinY; y <= bounds.MaxY; ++y)
-            {
-                for (uint32_t x = bounds.MinX; x <= bounds.MaxX; ++x)
-                {
-                    if (!ship.CockpitMask.get(x, y)) { continue; }
-                    ship.FinalImage.setPixel(x, y, getLegacyCockpitPixelColor(ship.CockpitMask, bounds, x, y, palette, scaleTraits.ShadingComplexity));
-                }
-            }
-            return;
-        }
-
         const bool strongStructure = context.Cockpit.SizeClass >= CockpitSizeClass::LARGE || scaleTraits.ShadingComplexity >= 65u;
         const uint32_t shadowDistance = context.Cockpit.SizeClass == CockpitSizeClass::MASSIVE && scaleTraits.ShadingComplexity >= 60u ? 2u : 1u;
         if (scaleTraits.ShadingComplexity >= 20u)
@@ -892,7 +878,7 @@ namespace SpectralShipGen
 
     void ShipPainter::paintCockpitReadability(const ShipGenerationContext& context, GeneratedShip& ship, const ShipPalette& palette) const
     {
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS || context.ScaleTraits.ShadingComplexity < 60u)
+        if (context.ScaleTraits.ShadingComplexity < 60u)
         {
             return;
         }
@@ -1640,32 +1626,6 @@ namespace SpectralShipGen
         }
 
         return palette.HullSecondary;
-    }
-
-    Color ShipPainter::getLegacyCockpitPixelColor(const PixelMask& cockpitMask, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const
-    {
-        const PixelMaskUtils::DirectionalMaskExposure exposure = PixelMaskUtils::getDirectionalMaskExposure(cockpitMask, x, y);
-        const uint32_t cockpitWidth = bounds.MaxX - bounds.MinX + 1u;
-        const uint32_t cockpitHeight = bounds.MaxY - bounds.MinY + 1u;
-        const uint32_t relativeX = x - bounds.MinX;
-        const uint32_t relativeY = y - bounds.MinY;
-        const bool reflectionRegion = relativeX * 100u <= cockpitWidth * 58u && relativeY * 100u <= cockpitHeight * 45u;
-        const uint32_t maximumDepth = shadingComplexity >= 80u ? 2u : 1u;
-        const uint32_t depth = PixelMaskUtils::getMaskDepth(cockpitMask, x, y, maximumDepth);
-
-        if (exposure.isBoundary())
-        {
-            if (reflectionRegion && (exposure.Top || exposure.Left) && exposure.getHighlightExposure() >= exposure.getShadowExposure())
-            {
-                return palette.CockpitGlint;
-            }
-            return palette.CockpitDark;
-        }
-        if (reflectionRegion && depth >= maximumDepth)
-        {
-            return palette.CockpitHighlight;
-        }
-        return palette.CockpitBase;
     }
 
     Color ShipPainter::getCockpitGlassPixelColor(const CockpitData& cockpit, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const

@@ -168,7 +168,6 @@ namespace
         configuration.AttachmentsEnabled = settings.AttachmentsEnabled;
         configuration.SeedOverrides = settings.SeedOverrides;
         configuration.DomainSeedOverrides = settings.DomainSeedOverrides;
-        configuration.RandomStreamMode = settings.RandomStreamMode;
         return configuration;
     }
 
@@ -184,7 +183,6 @@ namespace
         settings.AttachmentsEnabled = true;
         settings.SeedOverrides.Palette = seed ^ 0xA5A5A5A5A5A5A5A5ull;
         settings.DomainSeedOverrides.set(GenerationDomain::DETAILS, seed ^ 0xC6BC279692B5CC83ull);
-        settings.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
         return settings;
     }
 
@@ -293,7 +291,7 @@ namespace
             const GeneratedShip presetShip = generator.generate(presetSettings, &presetDebug);
             const GeneratedShip explicitShip = generator.generate(explicitConfiguration, profile, &explicitDebug);
 
-            if (presetShip.Style != style || explicitShip.Style != ShipStyle::SHIP_STYLE_END)
+            if (presetShip.Provenance.StructuralPreset != style || explicitShip.Provenance.StructuralPreset.has_value())
             {
                 std::cerr << "Structural provenance is not truthful for style index " << index << ".\n";
                 return false;
@@ -437,7 +435,7 @@ namespace
 
             const GeneratedShip first = generator.generate(configuration, cases[index].Profile);
             const GeneratedShip second = generator.generate(configuration, cases[index].Profile);
-            if (first.Style != ShipStyle::SHIP_STYLE_END || second.Style != ShipStyle::SHIP_STYLE_END || !generatedBehaviorEqual(first, second))
+            if (first.Provenance.StructuralPreset.has_value() || second.Provenance.StructuralPreset.has_value() || !generatedBehaviorEqual(first, second))
             {
                 std::cerr << "Custom profile " << index << " was not deterministic or acquired fake preset provenance.\n";
                 return false;

@@ -833,7 +833,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
             object.Object["WeaponHierarchyUsesWingRoot"] = toValue(value.WeaponHierarchyUsesWingRoot);
             object.Object["ComplexityBudgetPercent"] = toValue(value.ComplexityBudgetPercent);
             object.Object["ComplexityCategoryWeights"] = toValue(value.ComplexityCategoryWeights);
-            object.Object["LegacyComplexityCategoryWeights"] = toValue(value.LegacyComplexityCategoryWeights);
             object.Object["SpatialCapacityBias"] = toValue(value.SpatialCapacityBias);
             object.Object["HullVerticalPaddingPercent"] = toValue(value.HullVerticalPaddingPercent);
             object.Object["HullHorizontalPaddingPercent"] = toValue(value.HullHorizontalPaddingPercent);
@@ -876,7 +875,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
             object.Object["SilhouetteWeakArticulationGuidanceEnabled"] = toValue(value.SilhouetteWeakArticulationGuidanceEnabled);
             object.Object["SilhouetteGuidanceWeights"] = toValue(value.SilhouetteGuidanceWeights);
             object.Object["SilhouetteProfileValidationEnabled"] = toValue(value.SilhouetteProfileValidationEnabled);
-            object.Object["AllowTinyBroadSilhouetteLegacyValidationException"] = toValue(value.AllowTinyBroadSilhouetteLegacyValidationException);
             object.Object["TinySilhouetteExtraWidthRelaxationPercent"] = toValue(value.TinySilhouetteExtraWidthRelaxationPercent);
             object.Object["CleanAxialTaperArticulationExemption"] = toValue(value.CleanAxialTaperArticulationExemption);
             object.Object["WingWedgeArticulationExemption"] = toValue(value.WingWedgeArticulationExemption);
@@ -980,7 +978,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
             field = requiredField(json, "WeaponHierarchyUsesWingRoot", error, path); if (field == nullptr || !fromValue(*field, value.WeaponHierarchyUsesWingRoot, error, path + ".WeaponHierarchyUsesWingRoot")) { return false; }
             field = requiredField(json, "ComplexityBudgetPercent", error, path); if (field == nullptr || !fromValue(*field, value.ComplexityBudgetPercent, error, path + ".ComplexityBudgetPercent")) { return false; }
             field = requiredField(json, "ComplexityCategoryWeights", error, path); if (field == nullptr || !fromValue(*field, value.ComplexityCategoryWeights, error, path + ".ComplexityCategoryWeights")) { return false; }
-            field = requiredField(json, "LegacyComplexityCategoryWeights", error, path); if (field == nullptr || !fromValue(*field, value.LegacyComplexityCategoryWeights, error, path + ".LegacyComplexityCategoryWeights")) { return false; }
             field = requiredField(json, "SpatialCapacityBias", error, path); if (field == nullptr || !fromValue(*field, value.SpatialCapacityBias, error, path + ".SpatialCapacityBias")) { return false; }
             field = requiredField(json, "HullVerticalPaddingPercent", error, path); if (field == nullptr || !fromValue(*field, value.HullVerticalPaddingPercent, error, path + ".HullVerticalPaddingPercent")) { return false; }
             field = requiredField(json, "HullHorizontalPaddingPercent", error, path); if (field == nullptr || !fromValue(*field, value.HullHorizontalPaddingPercent, error, path + ".HullHorizontalPaddingPercent")) { return false; }
@@ -1023,7 +1020,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
             field = requiredField(json, "SilhouetteWeakArticulationGuidanceEnabled", error, path); if (field == nullptr || !fromValue(*field, value.SilhouetteWeakArticulationGuidanceEnabled, error, path + ".SilhouetteWeakArticulationGuidanceEnabled")) { return false; }
             field = requiredField(json, "SilhouetteGuidanceWeights", error, path); if (field == nullptr || !fromValue(*field, value.SilhouetteGuidanceWeights, error, path + ".SilhouetteGuidanceWeights")) { return false; }
             field = requiredField(json, "SilhouetteProfileValidationEnabled", error, path); if (field == nullptr || !fromValue(*field, value.SilhouetteProfileValidationEnabled, error, path + ".SilhouetteProfileValidationEnabled")) { return false; }
-            field = requiredField(json, "AllowTinyBroadSilhouetteLegacyValidationException", error, path); if (field == nullptr || !fromValue(*field, value.AllowTinyBroadSilhouetteLegacyValidationException, error, path + ".AllowTinyBroadSilhouetteLegacyValidationException")) { return false; }
             field = requiredField(json, "TinySilhouetteExtraWidthRelaxationPercent", error, path); if (field == nullptr || !fromValue(*field, value.TinySilhouetteExtraWidthRelaxationPercent, error, path + ".TinySilhouetteExtraWidthRelaxationPercent")) { return false; }
             field = requiredField(json, "CleanAxialTaperArticulationExemption", error, path); if (field == nullptr || !fromValue(*field, value.CleanAxialTaperArticulationExemption, error, path + ".CleanAxialTaperArticulationExemption")) { return false; }
             field = requiredField(json, "WingWedgeArticulationExemption", error, path); if (field == nullptr || !fromValue(*field, value.WingWedgeArticulationExemption, error, path + ".WingWedgeArticulationExemption")) { return false; }
@@ -1810,7 +1806,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
         {
             Value object = Value::object();
             object.Object["TotalBudgetPercent"] = toValue(value.TotalBudgetPercent);
-            object.Object["LegacyCategoryOffsets"] = toValue(value.LegacyCategoryOffsets);
             object.Object["CategoryOffsets"] = toValue(value.CategoryOffsets);
             return object;
         }
@@ -1819,7 +1814,6 @@ namespace SpectralShipGen::RecipeProfileSerialization
         {
             const Value* field = nullptr;
             field = requiredField(json, "TotalBudgetPercent", error, path); if (field == nullptr || !fromValue(*field, value.TotalBudgetPercent, error, path + ".TotalBudgetPercent")) { return false; }
-            field = requiredField(json, "LegacyCategoryOffsets", error, path); if (field == nullptr || !fromValue(*field, value.LegacyCategoryOffsets, error, path + ".LegacyCategoryOffsets")) { return false; }
             field = requiredField(json, "CategoryOffsets", error, path); if (field == nullptr || !fromValue(*field, value.CategoryOffsets, error, path + ".CategoryOffsets")) { return false; }
             return true;
         }

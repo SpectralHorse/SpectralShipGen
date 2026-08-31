@@ -19,8 +19,7 @@ namespace SpectralShipGen
         }
 
         ShipGenerationRecipe result = recipe;
-        result.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
-        const GenerationDomainSeeds effectiveSeeds = resolveGenerationDomainSeeds(result.Seeds, result.DomainSeedOverrides, GenerationRandomStreamMode::DOMAIN_SUBSTREAMS);
+        const GenerationDomainSeeds effectiveSeeds = resolveGenerationDomainSeeds(result.Seeds, result.DomainSeedOverrides);
 
         for (std::size_t index = 0u; index < selected.size(); ++index)
         {

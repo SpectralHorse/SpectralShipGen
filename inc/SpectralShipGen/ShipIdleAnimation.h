@@ -14,9 +14,9 @@ namespace SpectralShipGen
     {
         uint32_t AnimationDurationMilliseconds = 1500u;
 
-        // Legacy compatibility value. It is authoritative only in EXACT_FRAME_COUNT mode.
-        // ADAPTIVE mode derives the actual count from animation complexity within the configured bounds.
-        uint32_t FrameCount = 10u;
+        // Authoritative only in EXACT_FRAME_COUNT mode. ADAPTIVE mode derives the actual
+        // count from animation complexity within the configured bounds.
+        uint32_t ExactFrameCount = 10u;
         uint32_t MinimumFrameCount = 10u;
         uint32_t MaximumFrameCount = 60u;
         AnimationSamplingMode SamplingMode = AnimationSamplingMode::ADAPTIVE;

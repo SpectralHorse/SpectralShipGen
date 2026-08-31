@@ -288,8 +288,6 @@ namespace SpectralShipGen
     {
         // Multiplies the structural/scale-derived total complexity budget.
         uint32_t TotalBudgetPercent = 100u;
-        // Signed offsets preserve the two existing budget category formulations.
-        ShipFactionComplexityCategoryOffsets LegacyCategoryOffsets;
         ShipFactionComplexityCategoryOffsets CategoryOffsets;
     };
 

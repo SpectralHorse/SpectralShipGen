@@ -215,16 +215,25 @@ namespace SpectralShipGenTests
             return 1;
         }
 
-        std::string unsupported = json;
-        const std::string token = "\"schema_version\":1";
-        const std::size_t schemaPosition = unsupported.find(token);
+        const std::string token = "\"schema_version\":2";
+        const std::size_t schemaPosition = json.find(token);
         if (schemaPosition == std::string::npos)
         {
             std::cerr << "Task-66 serializer output does not expose schema version.\n";
             return 1;
         }
-        unsupported.replace(schemaPosition, token.size(), "\"schema_version\":2");
-        if (deserializeDiagnosticsResultJson(unsupported).Success)
+
+        std::string unsupportedOld = json;
+        unsupportedOld.replace(schemaPosition, token.size(), "\"schema_version\":1");
+        if (deserializeDiagnosticsResultJson(unsupportedOld).Success)
+        {
+            std::cerr << "Task-108 accepted an unsupported pre-1.0 diagnostics schema version.\n";
+            return 1;
+        }
+
+        std::string unsupportedFuture = json;
+        unsupportedFuture.replace(schemaPosition, token.size(), "\"schema_version\":3");
+        if (deserializeDiagnosticsResultJson(unsupportedFuture).Success)
         {
             std::cerr << "Task-66 accepted an unsupported future schema version.\n";
             return 1;

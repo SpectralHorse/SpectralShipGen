@@ -81,7 +81,7 @@ namespace
             return false;
         }
 
-        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(deriveShipGenerationSeeds(settings.Seed), settings.DomainSeedOverrides, settings.RandomStreamMode);
+        const GenerationDomainSeeds domains = resolveGenerationDomainSeeds(deriveShipGenerationSeeds(settings.Seed), settings.DomainSeedOverrides);
         ShipGenerationSettings paletteReroll = settings;
         paletteReroll.DomainSeedOverrides.set(GenerationDomain::PALETTE, deriveGenerationDomainRerollSeed(0x61B22D1EF2345678ull, GenerationDomain::PALETTE, domains.get(GenerationDomain::PALETTE)));
         ShipGenerationDebugInfo paletteDebug;

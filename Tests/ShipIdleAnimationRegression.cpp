@@ -763,7 +763,7 @@ int SpectralShipGenTests::runIdleAnimationRegression()
         {
             SpectralShipGen::ShipIdleAnimationSettings animationSettings;
             animationSettings.AnimationDurationMilliseconds = 1500u;
-            animationSettings.FrameCount = FrameCounts[densityIndex];
+            animationSettings.ExactFrameCount = FrameCounts[densityIndex];
             animationSettings.SamplingMode = SpectralShipGen::AnimationSamplingMode::EXACT_FRAME_COUNT;
             animationSettings.Seed = 0xBB67AE8584CAA73Bull;
             animations[densityIndex] = animator.generate(ship, animationSettings);
@@ -856,13 +856,13 @@ int SpectralShipGenTests::runIdleAnimationRegression()
             std::cerr << "large ship with no active animation was forced to extra frames solely by resolution.\n";
         }
 
-        SpectralShipGen::ShipIdleAnimationSettings legacyCountHint = noEffects;
-        legacyCountHint.FrameCount = 60u;
-        const SpectralShipGen::ShipIdleAnimation adaptiveIgnoresLegacyCount = animator.generate(largeSimpleShip, legacyCountHint);
-        if (adaptiveIgnoresLegacyCount.Sampling.ActualFrameCount != legacyCountHint.MinimumFrameCount)
+        SpectralShipGen::ShipIdleAnimationSettings exactCountHint = noEffects;
+        exactCountHint.ExactFrameCount = 60u;
+        const SpectralShipGen::ShipIdleAnimation adaptiveIgnoresExactCount = animator.generate(largeSimpleShip, exactCountHint);
+        if (adaptiveIgnoresExactCount.Sampling.ActualFrameCount != exactCountHint.MinimumFrameCount)
         {
             success = false;
-            std::cerr << "adaptive sampling still treats legacy FrameCount as a mandatory output count.\n";
+            std::cerr << "adaptive sampling still treats ExactFrameCount as mandatory in ADAPTIVE mode.\n";
         }
     }
     catch (const std::exception& exception)

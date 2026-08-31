@@ -44,7 +44,7 @@ namespace SpectralShipGenDiagnostics
             return count <= 0 ? 0u : static_cast<uint64_t>(count);
         }
 
-        DiagnosticGenerationConfiguration makeLegacyConfiguration(const DiagnosticsRunConfiguration& configuration, const DiagnosticsWorkItem& item)
+        DiagnosticGenerationConfiguration makeStatisticsConfiguration(const DiagnosticsRunConfiguration& configuration, const DiagnosticsWorkItem& item)
         {
             DiagnosticGenerationConfiguration result;
             result.Width = item.Dimensions.Width;
@@ -309,30 +309,14 @@ namespace SpectralShipGenDiagnostics
 
     DiagnosticsResult DiagnosticsRunner::run(
         const DiagnosticsRunConfiguration& configuration,
-        const SpectralShipGen::ShipGenerationProfile& profile,
-        const SpectralShipGen::ShipFactionProfile& factionProfile,
-        const DiagnosticsProgressCallback& progressCallback,
-        const DiagnosticsCancellationCallback& cancellationCallback,
-        const DiagnosticsSampleCallback& sampleCallback) const
-    {
-        SpectralShipGen::ExplicitShipGenerationConfiguration generation;
-        generation.Dimensions = configuration.Dimensions.empty() ? SpectralShipGen::ShipDimensions{ 44u, 44u } : configuration.Dimensions.front();
-        generation.DetailDensity = configuration.DetailDensity;
-        generation.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
-        generation.AttachmentsEnabled = configuration.AttachmentsEnabled;
-        return run(configuration, SpectralShipGen::resolveShipGenerationConfiguration(generation, profile, factionProfile), progressCallback, cancellationCallback, sampleCallback);
-    }
-
-    DiagnosticsResult DiagnosticsRunner::run(
-        const DiagnosticsRunConfiguration& configuration,
         const SpectralShipGen::ShipResolvedGenerationConfiguration& resolvedConfiguration,
         const DiagnosticsProgressCallback& progressCallback,
         const DiagnosticsCancellationCallback& cancellationCallback,
         const DiagnosticsSampleCallback& sampleCallback) const
     {
         DiagnosticsRunConfiguration explicitConfiguration = configuration;
-        explicitConfiguration.Styles = { resolvedConfiguration.Provenance.StructuralPreset.value_or(SpectralShipGen::ShipStyle::SHIP_STYLE_END) };
-        explicitConfiguration.Factions = { resolvedConfiguration.Provenance.FactionPreset.value_or(SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) };
+        explicitConfiguration.Styles.clear();
+        explicitConfiguration.Factions.clear();
         explicitConfiguration.PaletteSourceMode = resolvedConfiguration.Generation.PaletteConfiguration.Mode;
         if (explicitConfiguration.ConfigurationLabel.empty() && (!resolvedConfiguration.Provenance.StructuralPreset.has_value() || !resolvedConfiguration.Provenance.FactionPreset.has_value()))
         {
@@ -350,24 +334,67 @@ namespace SpectralShipGenDiagnostics
     {
         DiagnosticsResult result;
         result.Configuration = configuration;
-        const std::vector<DiagnosticsWorkItem> schedule = resolveDiagnosticsWorkSchedule(configuration);
-        result.ScheduledWorkItems = schedule.size();
-        const uint64_t configurationCount = static_cast<uint64_t>(configuration.Dimensions.size()) * configuration.Styles.size() * configuration.Factions.size();
-        result.ConfigurationResults.resize(static_cast<std::size_t>(configurationCount));
-        uint64_t configurationIndex = 0u;
-        for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
+        std::vector<DiagnosticsWorkItem> schedule;
+        uint64_t configurationCount = 0u;
+        if (resolvedConfiguration != nullptr)
         {
-            for (const SpectralShipGen::ShipStyle style : configuration.Styles)
+            uint64_t workIndex = 0u;
+            for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
             {
-                for (const SpectralShipGen::ShipFactionType faction : configuration.Factions)
+                const uint64_t configurationIndex = configurationCount++;
+                for (uint64_t sampleIndex = 0u; sampleIndex < configuration.SamplesPerConfiguration; ++sampleIndex)
                 {
-                    DiagnosticsWorkItem representative;
-                    representative.ConfigurationIndex = configurationIndex;
-                    representative.Dimensions = dimensions;
-                    representative.Style = style;
-                    representative.Faction = faction;
-                    result.ConfigurationResults[static_cast<std::size_t>(configurationIndex)].Configuration = makeLegacyConfiguration(configuration, representative);
-                    ++configurationIndex;
+                    DiagnosticsWorkItem item;
+                    item.WorkIndex = workIndex++;
+                    item.ConfigurationIndex = configurationIndex;
+                    item.SampleIndex = sampleIndex;
+                    item.Seed = deriveDiagnosticSampleSeed(configuration.DiagnosticSeed, sampleIndex);
+                    item.Dimensions = dimensions;
+                    item.Style = resolvedConfiguration->Provenance.StructuralPreset;
+                    item.Faction = resolvedConfiguration->Provenance.FactionPreset;
+                    schedule.push_back(item);
+                }
+            }
+        }
+        else
+        {
+            schedule = resolveDiagnosticsWorkSchedule(configuration);
+            configurationCount = static_cast<uint64_t>(configuration.Dimensions.size()) * configuration.Styles.size() * configuration.Factions.size();
+        }
+
+        result.ScheduledWorkItems = schedule.size();
+        result.ConfigurationResults.resize(static_cast<std::size_t>(configurationCount));
+        if (resolvedConfiguration != nullptr)
+        {
+            uint64_t configurationIndex = 0u;
+            for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
+            {
+                DiagnosticsWorkItem representative;
+                representative.ConfigurationIndex = configurationIndex;
+                representative.Dimensions = dimensions;
+                representative.Style = resolvedConfiguration->Provenance.StructuralPreset;
+                representative.Faction = resolvedConfiguration->Provenance.FactionPreset;
+                result.ConfigurationResults[static_cast<std::size_t>(configurationIndex)].Configuration = makeStatisticsConfiguration(configuration, representative);
+                ++configurationIndex;
+            }
+        }
+        else
+        {
+            uint64_t configurationIndex = 0u;
+            for (const SpectralShipGen::ShipDimensions dimensions : configuration.Dimensions)
+            {
+                for (const SpectralShipGen::ShipStyle style : configuration.Styles)
+                {
+                    for (const SpectralShipGen::ShipFactionType faction : configuration.Factions)
+                    {
+                        DiagnosticsWorkItem representative;
+                        representative.ConfigurationIndex = configurationIndex;
+                        representative.Dimensions = dimensions;
+                        representative.Style = style;
+                        representative.Faction = faction;
+                        result.ConfigurationResults[static_cast<std::size_t>(configurationIndex)].Configuration = makeStatisticsConfiguration(configuration, representative);
+                        ++configurationIndex;
+                    }
                 }
             }
         }
@@ -430,11 +457,15 @@ namespace SpectralShipGenDiagnostics
                 }
                 else
                 {
+                    if (!item.Style.has_value() || !item.Faction.has_value())
+                    {
+                        throw std::logic_error("Built-in diagnostics work item is missing preset identity.");
+                    }
                     SpectralShipGen::ShipGenerationSettings settings;
                     settings.Seed = item.Seed;
                     settings.Dimensions = item.Dimensions;
-                    settings.Style = item.Style;
-                    settings.Faction = item.Faction;
+                    settings.Style = *item.Style;
+                    settings.Faction = *item.Faction;
                     settings.DetailDensity = configuration.DetailDensity;
                     settings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
                     settings.AttachmentsEnabled = configuration.AttachmentsEnabled;
@@ -442,8 +473,8 @@ namespace SpectralShipGenDiagnostics
                 }
                 sample.Success = true;
                 sample.FinalImageSignature = imageSignature(ship.FinalImage);
-                result.OverallStatistics.recordSuccess(ship, debugInfo, makeLegacyConfiguration(configuration, item));
-                result.ConfigurationResults[static_cast<std::size_t>(item.ConfigurationIndex)].Statistics.recordSuccess(ship, debugInfo, makeLegacyConfiguration(configuration, item));
+                result.OverallStatistics.recordSuccess(ship, debugInfo, makeStatisticsConfiguration(configuration, item));
+                result.ConfigurationResults[static_cast<std::size_t>(item.ConfigurationIndex)].Statistics.recordSuccess(ship, debugInfo, makeStatisticsConfiguration(configuration, item));
             }
             catch (const std::exception& exception)
             {
@@ -578,9 +609,9 @@ namespace SpectralShipGenDiagnostics
     void writeDiagnosticsResultCsv(std::ostream& output, const DiagnosticsResult& result)
     {
         if (!result.PersistedCsvSnapshot.empty()) { output << result.PersistedCsvSnapshot; return; }
-        std::ostringstream legacyHeader;
-        writeGenerationStatisticsCsvHeader(legacyHeader);
-        std::string header = legacyHeader.str();
+        std::ostringstream baseHeader;
+        writeGenerationStatisticsCsvHeader(baseHeader);
+        std::string header = baseHeader.str();
         while (!header.empty() && (header.back() == '\n' || header.back() == '\r')) { header.pop_back(); }
         output << header << ",timing_mode,build_configuration,version_identifier,generation_time_mean_ms,generation_time_median_ms,generation_time_p95_ms,generation_time_max_ms,hull_retry_attempts_per_100,negative_space_attempt_rate_percent,negative_space_success_rate_percent,livery_coverage_mean_percent,livery_coverage_median_percent,livery_coverage_p95_percent,livery_largest_connected_mean_percent,livery_largest_connected_p95_percent,livery_coverage_rejections,livery_material_rejections";
         for (std::size_t stage = 0u; stage < SpectralShipGen::ShipGenerationPerformanceStageCount; ++stage)
@@ -590,9 +621,9 @@ namespace SpectralShipGenDiagnostics
         output << '\n';
         for (const auto& configurationResult : result.ConfigurationResults)
         {
-            std::ostringstream legacyRow;
-            writeGenerationStatisticsCsvRow(legacyRow, configurationResult.Configuration, configurationResult.Statistics);
-            std::string row = legacyRow.str();
+            std::ostringstream baseRow;
+            writeGenerationStatisticsCsvRow(baseRow, configurationResult.Configuration, configurationResult.Statistics);
+            std::string row = baseRow.str();
             while (!row.empty() && (row.back() == '\n' || row.back() == '\r')) { row.pop_back(); }
             const auto& summary = configurationResult.PerformanceSummary;
             output << row << ',' << (result.Configuration.DetailedPerformanceInstrumentation ? "DETAILED" : "TOTAL_ONLY") << ',' << result.Configuration.BuildConfiguration << ',' << result.Configuration.VersionIdentifier << ',' << summary.GenerationTimeMilliseconds.Mean << ',' << summary.GenerationTimeMilliseconds.Median << ',' << summary.GenerationTimeMilliseconds.P95 << ',' << summary.GenerationTimeMilliseconds.Maximum << ',' << summary.HullRetryRatePercent << ',' << summary.StructuralNegativeSpaceAttemptRatePercent << ',' << summary.StructuralNegativeSpaceSuccessRatePercent << ',' << summary.LiveryCoveragePercent.Mean << ',' << summary.LiveryCoveragePercent.Median << ',' << summary.LiveryCoveragePercent.P95 << ',' << summary.LiveryLargestConnectedCoveragePercent.Mean << ',' << summary.LiveryLargestConnectedCoveragePercent.P95 << ',' << summary.TotalLiveryCoverageRejections << ',' << summary.TotalLiveryMaterialPreservationRejections;

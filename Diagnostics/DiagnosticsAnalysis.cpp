@@ -19,14 +19,12 @@ namespace SpectralShipGenDiagnostics
 
         const char* styleLabel(SpectralShipGen::ShipStyle style)
         {
-            if (style == SpectralShipGen::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
             for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
             return "UNKNOWN";
         }
 
         const char* factionLabel(SpectralShipGen::ShipFactionType faction)
         {
-            if (faction == SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
             for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
             return "UNKNOWN";
         }
@@ -263,21 +261,21 @@ namespace SpectralShipGenDiagnostics
         DiagnosticsComparisonCompatibility result;
         std::set<std::pair<uint32_t, uint32_t>> baselineDimensions;
         std::set<std::pair<uint32_t, uint32_t>> currentDimensions;
-        std::set<uint32_t> baselineStyles;
-        std::set<uint32_t> currentStyles;
-        std::set<uint32_t> baselineFactions;
-        std::set<uint32_t> currentFactions;
+        std::set<std::optional<SpectralShipGen::ShipStyle>> baselineStyles;
+        std::set<std::optional<SpectralShipGen::ShipStyle>> currentStyles;
+        std::set<std::optional<SpectralShipGen::ShipFactionType>> baselineFactions;
+        std::set<std::optional<SpectralShipGen::ShipFactionType>> currentFactions;
         for (const auto& sample : baseline.Samples)
         {
             baselineDimensions.insert({ sample.WorkItem.Dimensions.Width, sample.WorkItem.Dimensions.Height });
-            baselineStyles.insert(static_cast<uint32_t>(sample.WorkItem.Style));
-            baselineFactions.insert(static_cast<uint32_t>(sample.WorkItem.Faction));
+            baselineStyles.insert(sample.WorkItem.Style);
+            baselineFactions.insert(sample.WorkItem.Faction);
         }
         for (const auto& sample : current.Samples)
         {
             currentDimensions.insert({ sample.WorkItem.Dimensions.Width, sample.WorkItem.Dimensions.Height });
-            currentStyles.insert(static_cast<uint32_t>(sample.WorkItem.Style));
-            currentFactions.insert(static_cast<uint32_t>(sample.WorkItem.Faction));
+            currentStyles.insert(sample.WorkItem.Style);
+            currentFactions.insert(sample.WorkItem.Faction);
         }
         for (const auto& value : baselineDimensions) { if (currentDimensions.count(value) != 0u) { ++result.MatchingDimensionCount; } }
         for (const auto value : baselineStyles) { if (currentStyles.count(value) != 0u) { ++result.MatchingStyleCount; } }

@@ -111,14 +111,14 @@ namespace SpectralShipGen
         return mixGenerationSeed64(parentSeed ^ getGenerationDomainSalt(domain));
     }
 
-    GenerationDomainSeeds resolveGenerationDomainSeeds(const ShipGenerationSeeds& seeds, const GenerationDomainSeedOverrides& overrides, GenerationRandomStreamMode mode)
+    GenerationDomainSeeds resolveGenerationDomainSeeds(const ShipGenerationSeeds& seeds, const GenerationDomainSeedOverrides& overrides)
     {
         GenerationDomainSeeds result;
         for (std::size_t index = 0u; index < GenerationDomainCount; ++index)
         {
             const GenerationDomain domain = static_cast<GenerationDomain>(index);
             const uint64_t parentSeed = getGenerationSeedForChannel(seeds, getGenerationDomainParentChannel(domain));
-            uint64_t resolved = mode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS ? parentSeed : deriveGenerationDomainSeed(parentSeed, domain);
+            uint64_t resolved = deriveGenerationDomainSeed(parentSeed, domain);
             if (overrides.Values[index].has_value()) { resolved = *overrides.Values[index]; }
             result.Values[index] = resolved;
         }

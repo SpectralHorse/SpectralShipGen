@@ -1,4 +1,5 @@
 #include "CoreRegressionSuites.h"
+#include "ShipGenerationContextTestUtils.h"
 
 #include <cstdint>
 #include <iostream>
@@ -149,8 +150,8 @@ namespace
 
         const ShipGenerationProfile& profile = getShipGenerationProfile(settings.Style);
         const ShipGenerationSeeds seeds = deriveShipGenerationSeeds(settings.Seed);
-        ShipGenerationContext first(settings, profile, seeds, nullptr);
-        ShipGenerationContext second(settings, profile, seeds, nullptr);
+        ShipGenerationContext first(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, nullptr);
+        ShipGenerationContext second(SpectralShipGenTests::makeTestExplicitGenerationConfiguration(settings), profile, getShipFactionProfile(settings.Faction), seeds, nullptr);
         prepareSyntheticScene(first);
         prepareSyntheticScene(second);
 

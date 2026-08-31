@@ -22,12 +22,10 @@ namespace SpectralShipGen
             uint32_t asymmetricDetailChance,
             bool attachmentsEnabled,
             const ShipGenerationSeedOverrides& seedOverrides,
-            const GenerationDomainSeedOverrides& domainSeedOverrides,
-            GenerationRandomStreamMode randomStreamMode)
+            const GenerationDomainSeedOverrides& domainSeedOverrides)
         {
             recipe.Seeds = resolveRecipeSeeds(seed, seedOverrides);
             recipe.DomainSeedOverrides = domainSeedOverrides;
-            recipe.RandomStreamMode = randomStreamMode;
             recipe.Dimensions = dimensions;
             recipe.DetailDensity = detailDensity;
             recipe.AsymmetricDetailChance = asymmetricDetailChance;
@@ -54,35 +52,29 @@ namespace SpectralShipGen
         {
             result.Errors.push_back({ "AsymmetricDetailChance", "Probability must be in the range 0-100." });
         }
-        if (recipe.RandomStreamMode >= GenerationRandomStreamMode::GENERATION_RANDOM_STREAM_MODE_END)
-        {
-            result.Errors.push_back({ "RandomStreamMode", "Random stream mode is outside the supported range." });
-        }
 
-        if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        if (recipe.StructuralPreset.has_value())
         {
-            if (recipe.Style >= ShipStyle::SHIP_STYLE_END) { result.Errors.push_back({ "StructuralSource", "Built-in structural source requires a valid preset." }); }
+            if (*recipe.StructuralPreset >= ShipStyle::SHIP_STYLE_END)
+            {
+                result.Errors.push_back({ "StructuralPreset", "Optional built-in structural preset must reference a valid preset." });
+            }
         }
-        else if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        else
         {
             appendValidationIssues(result, validateShipGenerationProfile(recipe.StructuralProfile), "StructuralProfile.");
         }
-        else
-        {
-            result.Errors.push_back({ "StructuralSource", "Structural recipe source is outside the supported range." });
-        }
 
-        if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        if (recipe.FactionPreset.has_value())
         {
-            if (recipe.Faction >= ShipFactionType::SHIP_FACTION_TYPE_END) { result.Errors.push_back({ "FactionSource", "Built-in faction source requires a valid preset." }); }
+            if (*recipe.FactionPreset >= ShipFactionType::SHIP_FACTION_TYPE_END)
+            {
+                result.Errors.push_back({ "FactionPreset", "Optional built-in faction preset must reference a valid preset." });
+            }
         }
-        else if (recipe.FactionSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        else
         {
             appendValidationIssues(result, validateShipFactionProfile(recipe.FactionProfile), "FactionProfile.");
-        }
-        else
-        {
-            result.Errors.push_back({ "FactionSource", "Faction recipe source is outside the supported range." });
         }
 
         if (recipe.PaletteConfiguration.Mode >= ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END)
@@ -99,11 +91,9 @@ namespace SpectralShipGen
     ShipGenerationRecipe makeShipGenerationRecipe(const ShipGenerationSettings& settings)
     {
         ShipGenerationRecipe recipe;
-        copyCommon(recipe, settings.Seed, settings.Dimensions, settings.DetailDensity, settings.AsymmetricDetailChance, settings.AttachmentsEnabled, settings.SeedOverrides, settings.DomainSeedOverrides, settings.RandomStreamMode);
-        recipe.StructuralSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-        recipe.Style = settings.Style;
-        recipe.FactionSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-        recipe.Faction = settings.Faction;
+        copyCommon(recipe, settings.Seed, settings.Dimensions, settings.DetailDensity, settings.AsymmetricDetailChance, settings.AttachmentsEnabled, settings.SeedOverrides, settings.DomainSeedOverrides);
+        recipe.StructuralPreset = settings.Style;
+        recipe.FactionPreset = settings.Faction;
         recipe.PaletteConfiguration.Mode = ShipPaletteSourceMode::FACTION_PROFILE_GENERATED;
         return recipe;
     }
@@ -111,12 +101,10 @@ namespace SpectralShipGen
     ShipGenerationRecipe makeShipGenerationRecipe(const ShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile)
     {
         ShipGenerationRecipe recipe;
-        copyCommon(recipe, configuration.Seed, configuration.Dimensions, configuration.DetailDensity, configuration.AsymmetricDetailChance, configuration.AttachmentsEnabled, configuration.SeedOverrides, configuration.DomainSeedOverrides, configuration.RandomStreamMode);
-        recipe.StructuralSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-        recipe.Style = ShipStyle::SHIP_STYLE_END;
+        copyCommon(recipe, configuration.Seed, configuration.Dimensions, configuration.DetailDensity, configuration.AsymmetricDetailChance, configuration.AttachmentsEnabled, configuration.SeedOverrides, configuration.DomainSeedOverrides);
+        recipe.StructuralPreset.reset();
         recipe.StructuralProfile = profile;
-        recipe.FactionSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-        recipe.Faction = configuration.Faction;
+        recipe.FactionPreset = configuration.Faction;
         recipe.PaletteConfiguration = configuration.PaletteConfiguration;
         return recipe;
     }
@@ -124,45 +112,25 @@ namespace SpectralShipGen
     ShipGenerationRecipe makeShipGenerationRecipe(const ExplicitShipGenerationConfiguration& configuration, const ShipGenerationProfile& profile, const ShipFactionProfile& factionProfile)
     {
         ShipGenerationRecipe recipe;
-        copyCommon(recipe, configuration.Seed, configuration.Dimensions, configuration.DetailDensity, configuration.AsymmetricDetailChance, configuration.AttachmentsEnabled, configuration.SeedOverrides, configuration.DomainSeedOverrides, configuration.RandomStreamMode);
-        recipe.StructuralSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-        recipe.Style = ShipStyle::SHIP_STYLE_END;
+        copyCommon(recipe, configuration.Seed, configuration.Dimensions, configuration.DetailDensity, configuration.AsymmetricDetailChance, configuration.AttachmentsEnabled, configuration.SeedOverrides, configuration.DomainSeedOverrides);
+        recipe.StructuralPreset.reset();
         recipe.StructuralProfile = profile;
-        recipe.FactionSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-        recipe.Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
+        recipe.FactionPreset.reset();
         recipe.FactionProfile = factionProfile;
         recipe.PaletteConfiguration = configuration.PaletteConfiguration;
         return recipe;
     }
+
     ShipGenerationRecipe makeShipGenerationRecipe(const ShipResolvedGenerationConfiguration& configuration)
     {
         ShipGenerationRecipe recipe;
         const auto& settings = configuration.Generation;
-        copyCommon(recipe, settings.Seed, settings.Dimensions, settings.DetailDensity, settings.AsymmetricDetailChance, settings.AttachmentsEnabled, settings.SeedOverrides, settings.DomainSeedOverrides, settings.RandomStreamMode);
-        if (configuration.Provenance.StructuralPreset.has_value())
-        {
-            recipe.StructuralSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-            recipe.Style = *configuration.Provenance.StructuralPreset;
-        }
-        else
-        {
-            recipe.StructuralSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-            recipe.Style = ShipStyle::SHIP_STYLE_END;
-            recipe.StructuralProfile = configuration.StructuralProfile;
-        }
-        if (configuration.Provenance.FactionPreset.has_value())
-        {
-            recipe.FactionSource = ShipGenerationRecipeProfileSource::BUILT_IN_PRESET;
-            recipe.Faction = *configuration.Provenance.FactionPreset;
-        }
-        else
-        {
-            recipe.FactionSource = ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM;
-            recipe.Faction = ShipFactionType::SHIP_FACTION_TYPE_END;
-            recipe.FactionProfile = configuration.FactionProfile;
-        }
+        copyCommon(recipe, settings.Seed, settings.Dimensions, settings.DetailDensity, settings.AsymmetricDetailChance, settings.AttachmentsEnabled, settings.SeedOverrides, settings.DomainSeedOverrides);
+        recipe.StructuralPreset = configuration.Provenance.StructuralPreset;
+        if (!recipe.StructuralPreset.has_value()) { recipe.StructuralProfile = configuration.StructuralProfile; }
+        recipe.FactionPreset = configuration.Provenance.FactionPreset;
+        if (!recipe.FactionPreset.has_value()) { recipe.FactionProfile = configuration.FactionProfile; }
         recipe.PaletteConfiguration = settings.PaletteConfiguration;
         return recipe;
     }
-
 }

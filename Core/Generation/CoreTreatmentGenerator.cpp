@@ -58,7 +58,7 @@ namespace SpectralShipGen
             context.DebugInfo->CoreLuminousMask = context.CoreTreatment.LuminousMask;
         }
 
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS || width == 0u || height == 0u)
+        if (width == 0u || height == 0u)
         {
             return;
         }

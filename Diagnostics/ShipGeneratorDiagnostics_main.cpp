@@ -212,19 +212,23 @@ namespace
             }
             else if (argument == "--style")
             {
-                if (!parseStyle(value, options.BaseConfiguration.Style))
+                SpectralShipGen::ShipStyle style;
+                if (!parseStyle(value, style))
                 {
                     error = "Unknown style: " + value;
                     return false;
                 }
+                options.BaseConfiguration.Style = style;
             }
             else if (argument == "--faction")
             {
-                if (!parseFaction(value, options.BaseConfiguration.Faction))
+                SpectralShipGen::ShipFactionType faction;
+                if (!parseFaction(value, faction))
                 {
                     error = "Unknown faction: " + value;
                     return false;
                 }
+                options.BaseConfiguration.Faction = faction;
             }
             else if (argument == "--attachments")
             {
@@ -290,7 +294,7 @@ namespace
     {
         if (!options.AllStyles)
         {
-            return { options.BaseConfiguration.Style };
+            return { options.BaseConfiguration.Style.value_or(SpectralShipGen::ShipStyle::FIGHTER) };
         }
 
         std::vector<SpectralShipGen::ShipStyle> styles;
@@ -302,7 +306,7 @@ namespace
     {
         if (!options.AllFactions)
         {
-            return { options.BaseConfiguration.Faction };
+            return { options.BaseConfiguration.Faction.value_or(SpectralShipGen::ShipFactionType::FRONTIER) };
         }
 
         std::vector<SpectralShipGen::ShipFactionType> factions;

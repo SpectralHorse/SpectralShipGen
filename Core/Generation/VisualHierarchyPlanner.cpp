@@ -81,12 +81,6 @@ namespace SpectralShipGen
     void VisualHierarchyPlanner::createPlan(ShipGenerationContext& context) const
     {
         VisualHierarchyPlan plan;
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            plan.InfluenceEnabled = false;
-            context.VisualHierarchy = plan;
-            return;
-        }
 
         if (!context.Profile.VisualHierarchyEnabled)
         {
@@ -111,7 +105,7 @@ namespace SpectralShipGen
 
     void VisualHierarchyPlanner::resolveAfterHull(ShipGenerationContext& context) const
     {
-        if (!context.VisualHierarchy.InfluenceEnabled || context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
+        if (!context.VisualHierarchy.InfluenceEnabled)
         {
             return;
         }

@@ -64,7 +64,6 @@ namespace SpectralShipGen
 
         Color getHullPixelColor(const ShipGenerationContext& context, const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, const ShipGenerationProfile& profile) const;
         Color getAttachmentPixelColor(const GeneratedShip& ship, const ShipAttachmentPlacement& placement, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
-        Color getLegacyCockpitPixelColor(const PixelMask& cockpitMask, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
         Color getCockpitGlassPixelColor(const CockpitData& cockpit, const PixelMaskUtils::MaskBounds& bounds, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity) const;
         Color getEnginePixelColor(const GeneratedShip& ship, uint32_t x, uint32_t y, const ShipPalette& palette, uint32_t shadingComplexity, const ShipFactionFinishProfile& finishProfile) const;
         Color getMechanicalPixelColor(const PixelMask& mechanicalMask, uint32_t x, uint32_t y, const ShipPalette& palette) const;

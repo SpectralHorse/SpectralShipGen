@@ -94,10 +94,6 @@ namespace SpectralShipGen
         MaterialCompositionData& data = context.MaterialComposition;
         data.reset(context.Ship.HullMask.getWidth(), context.Ship.HullMask.getHeight());
 
-        // Legacy recipes preserve their historical painting behavior. Current
-        // recipes derive zone layout from the HULL domain, never PALETTE.
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS) { context.updateMaterialCompositionDebugInfo(); return; }
-
         const uint32_t chance = std::min(100u, scalePercent(context.Profile.MaterialCompositionChance, getScaleChancePercent(context.ScaleTraits)));
         std::mt19937_64 randomGenerator(mixGenerationSeed64(context.DomainSeeds.get(GenerationDomain::HULL) ^ MaterialCompositionSalt));
         if (getRandomUInt(randomGenerator, 0u, 99u) >= chance) { context.updateMaterialCompositionDebugInfo(); return; }

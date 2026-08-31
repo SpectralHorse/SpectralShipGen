@@ -14,14 +14,6 @@ namespace SpectralShipGen
         void generate(ShipGenerationContext& context) const;
 
     private:
-        enum class LegacyCockpitShape : uint32_t
-        {
-            FORWARD_TAPER = 0u,
-            CANOPY,
-            DIAMOND,
-            LEGACY_COCKPIT_SHAPE_END
-        };
-
         struct CandidateCockpit
         {
             CandidateCockpit(uint32_t width, uint32_t height)
@@ -34,9 +26,6 @@ namespace SpectralShipGen
             CockpitData Data;
         };
 
-        void generateLegacyCockpit(ShipGenerationContext& context) const;
-        void generateLegacyCockpitShape(PixelMask& cockpitMask, LegacyCockpitShape shape, uint32_t startY, uint32_t height, uint32_t maximumHalfWidth) const;
-        bool isLegacyCockpitPlacementValid(const PixelMask& cockpitMask, const PixelMask& hullMask) const;
 
         CockpitSizeClass selectSizeClass(ShipGenerationContext& context, uint32_t attempt) const;
         CockpitShapeType selectShapeType(ShipGenerationContext& context, CockpitSizeClass sizeClass) const;

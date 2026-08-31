@@ -139,7 +139,7 @@ namespace SpectralShipGen
         }
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipPaletteGenerationProfile& paletteGenerationProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipPaletteGenerationProfile& paletteGenerationProfile, const ShipGenerationProfile& styleProfile)
     {
         const ShipPaletteGenerationRanges& paletteProfile = paletteGenerationProfile.Ranges;
         const ShipPaletteGenerationBehaviorProfile& paletteBehavior = paletteGenerationProfile.Behavior;
@@ -171,23 +171,17 @@ namespace SpectralShipGen
         HSVColor hullSecondaryColor = hullColor;
         hullSecondaryColor.Hue = wrapHue(hullColor.Hue + getRandomInt(randomGenerator, { -8, 8 }));
         hullSecondaryColor.Saturation = scalePercentage(hullColor.Saturation, getRandomUInt(randomGenerator, { 85u, 110u }));
-        if (enhancedMaterialContrast)
+
+        const int32_t secondaryMagnitude = std::max(4, static_cast<int32_t>((8u * styleProfile.MaterialSecondaryContrastPercent + 50u) / 100u));
+        int32_t secondaryDirection = (mixSeed(paletteSeed ^ 0xA3C59AC3E17B5D6Full) & 1ull) != 0ull ? 1 : -1;
+        switch (paletteBehavior.SecondaryToneDirection)
         {
-            const int32_t secondaryMagnitude = std::max(4, static_cast<int32_t>((8u * styleProfile.MaterialSecondaryContrastPercent + 50u) / 100u));
-            int32_t secondaryDirection = (mixSeed(paletteSeed ^ 0xA3C59AC3E17B5D6Full) & 1ull) != 0ull ? 1 : -1;
-            switch (paletteBehavior.SecondaryToneDirection)
-            {
-            case ShipFactionSecondaryToneDirection::DARKER: secondaryDirection = -1; break;
-            case ShipFactionSecondaryToneDirection::LIGHTER: secondaryDirection = 1; break;
-            case ShipFactionSecondaryToneDirection::CONTRAST_FROM_HULL_MIDPOINT: secondaryDirection = hullColor.Value >= 55u ? -1 : 1; break;
-            default: break;
-            }
-            hullSecondaryColor.Value = applySignedOffset(hullColor.Value, secondaryDirection * (secondaryMagnitude + getRandomInt(randomGenerator, { -2, 2 })));
+        case ShipFactionSecondaryToneDirection::DARKER: secondaryDirection = -1; break;
+        case ShipFactionSecondaryToneDirection::LIGHTER: secondaryDirection = 1; break;
+        case ShipFactionSecondaryToneDirection::CONTRAST_FROM_HULL_MIDPOINT: secondaryDirection = hullColor.Value >= 55u ? -1 : 1; break;
+        default: break;
         }
-        else
-        {
-            hullSecondaryColor.Value = applySignedOffset(hullColor.Value, getRandomInt(randomGenerator, { -5, 5 }));
-        }
+        hullSecondaryColor.Value = applySignedOffset(hullColor.Value, secondaryDirection * (secondaryMagnitude + getRandomInt(randomGenerator, { -2, 2 })));
 
         HSVColor hullEdgeHighlightColor = hullColor;
         hullEdgeHighlightColor.Saturation = scalePercentage(hullColor.Saturation, 80u);
@@ -288,14 +282,14 @@ namespace SpectralShipGen
         return palette;
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipFactionProfile& factionProfile, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, const ShipFactionProfile& factionProfile, const ShipGenerationProfile& styleProfile)
     {
-        return generate(paletteSeed, getShipPaletteGenerationProfile(factionProfile), styleProfile, enhancedMaterialContrast);
+        return generate(paletteSeed, getShipPaletteGenerationProfile(factionProfile), styleProfile);
     }
 
-    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile, bool enhancedMaterialContrast)
+    ShipPalette ShipPaletteGenerator::generate(uint64_t paletteSeed, ShipFactionType faction, const ShipGenerationProfile& styleProfile)
     {
-        return generate(paletteSeed, getShipFactionProfile(faction), styleProfile, enhancedMaterialContrast);
+        return generate(paletteSeed, getShipFactionProfile(faction), styleProfile);
     }
 
 }

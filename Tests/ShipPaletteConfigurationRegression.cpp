@@ -76,7 +76,6 @@ namespace
         configuration.DetailDensity = 61u;
         configuration.AsymmetricDetailChance = 19u;
         configuration.AttachmentsEnabled = true;
-        configuration.RandomStreamMode = GenerationRandomStreamMode::DOMAIN_SUBSTREAMS;
         return configuration;
     }
 
@@ -209,7 +208,7 @@ namespace
             std::cerr << "Generated palette-domain reroll did not recolor the ship.\n";
             return false;
         }
-        if (first.Style != ShipStyle::SHIP_STYLE_END || first.Faction != ShipFactionType::SHIP_FACTION_TYPE_END)
+        if (first.Provenance.StructuralPreset.has_value() || first.Provenance.FactionPreset.has_value())
         {
             std::cerr << "Explicit structural/faction/palette generation fabricated built-in provenance.\n";
             return false;
@@ -249,7 +248,7 @@ namespace
             std::cerr << "Fixed palette was not preserved exactly on GeneratedShip.\n";
             return false;
         }
-        if (first.Style != ShipStyle::SHIP_STYLE_END || first.Faction != ShipFactionType::SHIP_FACTION_TYPE_END || first.PaletteSourceMode != ShipPaletteSourceMode::FIXED)
+        if (first.Provenance.StructuralPreset.has_value() || first.Provenance.FactionPreset.has_value() || first.PaletteSourceMode != ShipPaletteSourceMode::FIXED)
         {
             std::cerr << "Fixed custom generation fabricated built-in provenance or lost palette-source provenance.\n";
             return false;

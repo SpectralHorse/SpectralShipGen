@@ -98,12 +98,6 @@ namespace SpectralShipGen
         const uint32_t height = context.Ship.HullMask.getHeight();
         data.reset(width, height);
 
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            context.updateLiveryDebugInfo();
-            return;
-        }
-
         uint32_t chance = scalePercent(context.Profile.LiveryChance, getScaleChancePercent(context.ScaleTraits));
         chance = scalePercent(chance, context.FactionProfile.Livery.ChancePercent);
         if (context.VisualHierarchy.InfluenceEnabled && context.VisualHierarchy.PrimaryAnchor == ShipVisualAnchorType::SILHOUETTE)

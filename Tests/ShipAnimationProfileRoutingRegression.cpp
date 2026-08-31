@@ -192,7 +192,7 @@ int SpectralShipGenTests::runAnimationProfileRoutingRegression()
         }
 
         GeneratedShip withoutStyleProvenance = generated;
-        withoutStyleProvenance.Style = ShipStyle::SHIP_STYLE_END;
+        withoutStyleProvenance.Provenance.StructuralPreset.reset();
 
         const ShipIdleAnimation idle = idleAnimator.generate(generated);
         const ShipIdleAnimation idleWithoutStyle = idleAnimator.generate(withoutStyleProvenance);

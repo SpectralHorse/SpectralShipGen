@@ -28,20 +28,15 @@ namespace SpectralShipGen
             }
         }
 
-        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(const ShipGenerationProfile& profile, const ShipFactionComplexityProfile& factionProfile, bool reserveCockpitStructure)
+        std::array<int32_t, GenerationComplexityBudget::CategoryCount> getCategoryWeights(const ShipGenerationProfile& profile, const ShipFactionComplexityProfile& factionProfile)
         {
-            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = reserveCockpitStructure
-                ? profile.ComplexityCategoryWeights.toArray()
-                : profile.LegacyComplexityCategoryWeights.toArray();
-            const ShipFactionComplexityCategoryOffsets& offsets = reserveCockpitStructure
-                ? factionProfile.CategoryOffsets
-                : factionProfile.LegacyCategoryOffsets;
+            std::array<int32_t, GenerationComplexityBudget::CategoryCount> weights = profile.ComplexityCategoryWeights.toArray();
+            const ShipFactionComplexityCategoryOffsets& offsets = factionProfile.CategoryOffsets;
 
             for (std::size_t index = 0u; index < weights.size(); ++index)
             {
                 const GenerationComplexityCategory category = static_cast<GenerationComplexityCategory>(index);
                 weights[index] += getCategoryOffset(offsets, category);
-                if (!reserveCockpitStructure && category == GenerationComplexityCategory::COCKPIT_STRUCTURE) { continue; }
                 weights[index] = std::max(1, weights[index]);
             }
             return weights;
@@ -57,7 +52,7 @@ namespace SpectralShipGen
         totalBudget = (totalBudget * factionProfile.Complexity.TotalBudgetPercent + 50u) / 100u;
         budget.m_InitialBudget = static_cast<uint32_t>(std::clamp<uint64_t>(totalBudget, 28u, 132u));
 
-        const auto weights = getCategoryWeights(profile, factionProfile.Complexity, reserveCockpitStructure);
+        const auto weights = getCategoryWeights(profile, factionProfile.Complexity);
         uint32_t totalWeight = 0u;
         for (int32_t weight : weights) { totalWeight += static_cast<uint32_t>(weight); }
 

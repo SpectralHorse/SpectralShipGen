@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <map>
+#include <optional>
 #include <string>
 
 #include <SpectralShipGen/GeneratedShip.h>
@@ -29,8 +30,8 @@ namespace SpectralShipGenDiagnostics
     {
         uint32_t Width = 44u;
         uint32_t Height = 44u;
-        SpectralShipGen::ShipStyle Style = SpectralShipGen::ShipStyle::FIGHTER;
-        SpectralShipGen::ShipFactionType Faction = SpectralShipGen::ShipFactionType::FRONTIER;
+        std::optional<SpectralShipGen::ShipStyle> Style = SpectralShipGen::ShipStyle::FIGHTER;
+        std::optional<SpectralShipGen::ShipFactionType> Faction = SpectralShipGen::ShipFactionType::FRONTIER;
         uint32_t DetailDensity = 50u;
         uint32_t AsymmetricDetailChance = 10u;
         bool AttachmentsEnabled = true;

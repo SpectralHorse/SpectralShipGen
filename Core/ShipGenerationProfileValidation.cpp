@@ -10,7 +10,7 @@ namespace SpectralShipGen
 {
     namespace
     {
-        using Result = ShipGenerationProfileValidationResult;
+        using Result = ValidationResult;
 
         void addError(Result& result, const char* field, const char* message)
         {
@@ -86,9 +86,9 @@ namespace SpectralShipGen
         }
     }
 
-    ShipGenerationProfileValidationResult validateShipGenerationProfile(const ShipGenerationProfile& profile)
+    ValidationResult validateShipGenerationProfile(const ShipGenerationProfile& profile)
     {
-        ShipGenerationProfileValidationResult result;
+        ValidationResult result;
 
         // UIntRange contracts. Canvas-relative ranges are bounded because they
         // are converted directly to image/profile indices or half-widths.
@@ -192,7 +192,6 @@ namespace SpectralShipGen
         validateWeightGroup(result, "SilhouetteGuidanceWeights", { profile.SilhouetteGuidanceWeights.BroaderShoulders, profile.SilhouetteGuidanceWeights.SideLobes, profile.SilhouetteGuidanceWeights.SteppedWingExtension }, profile.SilhouetteGuidanceEnabled && profile.SilhouetteWeakArticulationGuidanceEnabled);
 
         validateSignedWeights(result, "ComplexityCategoryWeights", profile.ComplexityCategoryWeights);
-        validateSignedWeights(result, "LegacyComplexityCategoryWeights", profile.LegacyComplexityCategoryWeights);
 
         if (static_cast<uint32_t>(profile.DetailMotifPlacementBias) > static_cast<uint32_t>(ShipDetailMotifPlacementBias::WING_SURFACE))
         {

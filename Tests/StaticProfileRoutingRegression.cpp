@@ -9,6 +9,7 @@
 #include <SpectralShipGen/GenerationComplexityBudget.h>
 #include <SpectralShipGen/GenerationSpatialBudget.h>
 #include "ShipGenerationContext.h"
+#include "ShipGenerationContextTestUtils.h"
 #include <SpectralShipGen/ShipGenerationProfile.h>
 #include <SpectralShipGen/ShipGenerationSeeds.h>
 #include "VisualHierarchyPlanner.h"
@@ -152,7 +153,7 @@ int SpectralShipGenTests::runStaticProfileRoutingRegression()
         fighterSettings.Faction = ShipFactionType::MILITARY;
         const ShipGenerationSeeds fighterSeeds = deriveShipGenerationSeeds(fighterSettings.Seed);
         const ShipGenerationProfile spearheadProfile = getShipGenerationProfile(ShipStyle::SPEARHEAD);
-        ShipGenerationContext spearheadProfileContext(fighterSettings, spearheadProfile, fighterSeeds);
+        ShipGenerationContext spearheadProfileContext(makeTestExplicitGenerationConfiguration(fighterSettings), spearheadProfile, getShipFactionProfile(fighterSettings.Faction), fighterSeeds);
         VisualHierarchyPlanner hierarchyPlanner;
         hierarchyPlanner.createPlan(spearheadProfileContext);
         if (spearheadProfileContext.VisualHierarchy.InfluenceEnabled ||
@@ -175,7 +176,7 @@ int SpectralShipGenTests::runStaticProfileRoutingRegression()
         spearheadSettings.Seed = 0x79A0C311A55EED02ull;
         spearheadSettings.Style = ShipStyle::SPEARHEAD;
         const ShipGenerationProfile fighterProfile = getShipGenerationProfile(ShipStyle::FIGHTER);
-        ShipGenerationContext fighterProfileContext(spearheadSettings, fighterProfile, deriveShipGenerationSeeds(spearheadSettings.Seed));
+        ShipGenerationContext fighterProfileContext(makeTestExplicitGenerationConfiguration(spearheadSettings), fighterProfile, getShipFactionProfile(spearheadSettings.Faction), deriveShipGenerationSeeds(spearheadSettings.Seed));
         hierarchyPlanner.createPlan(fighterProfileContext);
         if (!fighterProfileContext.VisualHierarchy.InfluenceEnabled)
         {

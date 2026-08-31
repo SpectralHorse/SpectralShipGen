@@ -95,11 +95,6 @@ namespace SpectralShipGen
 
     void CockpitGenerator::generate(ShipGenerationContext& context) const
     {
-        if (context.Settings.RandomStreamMode == GenerationRandomStreamMode::LEGACY_TOP_LEVEL_STREAMS)
-        {
-            generateLegacyCockpit(context);
-            return;
-        }
 
         GeneratedShip& ship = context.Ship;
         const ExplicitShipGenerationConfiguration& settings = context.Settings;
@@ -222,120 +217,6 @@ namespace SpectralShipGen
         }
     }
 
-
-    void CockpitGenerator::generateLegacyCockpit(ShipGenerationContext& context) const
-    {
-        GeneratedShip& ship = context.Ship;
-        const ExplicitShipGenerationConfiguration& settings = context.Settings;
-        const ShipGenerationProfile& profile = context.Profile;
-        ship.CockpitMask.clear(false);
-        context.Cockpit.reset(settings.Dimensions.Width, settings.Dimensions.Height);
-
-        uint32_t hullTop = ship.HullMask.getHeight();
-        uint32_t hullBottom = 0u;
-        for (uint32_t y = 0; y < ship.HullMask.getHeight(); ++y)
-        {
-            if (PixelMaskUtils::getOccupiedRowWidth(ship.HullMask, y) == 0u) { continue; }
-            hullTop = std::min(hullTop, y);
-            hullBottom = std::max(hullBottom, y);
-        }
-        if (hullTop >= ship.HullMask.getHeight()) { return; }
-
-        const uint32_t hullHeight = hullBottom - hullTop + 1u;
-        const uint32_t imageWidth = settings.Dimensions.Width;
-        const uint32_t imageHeight = settings.Dimensions.Height;
-        const uint32_t baseMinimumCockpitHeight = std::max(GenerationMath::scalePixelsFrom64(3u, imageHeight), imageHeight / 16u);
-        const uint32_t baseMaximumCockpitHeight = std::max(baseMinimumCockpitHeight, imageHeight / 9u);
-        const uint32_t baseMinimumCockpitHalfWidth = std::max(GenerationMath::scalePixelsFrom64(2u, imageWidth), imageWidth / 32u);
-        const uint32_t baseMaximumCockpitHalfWidth = std::max(baseMinimumCockpitHalfWidth, imageWidth / 12u);
-        const uint32_t minimumCockpitHeight = GenerationMath::scaleByPercent(baseMinimumCockpitHeight, profile.CockpitHeightPercent);
-        const uint32_t maximumCockpitHeight = std::max(minimumCockpitHeight, GenerationMath::scaleByPercent(baseMaximumCockpitHeight, profile.CockpitHeightPercent));
-        const uint32_t minimumCockpitHalfWidth = GenerationMath::scaleByPercent(baseMinimumCockpitHalfWidth, profile.CockpitWidthPercent);
-        const uint32_t maximumCockpitHalfWidth = std::max(minimumCockpitHalfWidth, GenerationMath::scaleByPercent(baseMaximumCockpitHalfWidth, profile.CockpitWidthPercent));
-        const uint32_t minimumStartY = hullTop + ((hullHeight * profile.CockpitStartPercent.Min) / 100u);
-        const uint32_t maximumStartY = hullTop + ((hullHeight * profile.CockpitStartPercent.Max) / 100u);
-        const uint32_t hullPixelCount = PixelMaskUtils::getMaskPixelCount(ship.HullMask);
-        const uint32_t maximumCockpitPixelCount = std::max(1u, (hullPixelCount * profile.MaximumCockpitHullPercent) / 100u);
-
-        for (uint32_t attempt = 0; attempt < 12u; ++attempt)
-        {
-            if (context.DebugInfo != nullptr) { ++context.DebugInfo->CockpitPlacementAttemptCount; }
-            PixelMask candidate(settings.Dimensions.Width, settings.Dimensions.Height, false);
-            const uint32_t cockpitHeight = context.getGenerationRandomUInt(GenerationDomain::COCKPIT, minimumCockpitHeight, maximumCockpitHeight);
-            const uint32_t cockpitHalfWidth = context.getGenerationRandomUInt(GenerationDomain::COCKPIT, minimumCockpitHalfWidth, maximumCockpitHalfWidth);
-            const uint32_t latestStartY = hullBottom >= cockpitHeight ? std::min(maximumStartY, hullBottom - cockpitHeight + 1u) : minimumStartY;
-            if (latestStartY < minimumStartY) { continue; }
-            const uint32_t startY = context.getGenerationRandomUInt(GenerationDomain::COCKPIT, minimumStartY, latestStartY);
-            const LegacyCockpitShape shape = static_cast<LegacyCockpitShape>(context.getGenerationRandomUInt(GenerationDomain::COCKPIT, 0u, static_cast<uint32_t>(LegacyCockpitShape::LEGACY_COCKPIT_SHAPE_END) - 1u));
-            generateLegacyCockpitShape(candidate, shape, startY, cockpitHeight, cockpitHalfWidth);
-            if (PixelMaskUtils::getMaskPixelCount(candidate) > maximumCockpitPixelCount) { continue; }
-            if (!isLegacyCockpitPlacementValid(candidate, ship.HullMask)) { continue; }
-            ship.CockpitMask = std::move(candidate);
-            context.Cockpit.GlassMask = ship.CockpitMask;
-            if (context.DebugInfo != nullptr)
-            {
-                context.DebugInfo->CockpitPlacementSucceeded = true;
-                context.DebugInfo->CockpitPixelCount = PixelMaskUtils::getMaskPixelCount(ship.CockpitMask);
-                context.DebugInfo->CockpitGlassPixelCount = context.DebugInfo->CockpitPixelCount;
-            }
-            return;
-        }
-    }
-
-    void CockpitGenerator::generateLegacyCockpitShape(PixelMask& cockpitMask, LegacyCockpitShape shape, uint32_t startY, uint32_t height, uint32_t maximumHalfWidth) const
-    {
-        if (height == 0u || maximumHalfWidth == 0u) { return; }
-        const uint32_t lastRow = height - 1u;
-        for (uint32_t row = 0; row < height; ++row)
-        {
-            uint32_t halfWidth = 1u;
-            switch (shape)
-            {
-            case LegacyCockpitShape::FORWARD_TAPER:
-                halfWidth = lastRow == 0u ? maximumHalfWidth : 1u + (((maximumHalfWidth - 1u) * row) / lastRow);
-                break;
-            case LegacyCockpitShape::CANOPY:
-            {
-                const uint32_t middle = height / 2u;
-                const uint32_t distanceFromMiddle = row > middle ? row - middle : middle - row;
-                const uint32_t reduction = maximumHalfWidth > 1u ? std::min(maximumHalfWidth - 1u, distanceFromMiddle) : 0u;
-                halfWidth = maximumHalfWidth - reduction;
-                break;
-            }
-            case LegacyCockpitShape::DIAMOND:
-            {
-                const uint32_t middle = height / 2u;
-                if (row <= middle)
-                {
-                    halfWidth = middle == 0u ? maximumHalfWidth : 1u + (((maximumHalfWidth - 1u) * row) / middle);
-                }
-                else
-                {
-                    const uint32_t lowerSpan = lastRow - middle;
-                    halfWidth = lowerSpan == 0u ? maximumHalfWidth : 1u + (((maximumHalfWidth - 1u) * (lastRow - row)) / lowerSpan);
-                }
-                break;
-            }
-            default: return;
-            }
-            PixelMaskUtils::setSymmetricRowWidth(cockpitMask, startY + row, PixelMaskUtils::getSymmetricWidth(cockpitMask, halfWidth));
-        }
-    }
-
-    bool CockpitGenerator::isLegacyCockpitPlacementValid(const PixelMask& cockpitMask, const PixelMask& hullMask) const
-    {
-        bool hasCockpitPixel = false;
-        for (uint32_t y = 0; y < cockpitMask.getHeight(); ++y)
-        {
-            for (uint32_t x = 0; x < cockpitMask.getWidth(); ++x)
-            {
-                if (!cockpitMask.get(x, y)) { continue; }
-                hasCockpitPixel = true;
-                if (!hullMask.get(x, y)) { return false; }
-            }
-        }
-        return hasCockpitPixel;
-    }
 
     CockpitSizeClass CockpitGenerator::selectSizeClass(ShipGenerationContext& context, uint32_t attempt) const
     {

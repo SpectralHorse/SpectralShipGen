@@ -20,7 +20,6 @@ namespace SpectralShipGen
             result.AttachmentsEnabled = settings.AttachmentsEnabled;
             result.SeedOverrides = settings.SeedOverrides;
             result.DomainSeedOverrides = settings.DomainSeedOverrides;
-            result.RandomStreamMode = settings.RandomStreamMode;
             return result;
         }
 
@@ -34,7 +33,6 @@ namespace SpectralShipGen
             result.AttachmentsEnabled = settings.AttachmentsEnabled;
             result.SeedOverrides = settings.SeedOverrides;
             result.DomainSeedOverrides = settings.DomainSeedOverrides;
-            result.RandomStreamMode = settings.RandomStreamMode;
             result.PaletteConfiguration = settings.PaletteConfiguration;
             return result;
         }
@@ -52,7 +50,6 @@ namespace SpectralShipGen
             result.SeedOverrides.Details = recipe.Seeds.Details;
             result.SeedOverrides.Attachments = recipe.Seeds.Attachments;
             result.DomainSeedOverrides = recipe.DomainSeedOverrides;
-            result.RandomStreamMode = recipe.RandomStreamMode;
             result.PaletteConfiguration = recipe.PaletteConfiguration;
             return result;
         }
@@ -108,34 +105,24 @@ namespace SpectralShipGen
     {
         ShipResolvedGenerationConfiguration result;
         result.Generation = copyCommon(recipe);
-        if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        if (recipe.StructuralPreset.has_value())
         {
-            result.StructuralProfile = getBuiltInStructuralPresetProfile(recipe.Style);
-            result.Provenance.StructuralPreset = recipe.Style;
+            result.StructuralProfile = getBuiltInStructuralPresetProfile(*recipe.StructuralPreset);
+            result.Provenance.StructuralPreset = recipe.StructuralPreset;
         }
-        else if (recipe.StructuralSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        else
         {
             result.StructuralProfile = recipe.StructuralProfile;
         }
-        else
-        {
-            result.StructuralProfile = ShipGenerationProfile();
-            result.Generation.Dimensions = {};
-        }
 
-        if (recipe.FactionSource == ShipGenerationRecipeProfileSource::BUILT_IN_PRESET)
+        if (recipe.FactionPreset.has_value())
         {
-            result.FactionProfile = getBuiltInFactionPresetProfile(recipe.Faction);
-            result.Provenance.FactionPreset = recipe.Faction;
+            result.FactionProfile = getBuiltInFactionPresetProfile(*recipe.FactionPreset);
+            result.Provenance.FactionPreset = recipe.FactionPreset;
         }
-        else if (recipe.FactionSource == ShipGenerationRecipeProfileSource::EMBEDDED_CUSTOM)
+        else
         {
             result.FactionProfile = recipe.FactionProfile;
-        }
-        else
-        {
-            result.FactionProfile = ShipFactionProfile();
-            result.Generation.Dimensions = {};
         }
         setPaletteProvenance(result);
         return result;
@@ -159,10 +146,6 @@ namespace SpectralShipGen
         if (configuration.Generation.AsymmetricDetailChance > 100u)
         {
             result.Errors.push_back({ "Generation.AsymmetricDetailChance", "Probability must be in the range 0-100." });
-        }
-        if (configuration.Generation.RandomStreamMode >= GenerationRandomStreamMode::GENERATION_RANDOM_STREAM_MODE_END)
-        {
-            result.Errors.push_back({ "Generation.RandomStreamMode", "Random stream mode is outside the supported range." });
         }
         if (configuration.Generation.PaletteConfiguration.Mode >= ShipPaletteSourceMode::SHIP_PALETTE_SOURCE_MODE_END)
         {

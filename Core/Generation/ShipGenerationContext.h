@@ -37,17 +37,8 @@ namespace SpectralShipGen
             const ShipFactionProfile& factionProfile,
             const ShipGenerationSeeds& seeds,
             ShipGenerationDebugInfo* debugInfo = nullptr,
-            const GenerationCalibrationSettings* calibrationSettings = nullptr,
-            ShipStyle builtInStyleProvenance = ShipStyle::SHIP_STYLE_END,
-            ShipFactionType builtInFactionProvenance = ShipFactionType::SHIP_FACTION_TYPE_END);
-
-        // Internal compatibility entry for generation-focused regressions/helpers
-        // that still construct a context from the legacy preset settings.
-        ShipGenerationContext(const ShipGenerationSettings& settings,
-            const ShipGenerationProfile& profile,
-            const ShipGenerationSeeds& seeds,
-            ShipGenerationDebugInfo* debugInfo = nullptr,
             const GenerationCalibrationSettings* calibrationSettings = nullptr);
+
 
         uint32_t getGenerationRandomUInt(GenerationDomain domain, uint32_t minimum, uint32_t maximum);
         uint32_t getGenerationRandomUInt(GenerationDomain domain, const UIntRange& range);
@@ -91,13 +82,8 @@ namespace SpectralShipGen
         uint32_t getRandomUInt(std::mt19937_64& randomGenerator, uint32_t minimum, uint32_t maximum);
         uint64_t getRandomUInt64(std::mt19937_64& randomGenerator, uint64_t minimum, uint64_t maximum);
         std::mt19937_64& getDomainRandomGenerator(GenerationDomain domain);
-        std::mt19937_64& getLegacyRandomGenerator(GenerationSeedChannel channel);
 
         std::array<std::mt19937_64, GenerationDomainCount> m_DomainRandomGenerators;
-        std::mt19937_64 m_LegacyStructureRandomGenerator;
-        std::mt19937_64 m_LegacyPaletteRandomGenerator;
-        std::mt19937_64 m_LegacyDetailRandomGenerator;
-        std::mt19937_64 m_LegacyAttachmentRandomGenerator;
         std::mt19937_64 m_SavedCalibrationRandomGenerator;
         GenerationDomain m_CalibrationDomain = GenerationDomain::GENERATION_DOMAIN_END;
         bool m_CalibrationSubstreamActive = false;

@@ -288,7 +288,7 @@ namespace SpectralShipGen
             requirements.Type = SpectralShipGen::ShipAnimationType::IDLE;
             requirements.Mode = settings.SamplingMode;
             requirements.DurationMilliseconds = std::max(1u, settings.AnimationDurationMilliseconds);
-            requirements.ExactFrameCount = std::max(1u, settings.FrameCount);
+            requirements.ExactFrameCount = std::max(1u, settings.ExactFrameCount);
             requirements.MinimumFrameCount = std::max(1u, settings.MinimumFrameCount);
             requirements.MaximumFrameCount = std::max(requirements.MinimumFrameCount, settings.MaximumFrameCount);
             requirements.ScaleAnimationComplexity = scaleTraits.AnimationComplexity;

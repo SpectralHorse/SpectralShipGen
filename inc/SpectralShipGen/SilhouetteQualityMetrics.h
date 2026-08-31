@@ -9,7 +9,7 @@ namespace SpectralShipGen
     enum class SilhouetteValidationFailureReason : uint32_t
     {
         NONE = 0u,
-        LEGACY_GEOMETRY_VALIDATION,
+        BASE_GEOMETRY_VALIDATION,
         INVALID_WING_REGIONS,
         LOW_LATERAL_UTILIZATION,
         LOW_LONGITUDINAL_UTILIZATION,

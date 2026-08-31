@@ -7,7 +7,7 @@
 
 namespace SpectralShipGenDiagnostics
 {
-    constexpr uint32_t DiagnosticsResultSchemaVersion = 1u;
+    constexpr uint32_t DiagnosticsResultSchemaVersion = 2u;
 
     struct DiagnosticsResultLoadResult
     {

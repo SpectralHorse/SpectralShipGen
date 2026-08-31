@@ -10,6 +10,7 @@
 #include <numeric>
 #include <ostream>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -22,17 +23,17 @@
 namespace
 {
 
-    const char* styleName(SpectralShipGen::ShipStyle style)
+    const char* styleName(const std::optional<SpectralShipGen::ShipStyle>& style)
     {
-        if (style == SpectralShipGen::ShipStyle::SHIP_STYLE_END) { return "CUSTOM"; }
-        for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == style) { return entry.StableId; } }
+        if (!style.has_value()) { return "CUSTOM"; }
+        for (const auto& entry : SpectralShipGen::getBuiltInStructuralPresetCatalog()) { if (entry.Preset == *style) { return entry.StableId; } }
         return "UNKNOWN";
     }
 
-    const char* factionName(SpectralShipGen::ShipFactionType faction)
+    const char* factionName(const std::optional<SpectralShipGen::ShipFactionType>& faction)
     {
-        if (faction == SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END) { return "CUSTOM"; }
-        for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { if (entry.Preset == faction) { return entry.StableId; } }
+        if (!faction.has_value()) { return "CUSTOM"; }
+        for (const auto& entry : SpectralShipGen::getBuiltInFactionPresetCatalog()) { if (entry.Preset == *faction) { return entry.StableId; } }
         return "UNKNOWN";
     }
     struct MaskMetrics
@@ -746,9 +747,13 @@ namespace SpectralShipGenDiagnostics
     GenerationStatistics collectGenerationStatistics(const DiagnosticGenerationConfiguration& configuration)
     {
         DiagnosticsRunConfiguration runConfiguration;
+        if (!configuration.Style.has_value() || !configuration.Faction.has_value())
+        {
+            throw std::invalid_argument("collectGenerationStatistics requires built-in style and faction presets.");
+        }
         runConfiguration.Dimensions = { { configuration.Width, configuration.Height } };
-        runConfiguration.Styles = { configuration.Style };
-        runConfiguration.Factions = { configuration.Faction };
+        runConfiguration.Styles = { *configuration.Style };
+        runConfiguration.Factions = { *configuration.Faction };
         runConfiguration.SamplesPerConfiguration = configuration.Samples;
         runConfiguration.DiagnosticSeed = configuration.DiagnosticSeed;
         runConfiguration.DetailDensity = configuration.DetailDensity;

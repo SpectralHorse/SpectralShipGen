@@ -1440,18 +1440,14 @@ namespace SpectralShipGen
     {
         if (!validate(context.Ship.HullMask))
         {
-            const bool tinyBroadSilhouetteException = context.Profile.AllowTinyBroadSilhouetteLegacyValidationException && context.ScaleTraits.MinimumDimension <= 24u &&
-                metrics.PixelCount != 0u && isHullConnected(context.Ship.HullMask) && metrics.CanvasFillPercent >= 7u && metrics.CanvasFillPercent <= 68u &&
-                metrics.NormalizedHeightPercent >= 50u && metrics.NormalizedWidthPercent >= 50u && metrics.WidthVariationPercent >= 20u &&
-                metrics.MaximumRowWidthDelta <= std::max(GenerationMath::scalePixelsFrom64(8u, context.Settings.Dimensions.Width), context.Settings.Dimensions.Width / 3u) && metrics.NearMaximumRowPercent < 90u;
             const bool intentionalNegativeSpaceException = !context.StructuralNegativeSpace.empty() && metrics.PixelCount != 0u &&
                 isHullConnected(context.Ship.HullMask) && metrics.CanvasFillPercent >= 5u && metrics.CanvasFillPercent <= 55u &&
                 metrics.NormalizedHeightPercent >= 50u && metrics.NormalizedWidthPercent >= 20u && metrics.WidthVariationPercent >= 15u &&
                 metrics.MaximumRowWidthDelta <= std::max(GenerationMath::scalePixelsFrom64(9u, context.Settings.Dimensions.Width), context.Settings.Dimensions.Width / 3u) &&
                 metrics.NearMaximumRowPercent < 92u;
-            if (!tinyBroadSilhouetteException && !intentionalNegativeSpaceException)
+            if (!intentionalNegativeSpaceException)
             {
-                return SilhouetteValidationFailureReason::LEGACY_GEOMETRY_VALIDATION;
+                return SilhouetteValidationFailureReason::BASE_GEOMETRY_VALIDATION;
             }
         }
         if (!validateWingRegions(context))

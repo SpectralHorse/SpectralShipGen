@@ -11,6 +11,7 @@
 #include <SpectralShipGen/Diagnostics/DiagnosticsResultSerializer.h>
 #include <SpectralShipGen/ShipFactionProfile.h>
 #include <SpectralShipGen/ShipGenerationProfile.h>
+#include <SpectralShipGen/ShipResolvedGenerationConfiguration.h>
 #include <SpectralShipGen/ShipGenerator.h>
 
 namespace
@@ -92,8 +93,13 @@ int SpectralShipGenTests::runDiagnosticsRunnerRegression()
     SpectralShipGen::ShipGenerationSettings directSettings;
     directSettings.Seed = firstSchedule.front().Seed;
     directSettings.Dimensions = firstSchedule.front().Dimensions;
-    directSettings.Style = firstSchedule.front().Style;
-    directSettings.Faction = firstSchedule.front().Faction;
+    if (!firstSchedule.front().Style.has_value() || !firstSchedule.front().Faction.has_value())
+    {
+        std::cerr << "Diagnostics runner regression failed: built-in work item lost preset identity.\n";
+        return 1;
+    }
+    directSettings.Style = *firstSchedule.front().Style;
+    directSettings.Faction = *firstSchedule.front().Faction;
     directSettings.DetailDensity = configuration.DetailDensity;
     directSettings.AsymmetricDetailChance = configuration.AsymmetricDetailChance;
     directSettings.AttachmentsEnabled = configuration.AttachmentsEnabled;
@@ -119,29 +125,32 @@ int SpectralShipGenTests::runDiagnosticsRunnerRegression()
     customProfile.LargeWeaponChance = std::min<uint32_t>(100u, customProfile.LargeWeaponChance + 1u);
     customFaction.SurfaceDetails.DetailDensityPercent += 1u;
 
-    const DiagnosticsResult explicitResult = DiagnosticsRunner().run(explicitConfiguration, customProfile, customFaction);
+    SpectralShipGen::ExplicitShipGenerationConfiguration resolvedSettings;
+    resolvedSettings.Dimensions = explicitConfiguration.Dimensions.front();
+    resolvedSettings.DetailDensity = explicitConfiguration.DetailDensity;
+    resolvedSettings.AsymmetricDetailChance = explicitConfiguration.AsymmetricDetailChance;
+    resolvedSettings.AttachmentsEnabled = explicitConfiguration.AttachmentsEnabled;
+    const SpectralShipGen::ShipResolvedGenerationConfiguration resolvedCustom =
+        SpectralShipGen::resolveShipGenerationConfiguration(resolvedSettings, customProfile, customFaction);
+
+    const DiagnosticsResult explicitResult = DiagnosticsRunner().run(explicitConfiguration, resolvedCustom);
     if (!explicitResult.Completed || explicitResult.CompletedWorkItems != 1u || explicitResult.Samples.size() != 1u ||
-        explicitResult.Configuration.Styles.size() != 1u ||
-        explicitResult.Configuration.Styles.front() != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
-        explicitResult.Configuration.Factions.size() != 1u ||
-        explicitResult.Configuration.Factions.front() != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END ||
-        explicitResult.Samples.front().WorkItem.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
-        explicitResult.Samples.front().WorkItem.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
+        !explicitResult.Configuration.Styles.empty() ||
+        !explicitResult.Configuration.Factions.empty() ||
+        explicitResult.Samples.front().WorkItem.Style.has_value() ||
+        explicitResult.Samples.front().WorkItem.Faction.has_value())
     {
-        std::cerr << "Diagnostics runner regression failed: explicit profiles required fabricated built-in provenance.\n";
+        std::cerr << "Diagnostics runner regression failed: explicit profiles fabricated built-in provenance.\n";
         return 1;
     }
 
-    SpectralShipGen::ExplicitShipGenerationConfiguration explicitSettings;
+    SpectralShipGen::ExplicitShipGenerationConfiguration explicitSettings = resolvedSettings;
     explicitSettings.Seed = explicitResult.Samples.front().WorkItem.Seed;
     explicitSettings.Dimensions = explicitResult.Samples.front().WorkItem.Dimensions;
-    explicitSettings.DetailDensity = explicitConfiguration.DetailDensity;
-    explicitSettings.AsymmetricDetailChance = explicitConfiguration.AsymmetricDetailChance;
-    explicitSettings.AttachmentsEnabled = explicitConfiguration.AttachmentsEnabled;
     const SpectralShipGen::GeneratedShip explicitShip = generator.generate(explicitSettings, customProfile, customFaction);
     if (imageSignature(explicitShip.FinalImage) != explicitResult.Samples.front().FinalImageSignature ||
-        explicitShip.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
-        explicitShip.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
+        explicitShip.Provenance.StructuralPreset.has_value() ||
+        explicitShip.Provenance.FactionPreset.has_value())
     {
         std::cerr << "Diagnostics runner regression failed: explicit-profile diagnostics diverged from direct generation.\n";
         return 1;
@@ -159,8 +168,8 @@ int SpectralShipGenTests::runDiagnosticsRunnerRegression()
     const DiagnosticsResultLoadResult explicitReload = deserializeDiagnosticsResultJson(explicitJson);
     if (!explicitReload.Success ||
         explicitReload.Result.Samples.size() != 1u ||
-        explicitReload.Result.Samples.front().WorkItem.Style != SpectralShipGen::ShipStyle::SHIP_STYLE_END ||
-        explicitReload.Result.Samples.front().WorkItem.Faction != SpectralShipGen::ShipFactionType::SHIP_FACTION_TYPE_END)
+        explicitReload.Result.Samples.front().WorkItem.Style.has_value() ||
+        explicitReload.Result.Samples.front().WorkItem.Faction.has_value())
     {
         std::cerr << "Diagnostics runner regression failed: custom provenance did not survive result serialization.\n";
         return 1;
@@ -252,14 +261,14 @@ int SpectralShipGenTests::runDiagnosticsRunnerRegression()
         return 1;
     }
 
-    DiagnosticGenerationConfiguration legacy;
-    legacy.Width = 32u;
-    legacy.Height = 32u;
-    legacy.Samples = 4u;
-    legacy.DiagnosticSeed = 0x12345678ull;
-    if (collectGenerationStatistics(legacy).deterministicSignature() != collectGenerationStatistics(legacy).deterministicSignature())
+    DiagnosticGenerationConfiguration statisticsConfiguration;
+    statisticsConfiguration.Width = 32u;
+    statisticsConfiguration.Height = 32u;
+    statisticsConfiguration.Samples = 4u;
+    statisticsConfiguration.DiagnosticSeed = 0x12345678ull;
+    if (collectGenerationStatistics(statisticsConfiguration).deterministicSignature() != collectGenerationStatistics(statisticsConfiguration).deterministicSignature())
     {
-        std::cerr << "Diagnostics runner regression failed: legacy statistics workflow is no longer deterministic.\n";
+        std::cerr << "Diagnostics runner regression failed: statistics workflow is no longer deterministic.\n";
         return 1;
     }
 
