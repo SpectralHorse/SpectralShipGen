@@ -80,6 +80,7 @@ target_include_directories(SpectralShipGenCore
             ${CMAKE_CURRENT_SOURCE_DIR}/Core/Generation
 )
 target_compile_features(SpectralShipGenCore PUBLIC cxx_std_17)
+spectral_ship_gen_enable_sanitizers(SpectralShipGenCore)
 set_target_properties(SpectralShipGenCore PROPERTIES EXPORT_NAME Core)
 add_library(SpectralShipGen::Core ALIAS SpectralShipGenCore)
 install(TARGETS SpectralShipGenCore
@@ -110,6 +111,7 @@ target_include_directories(SpectralShipGenDiagnosticsCore PUBLIC
 )
 target_link_libraries(SpectralShipGenDiagnosticsCore PUBLIC SpectralShipGen::Core)
 target_compile_features(SpectralShipGenDiagnosticsCore PUBLIC cxx_std_17)
+spectral_ship_gen_enable_sanitizers(SpectralShipGenDiagnosticsCore)
 set_target_properties(SpectralShipGenDiagnosticsCore PROPERTIES EXPORT_NAME Diagnostics)
 add_library(SpectralShipGen::Diagnostics ALIAS SpectralShipGenDiagnosticsCore)
 install(TARGETS SpectralShipGenDiagnosticsCore
@@ -129,6 +131,7 @@ if(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI)
     add_executable(ShipGeneratorDiagnostics Diagnostics/ShipGeneratorDiagnostics_main.cpp)
     target_link_libraries(ShipGeneratorDiagnostics PRIVATE SpectralShipGen::Core SpectralShipGen::Diagnostics)
     target_compile_features(ShipGeneratorDiagnostics PRIVATE cxx_std_17)
+    spectral_ship_gen_enable_sanitizers(ShipGeneratorDiagnostics)
     target_compile_definitions(ShipGeneratorDiagnostics PRIVATE SPECTRAL_SHIP_GEN_BUILD_CONFIGURATION="${CMAKE_BUILD_TYPE}")
 endif()
 
@@ -198,6 +201,7 @@ if(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION)
         ${CMAKE_CURRENT_SOURCE_DIR}/Core/Generation
     )
     target_link_libraries(SpectralShipGenRegression PRIVATE SpectralShipGen::Core SpectralShipGen::Diagnostics)
+    spectral_ship_gen_enable_sanitizers(SpectralShipGenRegression)
     target_compile_features(SpectralShipGenRegression PRIVATE cxx_std_17)
 endif()
 
@@ -217,6 +221,7 @@ if(SPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS)
     endforeach()
     add_library(SpectralShipGenPublicHeaderChecks OBJECT ${SPECTRAL_SHIP_GEN_PUBLIC_HEADER_CHECK_SOURCES})
     target_link_libraries(SpectralShipGenPublicHeaderChecks PRIVATE SpectralShipGen::Core)
+    spectral_ship_gen_enable_sanitizers(SpectralShipGenPublicHeaderChecks)
     target_compile_features(SpectralShipGenPublicHeaderChecks PRIVATE cxx_std_17)
 endif()
 

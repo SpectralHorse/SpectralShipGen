@@ -1,0 +1,53 @@
+name: Library Sanitizers
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asan-ubsan:
+    name: Linux Clang ASan+UBSan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CC: clang
+      CXX: clang++
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+    steps:
+      - name: Checkout SpectralShipGen
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure sanitizer build
+        run: >-
+          cmake -S . -B build-sanitized
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=ON
+          -DSPECTRAL_SHIP_GEN_ENABLE_SANITIZERS=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI=OFF
+          -DSPECTRAL_SHIP_GEN_BUILD_EXAMPLES=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS=ON
+
+      - name: Build sanitized project targets
+        run: cmake --build build-sanitized --parallel
+
+      - name: Run sanitized Core NORMAL regression
+        run: ctest --test-dir build-sanitized -L normal --output-on-failure
+
+      - name: Run sanitized public examples
+        shell: bash
+        run: |
+          set -euo pipefail
+          for example in build-sanitized/bin/SpectralShipGenExample_*; do
+            echo "Running ${example}"
+            "${example}"
+          done

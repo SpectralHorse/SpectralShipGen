@@ -80,6 +80,16 @@ Developer-only targets default to ON for a top-level Library checkout and OFF wh
 
 The package version currently uses the explicit development placeholder `0.0.0`. Task 109 owns the release version contract.
 
+## CI and regression policy
+
+The repository keeps routine and expensive validation separate:
+
+- `.github/workflows/library-ci.yml` runs Windows/MSVC and Linux/GCC builds, Core NORMAL regression, installation, installed-package consumption, and a separate source-consumer check.
+- `.github/workflows/library-sanitizers.yml` runs the project-owned Library code under Clang ASan+UBSan on Linux. `SPECTRAL_SHIP_GEN_ENABLE_SANITIZERS=ON` is a development/CI-only option and is not part of the installed package interface.
+- `.github/workflows/library-long.yml` runs the full NORMAL+LONG regression set only by manual dispatch and on the weekly schedule. LONG sample counts and many-seed matrices are intentionally preserved.
+
+Local test labels remain `normal` and `long`, so focused CTest runs can use `-L normal` or `-L long`.
+
 ## Public configuration model
 
 SpectralShipGen separates *what a ship should be like* from the exact generated ship.

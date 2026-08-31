@@ -1,0 +1,85 @@
+name: Library CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows MSVC
+            os: windows-latest
+          - name: Linux GCC
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout SpectralShipGen
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_EXAMPLES=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION=ON
+          -DSPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS=ON
+
+      - name: Build Library, diagnostics, examples, and regression
+        run: cmake --build build --config Release --parallel
+
+      - name: Run Core NORMAL regression
+        run: ctest --test-dir build -C Release -L normal --output-on-failure
+
+      - name: Install Library package
+        run: cmake --install build --config Release --prefix "${{ github.workspace }}/build/install"
+
+      - name: Configure installed-package consumer
+        run: >-
+          cmake -S Tests/Consumer -B build-installed-consumer
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/install"
+
+      - name: Build installed-package consumer
+        run: cmake --build build-installed-consumer --config Release --parallel
+
+      - name: Run installed-package consumer
+        run: ctest --test-dir build-installed-consumer -C Release --output-on-failure
+
+  source-consumer:
+    name: Linux Source Consumer
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout SpectralShipGen
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure FetchContent/source consumer
+        run: >-
+          cmake -S Tests/Consumer -B build-source-consumer
+          -DCMAKE_BUILD_TYPE=Release
+          -DSPECTRAL_SHIP_GEN_CONSUMER_FETCHCONTENT=ON
+          -DSPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR="${{ github.workspace }}"
+
+      - name: Build source consumer
+        run: cmake --build build-source-consumer --config Release --parallel
+
+      - name: Run source consumer
+        run: ctest --test-dir build-source-consumer -C Release --output-on-failure
