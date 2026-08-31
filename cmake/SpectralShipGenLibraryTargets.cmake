@@ -72,44 +72,82 @@ add_library(SpectralShipGenCore STATIC
 )
 
 target_include_directories(SpectralShipGenCore
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc/SpectralShipGen
             ${CMAKE_CURRENT_SOURCE_DIR}/Core/Animation
             ${CMAKE_CURRENT_SOURCE_DIR}/Core/Generation
 )
 target_compile_features(SpectralShipGenCore PUBLIC cxx_std_17)
+set_target_properties(SpectralShipGenCore PROPERTIES EXPORT_NAME Core)
+add_library(SpectralShipGen::Core ALIAS SpectralShipGenCore)
+install(TARGETS SpectralShipGenCore
+    EXPORT SpectralShipGenTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    set(SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT ON)
+else()
+    set(SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT OFF)
+endif()
+
+option(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS "Build the reusable diagnostics library" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
+if(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS)
 add_library(SpectralShipGenDiagnosticsCore STATIC
     Diagnostics/GenerationStatistics.cpp
     Diagnostics/DiagnosticsRunner.cpp
     Diagnostics/DiagnosticsAnalysis.cpp
     Diagnostics/DiagnosticsResultSerializer.cpp
 )
-target_include_directories(SpectralShipGenDiagnosticsCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-target_link_libraries(SpectralShipGenDiagnosticsCore PUBLIC SpectralShipGenCore)
+target_include_directories(SpectralShipGenDiagnosticsCore PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(SpectralShipGenDiagnosticsCore PUBLIC SpectralShipGen::Core)
 target_compile_features(SpectralShipGenDiagnosticsCore PUBLIC cxx_std_17)
+set_target_properties(SpectralShipGenDiagnosticsCore PROPERTIES EXPORT_NAME Diagnostics)
+add_library(SpectralShipGen::Diagnostics ALIAS SpectralShipGenDiagnosticsCore)
+install(TARGETS SpectralShipGenDiagnosticsCore
+    EXPORT SpectralShipGenTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+endif()
 
-option(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI "Build the SFML-independent diagnostics CLI" ON)
+option(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI "Build the SFML-independent diagnostics CLI" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
 if(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI)
+    if(NOT TARGET SpectralShipGen::Diagnostics)
+        message(FATAL_ERROR "SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI requires SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS=ON")
+    endif()
     add_executable(ShipGeneratorDiagnostics Diagnostics/ShipGeneratorDiagnostics_main.cpp)
-    target_link_libraries(ShipGeneratorDiagnostics PRIVATE SpectralShipGenCore SpectralShipGenDiagnosticsCore)
+    target_link_libraries(ShipGeneratorDiagnostics PRIVATE SpectralShipGen::Core SpectralShipGen::Diagnostics)
     target_compile_features(ShipGeneratorDiagnostics PRIVATE cxx_std_17)
     target_compile_definitions(ShipGeneratorDiagnostics PRIVATE SPECTRAL_SHIP_GEN_BUILD_CONFIGURATION="${CMAKE_BUILD_TYPE}")
 endif()
 
-option(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES "Compile the public API example translation units" ON)
+option(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES "Compile the public API example translation units" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
 if(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES)
     add_library(SpectralShipGenExamples OBJECT
         Examples/custom_profile_generation.cpp
         Examples/public_configuration_api.cpp
         Examples/recipe_serialization.cpp
     )
-    target_link_libraries(SpectralShipGenExamples PRIVATE SpectralShipGenCore)
+    target_link_libraries(SpectralShipGenExamples PRIVATE SpectralShipGen::Core)
     target_compile_features(SpectralShipGenExamples PRIVATE cxx_std_17)
 endif()
 
-option(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION "Build the unified Core regression runner" ON)
+option(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION "Build the unified Core regression runner" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
 if(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION)
+    if(NOT TARGET SpectralShipGen::Diagnostics)
+        message(FATAL_ERROR "SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION requires SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS=ON")
+    endif()
     add_executable(SpectralShipGenRegression
         Tests/SpectralShipGenRegression_main.cpp
         Tests/RegressionRunner.cpp
@@ -165,8 +203,27 @@ if(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION)
         ${CMAKE_CURRENT_SOURCE_DIR}/inc/SpectralShipGen
         ${CMAKE_CURRENT_SOURCE_DIR}/Core/Generation
     )
-    target_link_libraries(SpectralShipGenRegression PRIVATE SpectralShipGenCore SpectralShipGenDiagnosticsCore)
+    target_link_libraries(SpectralShipGenRegression PRIVATE SpectralShipGen::Core SpectralShipGen::Diagnostics)
     target_compile_features(SpectralShipGenRegression PRIVATE cxx_std_17)
+endif()
+
+option(SPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS "Compile every public header from an isolated translation unit" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
+if(SPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS)
+    file(GLOB_RECURSE SPECTRAL_SHIP_GEN_PUBLIC_HEADERS
+        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/inc"
+        CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/inc/SpectralShipGen/*.h"
+    )
+    set(SPECTRAL_SHIP_GEN_PUBLIC_HEADER_CHECK_SOURCES)
+    foreach(PUBLIC_HEADER IN LISTS SPECTRAL_SHIP_GEN_PUBLIC_HEADERS)
+        string(MAKE_C_IDENTIFIER "${PUBLIC_HEADER}" HEADER_IDENTIFIER)
+        set(CHECK_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/public_header_checks/${HEADER_IDENTIFIER}.cpp")
+        file(WRITE "${CHECK_SOURCE}" "#include <${PUBLIC_HEADER}>\n")
+        list(APPEND SPECTRAL_SHIP_GEN_PUBLIC_HEADER_CHECK_SOURCES "${CHECK_SOURCE}")
+    endforeach()
+    add_library(SpectralShipGenPublicHeaderChecks OBJECT ${SPECTRAL_SHIP_GEN_PUBLIC_HEADER_CHECK_SOURCES})
+    target_link_libraries(SpectralShipGenPublicHeaderChecks PRIVATE SpectralShipGen::Core)
+    target_compile_features(SpectralShipGenPublicHeaderChecks PRIVATE cxx_std_17)
 endif()
 
 if(BUILD_TESTING AND TARGET SpectralShipGenRegression)

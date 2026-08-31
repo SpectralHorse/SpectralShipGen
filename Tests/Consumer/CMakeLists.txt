@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.16)
+project(SpectralShipGenConsumer LANGUAGES CXX)
+
+option(SPECTRAL_SHIP_GEN_CONSUMER_FETCHCONTENT "Consume SpectralShipGen from a source checkout through FetchContent" OFF)
+set(SPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR "" CACHE PATH "SpectralShipGen source checkout used by the FetchContent acceptance path")
+
+if(SPECTRAL_SHIP_GEN_CONSUMER_FETCHCONTENT)
+    if(NOT SPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR)
+        message(FATAL_ERROR "Set SPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR for the local FetchContent acceptance test")
+    endif()
+    set(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS OFF CACHE BOOL "" FORCE)
+    set(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI OFF CACHE BOOL "" FORCE)
+    set(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION OFF CACHE BOOL "" FORCE)
+    set(SPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS OFF CACHE BOOL "" FORCE)
+    include(FetchContent)
+    FetchContent_Declare(SpectralShipGen SOURCE_DIR "${SPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR}")
+    FetchContent_MakeAvailable(SpectralShipGen)
+else()
+    find_package(SpectralShipGen CONFIG REQUIRED)
+endif()
+
+add_executable(SpectralShipGenConsumer main.cpp)
+target_link_libraries(SpectralShipGenConsumer PRIVATE SpectralShipGen::Core)
+target_compile_features(SpectralShipGenConsumer PRIVATE cxx_std_17)
+
+enable_testing()
+add_test(NAME SpectralShipGenConsumer.run COMMAND SpectralShipGenConsumer)
