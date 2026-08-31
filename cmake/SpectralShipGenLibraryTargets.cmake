@@ -132,15 +132,9 @@ if(SPECTRAL_SHIP_GEN_BUILD_DIAGNOSTICS_CLI)
     target_compile_definitions(ShipGeneratorDiagnostics PRIVATE SPECTRAL_SHIP_GEN_BUILD_CONFIGURATION="${CMAKE_BUILD_TYPE}")
 endif()
 
-option(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES "Compile the public API example translation units" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
+option(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES "Build the runnable public API examples" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
 if(SPECTRAL_SHIP_GEN_BUILD_EXAMPLES)
-    add_library(SpectralShipGenExamples OBJECT
-        Examples/custom_profile_generation.cpp
-        Examples/public_configuration_api.cpp
-        Examples/recipe_serialization.cpp
-    )
-    target_link_libraries(SpectralShipGenExamples PRIVATE SpectralShipGen::Core)
-    target_compile_features(SpectralShipGenExamples PRIVATE cxx_std_17)
+    add_subdirectory(Examples)
 endif()
 
 option(SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION "Build the unified Core regression runner" ${SPECTRAL_SHIP_GEN_DEVELOPER_TARGET_DEFAULT})
