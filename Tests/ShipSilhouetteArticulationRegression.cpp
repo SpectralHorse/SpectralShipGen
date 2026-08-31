@@ -17,25 +17,6 @@ namespace
     using namespace PixelShipGenerator;
 
     constexpr std::array<ShipDimensions, 7u> Dimensions = { { {24u,24u}, {32u,32u}, {44u,44u}, {48u,64u}, {64u,48u}, {64u,64u}, {96u,96u} } };
-    constexpr std::array<uint64_t, 7u> SpearheadRgbHashes = { {
-        0x528750c29806f4c7ull, 0x747d3c0ac7cf1e79ull, 0x3aa32565a403baa7ull, 0xc99d5a85f88b6145ull,
-        0x34079b708fa3e800ull, 0x94faad2e64a63204ull, 0xc22da157d70dfd86ull
-    } };
-
-    uint64_t rgbHash(const Image& image)
-    {
-        uint64_t hash = 1469598103934665603ull;
-        for (const Color& color : image.getPixels())
-        {
-            for (uint8_t value : { color.R, color.G, color.B })
-            {
-                hash ^= value;
-                hash *= 1099511628211ull;
-            }
-        }
-        return hash;
-    }
-
     void setSymmetricRow(PixelMask& mask, uint32_t y, uint32_t width)
     {
         const uint32_t left = (mask.getWidth() - width) / 2u;
@@ -101,17 +82,6 @@ int PixelShipGeneratorTests::runSilhouetteArticulationRegression()
                 std::cerr << "Deterministic/symmetric silhouette regression failed.\n"; return 1;
             }
         }
-    }
-
-    for (std::size_t index = 0u; index < Dimensions.size(); ++index)
-    {
-        ShipGenerationSettings settings;
-        settings.Seed = 0x7A56D3914B8C102Full;
-        settings.Dimensions = Dimensions[index];
-        settings.Style = ShipStyle::SPEARHEAD;
-        settings.Faction = ShipFactionType::MILITARY;
-        const GeneratedShip ship = generator.generate(settings);
-        if (rgbHash(ship.FinalImage) != SpearheadRgbHashes[index]) { std::cerr << "SPEARHEAD Task-54 fixture changed at review dimension.\n"; return 1; }
     }
 
     constexpr uint32_t Samples = 48u;

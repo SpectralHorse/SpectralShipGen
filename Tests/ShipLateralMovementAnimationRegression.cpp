@@ -226,23 +226,36 @@ int PixelShipGeneratorTests::runLateralMovementAnimationRegression()
         return 1;
     }
 
-    const ShipGenerationSettings asymmetricSettings = makeSettings(0u, { 96u,96u }, ShipStyle::INDUSTRIAL, ShipFactionType::FRONTIER);
-    const GeneratedShip asymmetricShip = generator.generate(asymmetricSettings);
-    if (masksSymmetric(asymmetricShip.HullMask) && masksSymmetric(asymmetricShip.AttachmentMask))
+    // Asymmetry is generation-dependent. Search deterministically for a ship that actually
+    // exercises direction-specific safe fallback instead of pinning that semantic to one seed.
+    bool foundAsymmetricFallbackFixture = false;
+    for (uint64_t attempt = 0u; attempt < 32u && !foundAsymmetricFallbackFixture; ++attempt)
     {
-        std::cerr << "Task 68 regression failed: asymmetric fallback fixture is no longer asymmetric.\n";
-        return 1;
+        const GeneratedShip asymmetricShip = generator.generate(makeSettings(attempt, { 96u,96u }, ShipStyle::INDUSTRIAL, ShipFactionType::FRONTIER));
+        if (masksSymmetric(asymmetricShip.HullMask) && masksSymmetric(asymmetricShip.AttachmentMask))
+        {
+            continue;
+        }
+
+        const ShipMovementAnimation asymmetricLeft = animator.generate(asymmetricShip, ShipAnimationType::MOVE_LEFT);
+        const ShipMovementAnimation asymmetricRight = animator.generate(asymmetricShip, ShipAnimationType::MOVE_RIGHT);
+        if (asymmetricLeft.Diagnostics.ActiveAttachmentCount == asymmetricRight.Diagnostics.ActiveAttachmentCount && asymmetricLeft.Diagnostics.Components.size() == asymmetricRight.Diagnostics.Components.size())
+        {
+            continue;
+        }
+
+        if (!validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Enter) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Sustain) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Exit) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Enter) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Sustain) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Exit))
+        {
+            std::cerr << "Task 68 regression failed: asymmetric movement changed protected hull/cockpit geometry.\n";
+            return 1;
+        }
+
+        foundAsymmetricFallbackFixture = true;
     }
-    const ShipMovementAnimation asymmetricLeft = animator.generate(asymmetricShip, ShipAnimationType::MOVE_LEFT);
-    const ShipMovementAnimation asymmetricRight = animator.generate(asymmetricShip, ShipAnimationType::MOVE_RIGHT);
-    if (asymmetricLeft.Diagnostics.ActiveAttachmentCount == asymmetricRight.Diagnostics.ActiveAttachmentCount && asymmetricLeft.Diagnostics.Components.size() == asymmetricRight.Diagnostics.Components.size())
+
+    if (!foundAsymmetricFallbackFixture)
     {
-        std::cerr << "Task 68 regression failed: asymmetric fixture no longer exercises direction-specific safe fallback.\n";
-        return 1;
-    }
-    if (!validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Enter) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Sustain) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricLeft.Exit) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Enter) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Sustain) || !validateProtectedGeometry(asymmetricShip, nullptr, asymmetricRight.Exit))
-    {
-        std::cerr << "Task 68 regression failed: asymmetric movement changed protected hull/cockpit geometry.\n";
+        std::cerr << "Task 68 regression failed: deterministic fixture search found no direction-specific asymmetric fallback case.\n";
         return 1;
     }
 

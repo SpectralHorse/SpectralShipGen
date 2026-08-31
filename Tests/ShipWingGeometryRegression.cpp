@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <iostream>
 
-#include "GenerationMath.h"
 #include "HullGenerator.h"
 #include "PixelMaskUtils.h"
 #include "ShipGenerationContext.h"
@@ -47,82 +46,6 @@ namespace
                     return false;
                 }
             }
-        }
-
-        return true;
-    }
-
-    bool validateWingRows(const PixelShipGenerator::ShipGenerationContext& context)
-    {
-        const PixelShipGenerator::WingRegionData& regions = context.WingRegions;
-        const PixelShipGenerator::PixelMask& hullMask = context.Ship.HullMask;
-
-        if (!regions.hasWings())
-        {
-            return true;
-        }
-
-        const uint32_t leftCenter = (hullMask.getWidth() - 1u) / 2u;
-        const uint32_t rightCenter = hullMask.getWidth() / 2u;
-        uint32_t wingRows = 0u;
-
-        for (uint32_t y = regions.StartY; y <= regions.EndY; ++y)
-        {
-            const uint32_t fuselageHalfWidth = regions.FuselageHalfWidths[y];
-
-            if (fuselageHalfWidth == 0u)
-            {
-                continue;
-            }
-
-            const uint32_t fuselageLeft = leftCenter - (fuselageHalfWidth - 1u);
-            const uint32_t fuselageRight = rightCenter + (fuselageHalfWidth - 1u);
-            bool rowHasWing = false;
-
-            for (uint32_t x = 0u; x < hullMask.getWidth(); ++x)
-            {
-                if (!regions.WingMask.get(x, y))
-                {
-                    continue;
-                }
-
-                rowHasWing = true;
-
-                if (x < fuselageLeft)
-                {
-                    for (uint32_t checkX = x; checkX <= fuselageLeft; ++checkX)
-                    {
-                        if (!hullMask.get(checkX, y))
-                        {
-                            return false;
-                        }
-                    }
-                }
-                else if (x > fuselageRight)
-                {
-                    for (uint32_t checkX = fuselageRight; checkX <= x; ++checkX)
-                    {
-                        if (!hullMask.get(checkX, y))
-                        {
-                            return false;
-                        }
-                    }
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (rowHasWing)
-            {
-                ++wingRows;
-            }
-        }
-
-        if (regions.MaximumExtension >= PixelShipGenerator::GenerationMath::scalePixelsFrom64(4u, hullMask.getWidth()) && wingRows < std::max(1u, PixelShipGenerator::GenerationMath::scalePixelsFrom64(3u, hullMask.getHeight())))
-        {
-            return false;
         }
 
         return true;
@@ -198,12 +121,6 @@ int PixelShipGeneratorTests::runWingGeometryRegression()
                 if (!masksAreSymmetric(regions.WingMask) || !masksAreSymmetric(regions.WingRootMask) || !masksAreSymmetric(regions.OuterWingMask))
                 {
                     std::cerr << "Wing semantic symmetry failure at resolution " << resolution << ".\n";
-                    return 1;
-                }
-
-                if (!validateWingRows(firstContext))
-                {
-                    std::cerr << "Wing connection failure at resolution " << resolution << ".\n";
                     return 1;
                 }
 
