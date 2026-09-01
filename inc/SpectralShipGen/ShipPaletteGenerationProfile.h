@@ -5,7 +5,7 @@
 namespace SpectralShipGen
 {
     // Generic aliases for the existing faction-authored palette range/relationship
-    // value types. These aliases preserve the Task-83 public faction API while
+    // value types. These aliases preserve the existing public faction API while
     // making the same semantic data usable independently of faction provenance.
     using ShipPaletteGenerationRanges = ShipFactionPaletteProfile;
     using ShipPaletteGenerationBehaviorProfile = ShipFactionPaletteBehaviorProfile;

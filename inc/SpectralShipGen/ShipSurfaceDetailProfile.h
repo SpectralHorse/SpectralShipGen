@@ -25,7 +25,7 @@ namespace SpectralShipGen
         uint32_t GeometricMarking = 100u;
         uint32_t MechanicalExposure = 100u;
         uint32_t RepeatingMotif = 100u;
-        // These Task-55 languages are opt-in through faction profiles so
+        // These additional languages are opt-in through faction profiles so
         // the four original factions preserve their previous distributions.
         uint32_t IdentificationMarking = 0u;
         uint32_t LuminousChannel = 0u;

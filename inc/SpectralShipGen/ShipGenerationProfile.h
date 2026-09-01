@@ -442,7 +442,7 @@ namespace SpectralShipGen
         uint32_t WingCutoutModifierWeight = 60u;
         uint32_t SplitNoseModifierWeight = 55u;
 
-        // Explicit macro-form expectations used by Task-56 silhouette guidance
+        // Explicit macro-form expectations used by silhouette guidance
         // and validation. They remain style-profile data rather than a global
         // aesthetic score.
         uint32_t MinimumSilhouetteWidthPercent = 44u;

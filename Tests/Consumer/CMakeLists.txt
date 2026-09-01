@@ -17,7 +17,7 @@ if(SPECTRAL_SHIP_GEN_CONSUMER_FETCHCONTENT)
     FetchContent_Declare(SpectralShipGen SOURCE_DIR "${SPECTRAL_SHIP_GEN_CONSUMER_SOURCE_DIR}")
     FetchContent_MakeAvailable(SpectralShipGen)
 else()
-    find_package(SpectralShipGen CONFIG REQUIRED)
+    find_package(SpectralShipGen 1.0.0 CONFIG REQUIRED)
 endif()
 
 add_executable(SpectralShipGenConsumer main.cpp)

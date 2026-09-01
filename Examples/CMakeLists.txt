@@ -4,7 +4,7 @@
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     cmake_minimum_required(VERSION 3.16)
     project(SpectralShipGenPublicExamples LANGUAGES CXX)
-    find_package(SpectralShipGen CONFIG REQUIRED)
+    find_package(SpectralShipGen 1.0.0 CONFIG REQUIRED)
 endif()
 
 set(SPECTRAL_SHIP_GEN_PUBLIC_EXAMPLE_SOURCES

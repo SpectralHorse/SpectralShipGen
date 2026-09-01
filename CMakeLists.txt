@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(SPECTRAL_SHIP_GEN_PACKAGE_VERSION "0.0.0" CACHE STRING
-    "Development package version placeholder; Task 109 will establish the release version contract")
-project(SpectralShipGen VERSION ${SPECTRAL_SHIP_GEN_PACKAGE_VERSION} LANGUAGES CXX)
+project(SpectralShipGen VERSION 1.0.0 LANGUAGES CXX)
 
 if(MSVC)
     add_compile_options(/wd26812)
@@ -65,4 +63,4 @@ install(FILES
     DESTINATION "${SPECTRAL_SHIP_GEN_INSTALL_CMAKEDIR}"
 )
 install(DIRECTORY inc/SpectralShipGen DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES README.md LICENSE DESTINATION "${CMAKE_INSTALL_DOCDIR}")
+install(FILES README.md LICENSE COMPATIBILITY.md CHANGELOG.md RELEASE_NOTES_1.0.0-rc.1.md DESTINATION "${CMAKE_INSTALL_DOCDIR}")

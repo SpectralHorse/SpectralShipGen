@@ -34,7 +34,7 @@ int main()
 }
 ```
 
-The same seed and resolved configuration produce the same output.
+Within the same exact SpectralShipGen Library release revision, the same validated semantic configuration and deterministic seed state produce pixel-identical output. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the cross-version contract.
 
 ## Build and install
 
@@ -48,7 +48,7 @@ cmake --install build --prefix <install-prefix>
 Installed consumption:
 
 ```cmake
-find_package(SpectralShipGen CONFIG REQUIRED)
+find_package(SpectralShipGen 1.0.0 CONFIG REQUIRED)
 target_link_libraries(MyGame PRIVATE SpectralShipGen::Core)
 ```
 
@@ -60,13 +60,13 @@ Source/FetchContent consumption uses the same target:
 include(FetchContent)
 FetchContent_Declare(SpectralShipGen
     GIT_REPOSITORY https://github.com/SpectralHorse/SpectralShipGen.git
-    GIT_TAG master)
+    GIT_TAG v1.0.0-rc.1)
 FetchContent_MakeAvailable(SpectralShipGen)
 
 target_link_libraries(MyGame PRIVATE SpectralShipGen::Core)
 ```
 
-The repository is still private during pre-1.0 development, so remote FetchContent relies on normal Git authentication. Task 109 will establish the release version/tag contract.
+For the coordinated 1.0 release candidate, source-fetch examples pin `v1.0.0-rc.1`. The numeric CMake/package version remains `1.0.0`; prerelease identity belongs to the tag/revision. SpectralShipGen and Studio version independently after the initial 1.0 release.
 
 ## Build options
 
@@ -78,7 +78,7 @@ Developer-only targets default to ON for a top-level Library checkout and OFF wh
 - `SPECTRAL_SHIP_GEN_BUILD_CORE_REGRESSION` — unified Core regression runner.
 - `SPECTRAL_SHIP_GEN_BUILD_PUBLIC_HEADER_CHECKS` — isolated compilation check for every public header.
 
-The package version currently uses the explicit development placeholder `0.0.0`. Task 109 owns the release version contract.
+The authoritative numeric package version is the root CMake `PROJECT_VERSION` (`1.0.0`). The generated package version file uses `SameMajorVersion` compatibility.
 
 ## CI and regression policy
 
@@ -214,6 +214,18 @@ cmake --build build --target SpectralShipGenExamples
 cmake -S Examples -B examples-build -DCMAKE_PREFIX_PATH=<install-prefix>
 cmake --build examples-build
 ```
+
+## Versioning and compatibility
+
+SpectralShipGen `1.0.0` begins the public compatibility epoch. Public C++ source API follows Semantic Versioning, while binary ABI/object-layout stability is not promised. Recipe schema v6 and diagnostics schema v2 are the 1.0 baselines. Pre-1.0 development APIs/formats remain unsupported.
+
+See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the complete source API, CMake package, deprecation, recipe, diagnostics, and deterministic-output contract.
+
+## Generated output rights
+
+Images, spritesheets, animation frames, and other output generated with SpectralShipGen may be used for **any purpose**, including commercial use. You may modify, redistribute, publish, sell, incorporate, paint over, or otherwise use generated output with **no attribution requirement**. The zlib license governs the software source, not generated output.
+
+Showing the project an interesting or funny generated result is always welcome, but entirely optional.
 
 ## Repository relationship
 
