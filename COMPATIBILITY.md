@@ -25,7 +25,7 @@ The authoritative numeric Library version is the root CMake `PROJECT_VERSION`, c
 
 `SpectralShipGenConfigVersion.cmake` uses CMake's `SameMajorVersion` compatibility mode. A consumer requesting `find_package(SpectralShipGen 1.0.0 CONFIG REQUIRED)` therefore accepts compatible installed `1.x` packages and rejects `2.x` as a different major compatibility epoch.
 
-The package version is numeric. Prerelease identity such as `v1.0.0-rc.1` belongs to the release tag/revision and is not encoded in CMake's numeric `VERSION` field.
+The package version is numeric. Release/tag identity belongs to the Git revision and is not encoded separately in CMake's numeric `VERSION` field.
 
 ## Deterministic output
 
@@ -46,7 +46,7 @@ When exact reproduction matters, preserve:
 - deterministic seed state; and
 - the exact Library release tag/revision.
 
-For example, `v1.0.0-rc.1` and final `v1.0.0` may both report CMake version `1.0.0` while still being distinct deterministic-output revisions.
+The numeric CMake version alone is therefore not a substitute for retaining the exact release tag/revision when pixel-identical reproduction matters.
 
 ## Recipe compatibility
 

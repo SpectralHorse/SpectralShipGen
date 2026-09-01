@@ -2,9 +2,9 @@
 
 All notable public changes to SpectralShipGen are recorded here beginning with the 1.0 compatibility epoch.
 
-## [1.0.0-rc.1] - Release candidate
+## [1.0.0]
 
-Initial public release candidate.
+Initial public release.
 
 ### Generation
 

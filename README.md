@@ -60,13 +60,13 @@ Source/FetchContent consumption uses the same target:
 include(FetchContent)
 FetchContent_Declare(SpectralShipGen
     GIT_REPOSITORY https://github.com/SpectralHorse/SpectralShipGen.git
-    GIT_TAG v1.0.0-rc.1)
+    GIT_TAG v1.0.0)
 FetchContent_MakeAvailable(SpectralShipGen)
 
 target_link_libraries(MyGame PRIVATE SpectralShipGen::Core)
 ```
 
-For the coordinated 1.0 release candidate, source-fetch examples pin `v1.0.0-rc.1`. The numeric CMake/package version remains `1.0.0`; prerelease identity belongs to the tag/revision. SpectralShipGen and Studio version independently after the initial 1.0 release.
+For the public 1.0 release, source-fetch examples pin the immutable `v1.0.0` tag. SpectralShipGen and Studio version independently after their coordinated initial 1.0 release.
 
 ## Build options
 

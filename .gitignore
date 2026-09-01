@@ -1,6 +1,7 @@
 .vs/
 .vscode/
 .cache/
+CMakeUserPresets.json
 Debug/
 Logs/
 build/
